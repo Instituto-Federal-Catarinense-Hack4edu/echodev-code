@@ -52,3 +52,9 @@ Registro de escolhas tomadas durante a construção (o que, por quê).
 - **`WEB_ORIGIN` aceita lista de origens exatas separadas por vírgula** (sem `*`), para `localhost` e `127.0.0.1` ou o IP da rede local no desenvolvimento.
 - **Revogar um consentimento obrigatório** não expulsa da aula em andamento; impede entrar em novas aulas (`join_lesson` checa).
 - **Aviso de fim de aula ao estudante conectado** não foi feito (o estudante descobre ao tentar entrar de novo ou pelo link de revisão). Registrado em "Ideias fora do escopo".
+
+## Fase 5
+- **`load_test.py` ficou em Python** (a biblioteca `realtime` funcionou bem no `check_rls`); não foi preciso a exceção em Node. Os 40 clientes reaproveitam as 8 contas de teste (5 conexões cada), porque cada conexão precisa ser de um membro da aula.
+- **Ícones gerados por script** (PNG 192/512, sem dependências) e manifest via `app/manifest.ts`. Sem service worker, como pedido.
+- **`/health` a cada 5 minutos na tela ao vivo**: hosts gratuitos dormem após ~15 min sem tráfego, e uma aula dura mais que isso.
+- **Painel de depuração** só mostra a latência como indicação (relógios diferentes entre aparelhos, armadilha 34).

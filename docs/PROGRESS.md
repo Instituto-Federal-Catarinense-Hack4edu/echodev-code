@@ -43,13 +43,32 @@
 - Verificado no navegador: modo calmo e profundidade persistem após recarregar; eventos chegam ao banco; correção salva; aula muda para "ao vivo" sem reabrir o canal; exclusão apaga a conta.
 - Bug corrigido no caminho: consultas `supabase-js` disparadas com `void` nunca executam (são preguiçosas). Agora passam por `lib/supabase/fire.ts`.
 
-## Pendências
-- **Provedor `anthropic` não foi testado com chamada real** (não há `ANTHROPIC_API_KEY`). Os testes cobrem o fluxo com provedores falsos; a primeira chamada real pode revelar ajuste de parâmetros (por exemplo, `fallbacks` junto com `output_config.format`). Se der 400, use `LLM_FALLBACKS=false`.
-- Página de relatório (Fase 4).
-- Teste com celular real na rede local e com microfone de verdade (Web Speech) ainda não feito.
+## Fase 5: robustez e demo (concluída)
+- `scripts/load_test.py` (Python, biblioteca `realtime`): N clientes num canal privado, 1 publicando a cada 2 s; mede p50/p95/máx e perdas, apaga a aula no fim. Resultado na seção abaixo.
+- Painel `?debug=1` no estudante (latência `now - sentAt`, `seq` atual, conexão).
+- Acessibilidade: foco visível em tudo, alvos de toque de 44 px, termos com `aria-label`, `aria-live` na legenda, `h-dvh`, `lang="pt-BR"`, modo calmo com `prefers-reduced-motion`.
+- PWA: `app/manifest.ts` e ícones 192/512 (sem service worker).
+- API mantida acordada durante a aula (`/health` a cada 5 min na tela ao vivo).
+- `docs/TESTE_MANUAL.md` (Teste A, Teste B, A/B de 1 hora, checklist), `docs/DEPLOY.md`, `README.md`.
+
+### Resultado do teste de carga (rede doméstica, Supabase região padrão do projeto)
+`npm run load:test` em 03/11/2026: **40 clientes, 300 frases (1 a cada 2 s, 10 min), 12.000/12.000 recebimentos, 0 perdas. Latência p50 51 ms, p95 635 ms, média 220 ms, máximo 18,5 s.** Meta (p95 < 2 s) atingida. O máximo isolado de 18,5 s indica uma pausa de conexão (provável reconexão de um cliente); no app, a recuperação por `seq` cobre esse caso, mas vale repetir o teste na rede da escola. Teste curto anterior (10 clientes, 30 s): p95 289 ms.
+
+## O que NÃO foi testado em condições reais
+- **Microfone de verdade em sala de aula** (Web Speech API com ruído, eco, sotaques). Só o roteiro falso foi usado; o reinício automático e os erros de permissão estão implementados mas não exercitados com fala real.
+- **Celulares reais** (Android e iOS/Safari), inclusive wake lock e troca de rede 4G/Wi-Fi. Os testes usaram o navegador do computador, com viewport de celular.
+- **Provedor `anthropic` com chamada real** (não há `ANTHROPIC_API_KEY`). Os testes cobrem o fluxo com provedores falsos; a primeira chamada real pode pedir ajuste (por exemplo, `fallbacks` junto com `output_config.format`). Se der erro 400, use `LLM_FALLBACKS=false`.
+- **API hospedada** (cold start, limites de tempo): só rodou localmente.
+- **Link por e-mail e Google**: implementados; os testes usaram o login de desenvolvimento por senha.
+- **`pg_cron`**: não verifiquei se a extensão foi ativada no seu projeto. Se não estiver, use o plano B (`POST /cron/purge`, veja `docs/DEPLOY.md`).
+
+## Pendências para a equipe
 - **Revisão humana do conteúdo** dos 40 termos (explicações e traduções) antes da demo. Nada na interface diz "verificado".
-- Variações fonéticas são hipóteses: validar no Teste A (`docs/TESTE_MANUAL.md`, Fase 5).
-- Fases 2 a 5.
+- Variações fonéticas são hipóteses: validar no Teste A (`docs/TESTE_MANUAL.md`).
+- **Textos de consentimento** são marcadores ("texto a ser aprovado pela instituição"); definir o fluxo para menores de 18 anos com a instituição.
+- **SMTP próprio** no Supabase para a demo real (o envio padrão de links tem limite baixo).
+- **Escolher e configurar a hospedagem** da API (`docs/DEPLOY.md`) e as URLs de redirecionamento de produção.
+- Trocar a chave secreta do Supabase depois do hackathon (ela foi compartilhada no chat durante o desenvolvimento).
 
 ### Termos propensos a falso positivo (curadoria)
 Palavras comuns do português que também são termos: `objeto`, `classe`, `método`, `função`, `variável`, `parâmetro`, `biblioteca`, `repositório`, `algoritmo`. Outros riscos: `jason` (nome próprio) como variação de JSON; `repo`; `bug`/`merge` em conversa informal. `for` ficou de fora de propósito ("se ele **for**").
@@ -57,3 +76,6 @@ Palavras comuns do português que também são termos: `objeto`, `classe`, `mét
 ## Ideias fora do escopo
 - Legenda traduzida ao vivo (fora do MVP por definição).
 - Ensinar ao corretor plurais automáticos (hoje são listados em `forms`).
+- Avisar o estudante conectado quando a aula termina (mensagem no canal) com link direto para o resumo.
+- Lista de aulas para o estudante (hoje ele volta pelo código ou pelo link de revisão).
+- Painel de curadoria das correções de termos (`term_corrections`) para promovê-las ao pacote versionado.

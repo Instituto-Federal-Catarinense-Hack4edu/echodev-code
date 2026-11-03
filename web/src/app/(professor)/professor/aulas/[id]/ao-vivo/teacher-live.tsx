@@ -40,8 +40,11 @@ export function TeacherLive() {
   const [corrections, setCorrections] = useState<Corrections>({});
 
   useEffect(() => {
-    wakeApi(); // free hosts sleep; wake it now so "end" is fast later
+    // Free hosts sleep after ~15 min idle; keep the API awake so "end" is fast later.
+    wakeApi();
+    const keepAwake = setInterval(wakeApi, 5 * 60_000);
     void loadCorrections().then(setCorrections);
+    return () => clearInterval(keepAwake);
   }, []);
 
   const addCorrection = useCallback((termId: string, heard: string) => {

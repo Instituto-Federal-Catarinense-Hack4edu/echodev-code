@@ -16,6 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: t.app.name,
   description: t.app.tagline,
+  icons: { apple: "/icons/icon-192.png" },
 };
 
 export const viewport: Viewport = {
