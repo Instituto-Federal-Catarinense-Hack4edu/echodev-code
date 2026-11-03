@@ -8,10 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { TeacherConsole } from "@/components/teacher-console";
+import { TermCorrection, loadCorrections, type Corrections } from "@/components/term-correction";
 import { ApiError, apiFetch, wakeApi } from "@/lib/api/client";
 import { SupabaseTransport, maxSeq, persistUtterance } from "@/lib/realtime/supabase";
 import type { UtteranceMessage } from "@/lib/realtime/schemas";
 import { getSupabase } from "@/lib/supabase/client";
+import { fire } from "@/lib/supabase/fire";
 import { useProfile } from "@/lib/supabase/use-profile";
 import { t } from "@/lib/i18n/pt-BR";
 
@@ -35,9 +37,15 @@ export function TeacherLive() {
   const [ending, setEnding] = useState(false);
   const [endError, setEndError] = useState<string | null>(null);
   const [transport, setTransport] = useState<SupabaseTransport | null>(null);
+  const [corrections, setCorrections] = useState<Corrections>({});
 
   useEffect(() => {
     wakeApi(); // free hosts sleep; wake it now so "end" is fast later
+    void loadCorrections().then(setCorrections);
+  }, []);
+
+  const addCorrection = useCallback((termId: string, heard: string) => {
+    setCorrections((c) => ({ ...c, [termId]: [...(c[termId] ?? []), heard] }));
   }, []);
 
   useEffect(() => {
@@ -59,26 +67,29 @@ export function TeacherLive() {
     })();
   }, [id, user, loading]);
 
+  // Depend on the id and "ended" flag only: going live must not reopen the channel.
+  const liveLessonId = lesson && lesson.status !== "encerrada" ? lesson.id : null;
   useEffect(() => {
-    if (!lesson || lesson.status === "encerrada") return;
-    const tr = new SupabaseTransport(getSupabase(), lesson.id);
+    if (!liveLessonId) return;
+    const tr = new SupabaseTransport(getSupabase(), liveLessonId);
     // eslint-disable-next-line react-hooks/set-state-in-effect -- channel lives only in the browser
     setTransport(tr);
     return () => tr.close();
-  }, [lesson]);
+  }, [liveLessonId]);
 
   // Connected students counter (aggregate only, never pseudonyms).
+  const lessonId = lesson?.id ?? null;
   useEffect(() => {
-    if (!lesson) return;
+    if (!lessonId) return;
     const supabase = getSupabase();
     const tick = async () => {
-      const { data } = await supabase.rpc("lesson_member_count", { p_lesson_id: lesson.id });
+      const { data } = await supabase.rpc("lesson_member_count", { p_lesson_id: lessonId });
       if (typeof data === "number") setMembers(data);
     };
     void tick();
     const timer = setInterval(tick, 5000);
     return () => clearInterval(timer);
-  }, [lesson]);
+  }, [lessonId]);
 
   const persist = useCallback(
     (msg: UtteranceMessage) => persistUtterance(getSupabase(), id, msg),
@@ -88,10 +99,13 @@ export function TeacherLive() {
   const goLive = useCallback(() => {
     if (!lesson || lesson.status !== "criada") return;
     setLesson({ ...lesson, status: "ao_vivo" });
-    void getSupabase()
-      .from("lessons")
-      .update({ status: "ao_vivo", started_at: new Date().toISOString() })
-      .eq("id", lesson.id);
+    fire(
+      getSupabase()
+        .from("lessons")
+        .update({ status: "ao_vivo", started_at: new Date().toISOString() })
+        .eq("id", lesson.id),
+      "lesson live",
+    );
   }, [lesson]);
 
   async function endLesson() {
@@ -144,13 +158,17 @@ export function TeacherLive() {
       {lesson.status === "encerrada" ? (
         <p>{t.lessons.ended}</p>
       ) : (
-        <TeacherConsole
-          transport={transport}
-          persist={persist}
-          initialSeq={initialSeq}
-          packIds={lesson.pack_ids}
-          onFirstStart={goLive}
-        />
+        <>
+          <TeacherConsole
+            transport={transport}
+            persist={persist}
+            initialSeq={initialSeq}
+            packIds={lesson.pack_ids}
+            extraVariants={corrections}
+            onFirstStart={goLive}
+          />
+          <TermCorrection packIds={lesson.pack_ids} onSaved={addCorrection} />
+        </>
       )}
 
       <Dialog open={qrOpen} onOpenChange={setQrOpen}>

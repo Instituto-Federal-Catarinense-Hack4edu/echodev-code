@@ -63,6 +63,13 @@ def test_cors_preflight_allows_web_origin(client):
     assert res.headers["access-control-allow-origin"] == "http://localhost:3000"
 
 
+def test_web_origins_list_never_wildcard(settings):
+    s = settings.model_copy(
+        update={"web_origin": "http://localhost:3000/, http://127.0.0.1:3000,*"}
+    )
+    assert s.web_origins == ["http://localhost:3000", "http://127.0.0.1:3000"]
+
+
 def test_cors_rejects_other_origin(client):
     res = client.options(
         "/health",

@@ -22,6 +22,13 @@ class Settings(BaseSettings):
     llm_fallbacks: bool = True
     environment: Literal["development", "production", "test"] = "development"
 
+    @property
+    def web_origins(self) -> list[str]:
+        """WEB_ORIGIN may list several exact origins separated by commas (never '*')."""
+        return [
+            o.strip().rstrip("/") for o in self.web_origin.split(",") if o.strip() not in ("", "*")
+        ]
+
 
 @lru_cache
 def get_settings() -> Settings:

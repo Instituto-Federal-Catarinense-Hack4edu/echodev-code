@@ -45,3 +45,10 @@ Registro de escolhas tomadas durante a construção (o que, por quê).
 - **Termos sem definição**: procura "significa", "serve para", "é um/uma", "quer dizer", "ou seja" no resto da frase da primeira menção e nas 3 frases seguintes. "é um" exige o acento, para não confundir com "e um".
 - **"3 trechos mais rápidos" = 3 minutos com maior média de palavras/min** (sem texto, para sobreviver à limpeza de 24 h).
 - **`regenerate` responde 409** quando há material aprovado, quando a aula não foi encerrada ou quando a transcrição já expirou.
+
+## Fase 4
+- **Preferências no perfil para quem está logado; no aparelho (`localStorage`) só no modo demonstração.**
+- **Correções de termo valem para todos os professores** (a tabela não guarda autor, por privacidade); o professor só insere e lê.
+- **`WEB_ORIGIN` aceita lista de origens exatas separadas por vírgula** (sem `*`), para `localhost` e `127.0.0.1` ou o IP da rede local no desenvolvimento.
+- **Revogar um consentimento obrigatório** não expulsa da aula em andamento; impede entrar em novas aulas (`join_lesson` checa).
+- **Aviso de fim de aula ao estudante conectado** não foi feito (o estudante descobre ao tentar entrar de novo ou pelo link de revisão). Registrado em "Ideias fora do escopo".

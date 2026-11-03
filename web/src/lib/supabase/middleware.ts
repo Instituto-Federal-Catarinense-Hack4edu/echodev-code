@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { hasSupabaseEnv, publicEnv } from "@/lib/env";
 
-const PROTECTED = [/^\/professor(\/|$)/, /^\/aula\/[^/]+/];
+const PROTECTED = [/^\/professor(\/|$)/, /^\/aula\/[^/]+/, /^\/conta(\/|$)/];
 
 /** Refreshes the Supabase session cookie and sends logged-out users to /entrar?next=... */
 export async function updateSession(request: NextRequest) {

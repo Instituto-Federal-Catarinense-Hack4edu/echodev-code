@@ -305,6 +305,65 @@ def main() -> None:
             )
             check("student cannot purge", member.rpc("purge_expired_utterances").status_code >= 400)
 
+            # Report with 3 distinct students on "git" (shown) and 1 on "commit" (omitted).
+            extra = [
+                As(http, env, sign_in(http, env, email, password)) for email in STUDENT_EMAILS[2:4]
+            ]
+            students = [member, *extra]
+            pseudonyms = []
+            for s in extra:
+                have = {
+                    r["purpose"]
+                    for r in rows(s.get("consents", select="purpose", revoked_at="is.null"))
+                }
+                missing = [
+                    {"user_id": s.id, "purpose": p}
+                    for p in ("termos_uso", "tratamento_dados")
+                    if p not in have
+                ]
+                if missing:
+                    s.post("consents", missing)
+                s.rpc("join_lesson", p_code=code)
+            for s in students:
+                p = s.rpc("current_pseudonym").json()
+                pseudonyms.append(p)
+                s.post(
+                    "term_events",
+                    {"lesson_id": lesson_id, "pseudonym_id": p, "term_id": "git", "kind": "tap"},
+                    prefer="return=minimal",
+                )
+            member.post(
+                "term_events",
+                {"lesson_id": lesson_id, "pseudonym_id": pseudonyms[0], "term_id": "git",
+                 "kind": "doubt"},
+                prefer="return=minimal",
+            )  # fmt: skip
+            rep = teacher.rpc("lesson_term_report", p_lesson_id=lesson_id)
+            body = rep.text
+            data = rep.json() if rep.status_code == 200 else []
+            git = next((r for r in data if r.get("term_id") == "git"), None)
+            check(
+                "report shows a term touched by 3 students",
+                bool(git) and git["students"] == 3 and git["taps"] == 3 and git["doubts"] == 1,
+                body[:300],
+            )
+            check(
+                "report still omits the 1-student term", all(r["term_id"] != "commit" for r in data)
+            )
+            leaked = [
+                v
+                for v in [*pseudonyms, *(s.id for s in students), *STUDENT_EMAILS, "@"]
+                if v and str(v) in body
+            ]
+            check("report has no ids, pseudonyms or e-mails", not leaked, str(leaked))
+            check(
+                "report rows have only aggregate fields",
+                all(
+                    set(r) == {"term_id", "taps", "students", "doubts", "helped", "not_helped"}
+                    for r in data
+                ),
+            )
+
             asyncio.run(broadcast_check(env, lesson_id, teacher, member, outsider))
         finally:
             http.delete(

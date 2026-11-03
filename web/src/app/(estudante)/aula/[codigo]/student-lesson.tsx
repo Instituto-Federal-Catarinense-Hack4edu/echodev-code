@@ -7,8 +7,11 @@ import { ConsentFlow, OPTIONAL_PURPOSES, REQUIRED_PURPOSES, type Purpose } from 
 import { StudentView } from "@/components/student-view";
 import { SupabaseTransport, utteranceFetcher } from "@/lib/realtime/supabase";
 import { getSupabase } from "@/lib/supabase/client";
-import { useProfile } from "@/lib/supabase/use-profile";
-import { useLocalPrefs } from "@/lib/use-local-prefs";
+import { fire } from "@/lib/supabase/fire";
+import { PrefsToggles } from "@/components/prefs-toggles";
+import type { Depth } from "@/lib/terms/schemas";
+import { useProfile, type Profile } from "@/lib/supabase/use-profile";
+import { useCalmMode } from "@/lib/use-calm-mode";
 import { useDebugFlag } from "@/lib/use-debug-flag";
 import { t } from "@/lib/i18n/pt-BR";
 
@@ -28,10 +31,21 @@ function joinErrorMessage(message: string): { message: string; reviewLink?: bool
 export function StudentLesson() {
   const params = useParams<{ codigo: string }>();
   const code = (params.codigo ?? "").toUpperCase();
-  const { user, loading } = useProfile();
+  const { user, profile, setProfile, loading } = useProfile();
   const [phase, setPhase] = useState<Phase>({ kind: "loading" });
-  const [prefs, setPrefs] = useLocalPrefs();
   const debug = useDebugFlag();
+  const [pseudonym, setPseudonym] = useState<string | null>(null);
+  useCalmMode(profile?.mode === "calmo");
+
+  /** Saves a preference on the profile (only the columns the user may update). */
+  const updatePrefs = useCallback(
+    (patch: Partial<Pick<Profile, "depth_pref" | "lang_pref" | "mode" | "literal_mode">>) => {
+      if (!profile) return;
+      setProfile({ ...profile, ...patch });
+      fire(getSupabase().from("profiles").update(patch).eq("user_id", profile.user_id), "save prefs");
+    },
+    [profile, setProfile],
+  );
 
   const join = useCallback(async () => {
     const supabase = getSupabase();
@@ -42,6 +56,8 @@ export function StudentLesson() {
       return;
     }
     const { data: lesson } = await supabase.from("lessons").select("title").eq("id", lessonId).single();
+    const { data: pseudo } = await supabase.rpc("current_pseudonym");
+    setPseudonym(typeof pseudo === "string" ? pseudo : null);
     setPhase({ kind: "live", lessonId, title: (lesson?.title as string | undefined) ?? code });
   }, [code]);
 
@@ -96,6 +112,20 @@ export function StudentLesson() {
   }, [lessonId]);
   const fetchSince = useMemo(() => (lessonId ? utteranceFetcher(getSupabase(), lessonId) : null), [lessonId]);
 
+  /** Anonymous term event (own pseudonym only; nobody can read these rows back). */
+  const logEvent = useCallback(
+    (termId: string, kind: "tap" | "doubt" | "helped" | "not_helped", depth: Depth) => {
+      if (!lessonId || !pseudonym) return;
+      fire(
+        getSupabase()
+          .from("term_events")
+          .insert({ lesson_id: lessonId, pseudonym_id: pseudonym, term_id: termId, kind, depth }),
+        "term event",
+      );
+    },
+    [lessonId, pseudonym],
+  );
+
   if (phase.kind === "consent") return <ConsentFlow purposes={phase.purposes} onDone={onConsentDone} />;
   if (phase.kind === "error")
     return (
@@ -116,12 +146,23 @@ export function StudentLesson() {
       transport={transport}
       fetchSince={fetchSince}
       title={phase.title}
-      depth={prefs.depth}
-      lang={prefs.lang}
-      literalMode={prefs.literal}
-      onDepthChange={(depth) => setPrefs({ depth })}
-      onLangChange={(lang) => setPrefs({ lang })}
+      depth={profile?.depth_pref ?? "curta"}
+      lang={profile?.lang_pref ?? "pt"}
+      literalMode={profile?.literal_mode ?? false}
+      onDepthChange={(depth_pref) => updatePrefs({ depth_pref })}
+      onLangChange={(lang_pref) => updatePrefs({ lang_pref })}
+      onTermOpen={(termId, depth) => logEvent(termId, "tap", depth)}
+      onFeedback={(termId, kind, depth) => logEvent(termId, kind, depth)}
       debug={debug}
+      headerExtra={
+        <PrefsToggles
+          calm={profile?.mode === "calmo"}
+          literal={profile?.literal_mode ?? false}
+          onCalm={(v) => updatePrefs({ mode: v ? "calmo" : "padrao" })}
+          onLiteral={(literal_mode) => updatePrefs({ literal_mode })}
+          accountLink
+        />
+      }
     />
   );
 }

@@ -33,6 +33,16 @@
 - `web/`: `/professor/aulas/[id]/revisar` (editar resumo e cada questão, salvar, aprovar, descartar, tentar de novo) e `/aula/[codigo]/revisao` (resumo e quiz aprovados, uma questão por vez, sem gravar respostas). Tipos vindos de `npm run gen:api-types`.
 - Verificado no navegador com `LLM_PROVIDER=mock`: encerrar → rascunho → estudante ainda não vê → professor edita e aprova → estudante vê a versão editada e responde o quiz.
 
+## Fase 4: Nível 2 (concluída)
+- Profundidade e idioma da explicação salvos no perfil; **modo calmo** (`data-mode="calm"` no `<html>`, sem animações, contraste moderado, respeita `prefers-reduced-motion`) e **modo literal** (mostra `literalMeaning` de termos figurativos), também salvos no perfil. No modo demonstração ficam no aparelho.
+- Toques e botões "Ajudou", "Não ajudou" e "Ainda tenho dúvida" gravam `term_events` com o pseudônimo do próprio estudante.
+- Correção de termo pelo professor (`term_corrections`) na tela ao vivo: vira variação extra do dicionário na hora e nas próximas aulas.
+- Relatório `/professor/aulas/[id]/relatorio`: participantes, ritmo por minuto, trechos rápidos, termos sem definição e termos mais consultados (mínimo de 3 estudantes).
+- `/conta`: consentimentos (conceder e revogar) e "Excluir meus dados" (`delete_my_data()` com o token do usuário e depois exclusão da conta pela API com a chave secreta, só do próprio id).
+- `check:rls` ampliado para **34/34**: o relatório mostra termo com 3 estudantes, omite termo com 1 e não contém ids, pseudônimos nem e-mails.
+- Verificado no navegador: modo calmo e profundidade persistem após recarregar; eventos chegam ao banco; correção salva; aula muda para "ao vivo" sem reabrir o canal; exclusão apaga a conta.
+- Bug corrigido no caminho: consultas `supabase-js` disparadas com `void` nunca executam (são preguiçosas). Agora passam por `lib/supabase/fire.ts`.
+
 ## Pendências
 - **Provedor `anthropic` não foi testado com chamada real** (não há `ANTHROPIC_API_KEY`). Os testes cobrem o fluxo com provedores falsos; a primeira chamada real pode revelar ajuste de parâmetros (por exemplo, `fallbacks` junto com `output_config.format`). Se der 400, use `LLM_FALLBACKS=false`.
 - Página de relatório (Fase 4).
