@@ -4,7 +4,7 @@ import { t } from "@/lib/i18n/pt-BR";
 import "./globals.css";
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
+  variable: "--font-sans",
   subsets: ["latin"],
 });
 

@@ -128,3 +128,65 @@
     @apply font-sans;
   }
 }
+/* ===== EchoDev ===== */
+:root {
+  --term-bg: oklch(0.93 0.09 95);
+  --term-fg: oklch(0.25 0.05 80);
+}
+.dark {
+  --term-bg: oklch(0.42 0.09 85);
+  --term-fg: oklch(0.98 0.02 95);
+}
+
+@layer base {
+  /* Touch targets of at least 44 px (WCAG 2.5.5). */
+  [data-slot="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  /* Visible focus everywhere. */
+  :focus-visible {
+    outline: 3px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+.term-highlight {
+  background: var(--term-bg);
+  color: var(--term-fg);
+  border-radius: 0.3em;
+  padding: 0 0.15em;
+  font-weight: 600;
+  text-decoration: underline dotted 0.08em;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+button.term-highlight {
+  font: inherit;
+  font-weight: 600;
+}
+
+/* Calm mode: no animation, moderate contrast, softer highlights. */
+html[data-mode="calm"] {
+  --background: oklch(0.97 0.01 90);
+  --foreground: oklch(0.3 0.01 90);
+  --term-bg: oklch(0.92 0.03 230);
+  --term-fg: oklch(0.3 0.03 240);
+}
+html[data-mode="calm"] *,
+html[data-mode="calm"] *::before,
+html[data-mode="calm"] *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

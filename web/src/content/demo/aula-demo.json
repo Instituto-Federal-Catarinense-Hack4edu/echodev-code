@@ -1,0 +1,27 @@
+{
+  "title": "Aula de demonstração: Git e primeiros passos em React",
+  "utterances": [
+    { "text": "Bom dia, turma, hoje a gente vai ver como guardar o histórico do nosso código com o guit", "pauseMs": 900 },
+    { "text": "Primeiro eu crio um repositório com git init dentro da pasta do projeto", "pauseMs": 800 },
+    { "text": "Cada vez que eu termino uma parte eu faço um comiti com uma mensagem curta", "pauseMs": 1000 },
+    { "text": "O comiti é como uma foto do projeto naquele momento, ou seja, um ponto salvo que dá para voltar depois", "pauseMs": 1200 },
+    { "text": "Agora eu vou criar uma brenchi chamada login para mexer sem estragar a principal", "pauseMs": 900 },
+    { "text": "Quando terminar eu faço o puxi para mandar tudo para o guit hub", "pauseMs": 900 },
+    { "text": "Lá no site eu abro um pul rikuesti e um colega revisa as mudanças", "pauseMs": 1100 },
+    { "text": "Se estiver tudo certo a gente faz o merji na principal", "pauseMs": 1400 },
+    { "text": "Agora vamos para o código, abre o arquivo de JavaScript", "pauseMs": 800 },
+    { "text": "Uma variável guarda um valor, por exemplo a idade do aluno", "pauseMs": 900 },
+    { "text": "Uma função é um bloco de código com nome, e o parâmetro é o que ela recebe", "pauseMs": 1000 },
+    { "text": "No fim da função a gente usa ritórn para devolver o resultado", "pauseMs": 1000 },
+    { "text": "Se a nota for maior que seis, o ífi mostra aprovado, senão o élse mostra recuperação", "pauseMs": 1200 },
+    { "text": "Para repetir uma coisa várias vezes a gente usa um lupi", "pauseMs": 900 },
+    { "text": "Uma lista de notas fica num arrei, e o nome do aluno é uma istring", "pauseMs": 1000 },
+    { "text": "Quando chega dado de uma eipiai normalmente ele vem em jeisom", "pauseMs": 1100 },
+    { "text": "Se der problema, coloca um consoli log para ver o valor e fazer o dibâgui", "pauseMs": 1300 },
+    { "text": "Agora no riéct cada pedaço da tela é um componente", "pauseMs": 900 },
+    { "text": "Para o componente lembrar um valor que muda a gente usa o use state", "pauseMs": 1000 },
+    { "text": "E para rodar algo quando a tela aparece usamos o use effect com um callback", "pauseMs": 1100 },
+    { "text": "No final a gente faz o diplói e o site fica no ar para todo mundo", "pauseMs": 1200 },
+    { "text": "Na próxima aula a gente vai ver objeto e classe com mais calma", "pauseMs": 1500 }
+  ]
+}
