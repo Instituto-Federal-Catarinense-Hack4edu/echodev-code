@@ -17,8 +17,6 @@ interface Props {
   lang: Lang;
   onDepthChange: (d: Depth) => void;
   onLangChange: (l: Lang) => void;
-  /** Show the literal meaning of figurative terms. */
-  literalMode?: boolean;
   /** When provided, shows the anonymous feedback buttons. */
   onFeedback?: (termId: string, kind: FeedbackKind, depth: Depth) => void;
 }
@@ -61,8 +59,7 @@ function Segmented<T extends string>({
 }
 
 export function TermSheet(props: Props) {
-  const { termId, onClose, depth, lang, onDepthChange, onLangChange, literalMode, onFeedback } =
-    props;
+  const { termId, onClose, depth, lang, onDepthChange, onLangChange, onFeedback } = props;
   const term = termId ? getTerm(termId) : undefined;
   const [sentFor, setSentFor] = useState<string | null>(null);
   const resolved = term ? explain(term, depth, lang) : null;
@@ -100,7 +97,7 @@ export function TermSheet(props: Props) {
             </div>
             {resolved.fellBack && <p className="text-sm text-muted-foreground">{t.termSheet.fallback}</p>}
 
-            {literalMode && term.figurative && term.literalMeaning && (
+            {term.figurative && term.literalMeaning && (
               <p className="rounded-lg border p-3 text-base">
                 <strong>{t.termSheet.literal}: </strong>
                 {term.literalMeaning}

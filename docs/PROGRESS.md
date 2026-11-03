@@ -34,19 +34,21 @@
 - Verificado no navegador com `LLM_PROVIDER=mock`: encerrar → rascunho → estudante ainda não vê → professor edita e aprova → estudante vê a versão editada e responde o quiz.
 
 ## Fase 4: Nível 2 (concluída)
-- Profundidade e idioma da explicação salvos no perfil; **modo calmo** (`data-mode="calm"` no `<html>`, sem animações, contraste moderado, respeita `prefers-reduced-motion`) e **modo literal** (mostra `literalMeaning` de termos figurativos), também salvos no perfil. No modo demonstração ficam no aparelho.
+- Profundidade e idioma da explicação salvos no perfil (no modo demonstração ficam no aparelho).
+- **Modo único** (pedido da equipe em 03/11/2026, substitui "modo calmo" e "ao pé da letra"): não há botões de modo; a tradução literal de termos figurativos aparece sempre na explicação, e o movimento reduzido segue a configuração do sistema (`prefers-reduced-motion`).
 - Toques e botões "Ajudou", "Não ajudou" e "Ainda tenho dúvida" gravam `term_events` com o pseudônimo do próprio estudante.
 - Correção de termo pelo professor (`term_corrections`) na tela ao vivo: vira variação extra do dicionário na hora e nas próximas aulas.
 - Relatório `/professor/aulas/[id]/relatorio`: participantes, ritmo por minuto, trechos rápidos, termos sem definição e termos mais consultados (mínimo de 3 estudantes).
 - `/conta`: consentimentos (conceder e revogar) e "Excluir meus dados" (`delete_my_data()` com o token do usuário e depois exclusão da conta pela API com a chave secreta, só do próprio id).
 - `check:rls` ampliado para **34/34**: o relatório mostra termo com 3 estudantes, omite termo com 1 e não contém ids, pseudônimos nem e-mails.
-- Verificado no navegador: modo calmo e profundidade persistem após recarregar; eventos chegam ao banco; correção salva; aula muda para "ao vivo" sem reabrir o canal; exclusão apaga a conta.
+- Verificado no navegador: profundidade persiste após recarregar; eventos chegam ao banco; correção salva; aula muda para "ao vivo" sem reabrir o canal; exclusão apaga a conta.
 - Bug corrigido no caminho: consultas `supabase-js` disparadas com `void` nunca executam (são preguiçosas). Agora passam por `lib/supabase/fire.ts`.
 
 ## Fase 5: robustez e demo (concluída)
 - `scripts/load_test.py` (Python, biblioteca `realtime`): N clientes num canal privado, 1 publicando a cada 2 s; mede p50/p95/máx e perdas, apaga a aula no fim. Resultado na seção abaixo.
 - Painel `?debug=1` no estudante (latência `now - sentAt`, `seq` atual, conexão).
-- Acessibilidade: foco visível em tudo, alvos de toque de 44 px, termos com `aria-label`, `aria-live` na legenda, `h-dvh`, `lang="pt-BR"`, modo calmo com `prefers-reduced-motion`.
+- Acessibilidade: foco visível em tudo, alvos de toque de 44 px, termos com `aria-label`, `aria-live` na legenda, `h-dvh`, `lang="pt-BR"`, `prefers-reduced-motion` respeitado.
+- **Fim de aula para o estudante** (pedido em 03/11/2026): ao encerrar, o professor envia `lesson_ended` no canal; o estudante conectado vê a faixa "A aula terminou" com o botão **Ver resumo e quiz**. Quem perdeu o aviso recebe o botão ao reconectar (checagem do status) ou em até 30 s. A tela de revisão mostra "Aguardando a aprovação do professor" e atualiza sozinha a cada 15 s até o material ser aprovado. Verificado no navegador.
 - PWA: `app/manifest.ts` e ícones 192/512 (sem service worker).
 - API mantida acordada durante a aula (`/health` a cada 5 min na tela ao vivo).
 - `docs/TESTE_MANUAL.md` (Teste A, Teste B, A/B de 1 hora, checklist), `docs/DEPLOY.md`, `README.md`.

@@ -25,7 +25,7 @@ Registro de escolhas tomadas durante a construção (o que, por quê).
 ## Fase 2
 - **Chaves novas do Supabase** (`sb_publishable_`/`sb_secret_`): conforme a documentação, a chave vai no cabeçalho `apikey` e nunca como `Authorization: Bearer` (não são JWTs). A chave secreta é recusada por navegadores. Requisições de usuário usam `apikey` = publicável + `Authorization: Bearer <token do usuário>`.
 - **Scripts administrativos com `httpx`** (Auth Admin e PostgREST) em vez do `supabase-py`, que fica só como dependência da biblioteca `realtime` usada no `check_rls`. Menos camadas, mesmo comportamento.
-- **`literal_mode` no perfil** (coluna extra) para guardar o "modo literal" da Fase 4.
+- **`literal_mode` no perfil** (coluna extra) para guardar o "modo literal" da Fase 4. _Atualização 03/11/2026: o modo foi retirado; a coluna (e `mode`) ficam no banco sem uso, para não exigir migração._
 - **`join_lesson` exige os dois consentimentos obrigatórios** no próprio banco (defesa em profundidade, além da tela).
 - **Mínimo de 3 estudantes no relatório é um piso**: `lesson_term_report` usa `greatest(p_min_students, 3)`, então ninguém consegue pedir 1 e desanonimizar.
 - **Frases vencidas ficam invisíveis já pela RLS** (`expires_at > now()`), mesmo antes da limpeza rodar.
@@ -58,3 +58,8 @@ Registro de escolhas tomadas durante a construção (o que, por quê).
 - **Ícones gerados por script** (PNG 192/512, sem dependências) e manifest via `app/manifest.ts`. Sem service worker, como pedido.
 - **`/health` a cada 5 minutos na tela ao vivo**: hosts gratuitos dormem após ~15 min sem tráfego, e uma aula dura mais que isso.
 - **Painel de depuração** só mostra a latência como indicação (relógios diferentes entre aparelhos, armadilha 34).
+
+## Ajustes de 03/11/2026 (pedido da equipe)
+- **Modo único**: retirados "modo calmo" e "ao pé da letra". A tradução literal de termos figurativos aparece sempre na explicação; o movimento reduzido segue o sistema do aparelho. Uma experiência só para todos, coerente com o lema.
+- **Aviso de fim de aula no canal** (mensagem `lesson_ended`, validada com Zod): a regra de RLS existente já garante que só o professor dono publica. Reforço por checagem de status na reconexão e a cada 30 s.
+- **Tela de revisão do estudante atualiza sozinha** a cada 15 s enquanto falta material aprovado (polling simples em vez de Realtime de banco, para não abrir outro canal).

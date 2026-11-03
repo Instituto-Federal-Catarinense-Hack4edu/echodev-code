@@ -32,6 +32,10 @@ class FakeTransport implements RealtimeTransport {
     this.status = st;
     for (const f of this.s) f(st);
   }
+  async publishControl() {}
+  onControl() {
+    return () => {};
+  }
   close() {}
 }
 
@@ -125,6 +129,20 @@ describe("LocalTransport", () => {
 
     const missed = await student.fetchSince(1);
     expect(missed.map((m) => m.seq)).toEqual([2, 3]);
+    teacher.close();
+    student.close();
+  });
+
+  it("delivers the lesson-ended signal and drops malformed control messages", async () => {
+    const teacher = new LocalTransport("test-end");
+    const student = new LocalTransport("test-end");
+    const got: string[] = [];
+    student.onControl((m) => got.push(m.type));
+    await teacher.publishControl({ type: "lesson_ended", at: 1 });
+    // A malformed control payload must be ignored.
+    new BroadcastChannel("echodev:lesson:test-end").postMessage({ kind: "control", payload: { type: "x" } });
+    await new Promise((r) => setTimeout(r, 30));
+    expect(got).toEqual(["lesson_ended"]);
     teacher.close();
     student.close();
   });

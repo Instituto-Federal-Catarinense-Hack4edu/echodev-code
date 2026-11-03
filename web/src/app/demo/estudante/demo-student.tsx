@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PrefsToggles } from "@/components/prefs-toggles";
 import { StudentView } from "@/components/student-view";
-import { useCalmMode } from "@/lib/use-calm-mode";
 import { LocalTransport } from "@/lib/realtime/local";
 import { useLocalPrefs } from "@/lib/use-local-prefs";
 import { useDebugFlag } from "@/lib/use-debug-flag";
@@ -15,7 +13,6 @@ export function DemoStudent() {
   const [transport, setTransport] = useState<LocalTransport | null>(null);
   const [prefs, setPrefs] = useLocalPrefs();
   const debug = useDebugFlag();
-  useCalmMode(prefs.calm);
 
   useEffect(() => {
     const tr = new LocalTransport(DEMO_LESSON_ID);
@@ -31,18 +28,9 @@ export function DemoStudent() {
       title={t.student.demoTitle}
       depth={prefs.depth}
       lang={prefs.lang}
-      literalMode={prefs.literal}
       onDepthChange={(depth) => setPrefs({ depth })}
       onLangChange={(lang) => setPrefs({ lang })}
       debug={debug}
-      headerExtra={
-        <PrefsToggles
-          calm={prefs.calm}
-          literal={prefs.literal}
-          onCalm={(calm) => setPrefs({ calm })}
-          onLiteral={(literal) => setPrefs({ literal })}
-        />
-      }
     />
   );
 }

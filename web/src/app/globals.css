@@ -166,20 +166,7 @@ button.term-highlight {
   font-weight: 600;
 }
 
-/* Calm mode: no animation, moderate contrast, softer highlights. */
-html[data-mode="calm"] {
-  --background: oklch(0.97 0.01 90);
-  --foreground: oklch(0.3 0.01 90);
-  --term-bg: oklch(0.92 0.03 230);
-  --term-fg: oklch(0.3 0.03 240);
-}
-html[data-mode="calm"] *,
-html[data-mode="calm"] *::before,
-html[data-mode="calm"] *::after {
-  animation: none !important;
-  transition: none !important;
-  scroll-behavior: auto !important;
-}
+/* Single mode for everyone: follow the OS "reduce motion" setting. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

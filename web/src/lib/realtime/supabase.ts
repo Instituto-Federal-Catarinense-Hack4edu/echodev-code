@@ -2,10 +2,11 @@
 
 import type { RealtimeChannel, SupabaseClient } from "@supabase/supabase-js";
 import { fetchAllPages } from "./paging";
-import { parseUtterance, type UtteranceMessage } from "./schemas";
+import { parseControl, parseUtterance, type ControlMessage, type UtteranceMessage } from "./schemas";
 import type { FetchSince, RealtimeTransport, TransportStatus } from "./types";
 
 export const UTTERANCE_EVENT = "utterance";
+export const CONTROL_EVENT = "control";
 export const lessonTopic = (lessonId: string) => `lesson:${lessonId}`;
 
 /**
@@ -18,6 +19,7 @@ export class SupabaseTransport implements RealtimeTransport {
   private _status: TransportStatus = "connecting";
   private statusHandlers = new Set<(s: TransportStatus) => void>();
   private msgHandlers = new Set<(m: UtteranceMessage) => void>();
+  private controlHandlers = new Set<(m: ControlMessage) => void>();
   private closed = false;
 
   constructor(
@@ -48,6 +50,10 @@ export class SupabaseTransport implements RealtimeTransport {
       const msg = parseUtterance(payload);
       if (msg) for (const h of this.msgHandlers) h(msg);
     });
+    channel.on("broadcast", { event: CONTROL_EVENT }, ({ payload }) => {
+      const msg = parseControl(payload);
+      if (msg) for (const h of this.controlHandlers) h(msg);
+    });
     channel.subscribe((status) => {
       if (status === "SUBSCRIBED") this.setStatus("connected");
       else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") this.setStatus("error");
@@ -73,12 +79,25 @@ export class SupabaseTransport implements RealtimeTransport {
     return () => this.statusHandlers.delete(handler);
   }
 
+  async publishControl(msg: ControlMessage): Promise<void> {
+    const ch = this.channel;
+    if (!ch) throw new Error("channel not ready");
+    const r = await ch.send({ type: "broadcast", event: CONTROL_EVENT, payload: msg });
+    if (r !== "ok") throw new Error(`broadcast ${r}`);
+  }
+
+  onControl(handler: (msg: ControlMessage) => void): () => void {
+    this.controlHandlers.add(handler);
+    return () => this.controlHandlers.delete(handler);
+  }
+
   close(): void {
     this.closed = true;
     const ch = this.channel;
     this.channel = null;
     if (ch) void this.supabase.removeChannel(ch);
     this.msgHandlers.clear();
+    this.controlHandlers.clear();
     this.setStatus("disconnected");
     this.statusHandlers.clear();
   }

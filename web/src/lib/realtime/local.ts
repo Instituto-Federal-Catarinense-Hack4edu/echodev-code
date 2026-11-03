@@ -1,8 +1,9 @@
-import { parseUtterance, type UtteranceMessage } from "./schemas";
+import { parseControl, parseUtterance, type ControlMessage, type UtteranceMessage } from "./schemas";
 import type { FetchSince, RealtimeTransport, TransportStatus } from "./types";
 
 type Envelope =
   | { kind: "utterance"; payload: unknown }
+  | { kind: "control"; payload: unknown }
   | { kind: "history-request"; requestId: string; afterSeq: number }
   | { kind: "history-response"; requestId: string; payload: unknown[] };
 
@@ -16,6 +17,7 @@ export class LocalTransport implements RealtimeTransport {
   private _status: TransportStatus = "connecting";
   private statusHandlers = new Set<(s: TransportStatus) => void>();
   private msgHandlers = new Set<(m: UtteranceMessage) => void>();
+  private controlHandlers = new Set<(m: ControlMessage) => void>();
   private pending = new Map<string, (msgs: UtteranceMessage[]) => void>();
   private historyProvider: ((afterSeq: number) => UtteranceMessage[]) | null = null;
 
@@ -39,6 +41,9 @@ export class LocalTransport implements RealtimeTransport {
     if (env.kind === "utterance") {
       const msg = parseUtterance(env.payload);
       if (msg) for (const h of this.msgHandlers) h(msg);
+    } else if (env.kind === "control") {
+      const msg = parseControl(env.payload);
+      if (msg) for (const h of this.controlHandlers) h(msg);
     } else if (env.kind === "history-request" && this.historyProvider) {
       this.channel.postMessage({
         kind: "history-response",
@@ -67,6 +72,15 @@ export class LocalTransport implements RealtimeTransport {
     return () => this.statusHandlers.delete(handler);
   }
 
+  async publishControl(msg: ControlMessage): Promise<void> {
+    this.channel.postMessage({ kind: "control", payload: msg } satisfies Envelope);
+  }
+
+  onControl(handler: (msg: ControlMessage) => void): () => void {
+    this.controlHandlers.add(handler);
+    return () => this.controlHandlers.delete(handler);
+  }
+
   /** Teacher side: answer students' history requests. */
   serveHistory(provider: (afterSeq: number) => UtteranceMessage[]): void {
     this.historyProvider = provider;
@@ -92,6 +106,7 @@ export class LocalTransport implements RealtimeTransport {
     for (const resolve of this.pending.values()) resolve([]);
     this.pending.clear();
     this.msgHandlers.clear();
+    this.controlHandlers.clear();
     this.setStatus("disconnected");
     this.statusHandlers.clear();
   }

@@ -125,6 +125,8 @@ export function TeacherLive() {
         return;
       }
     }
+    // Tell connected students right away (they also re-check the status on reconnect).
+    await transport?.publishControl({ type: "lesson_ended", at: Date.now() }).catch(() => undefined);
     router.push(`/professor/aulas/${lesson.id}/revisar`);
   }
 

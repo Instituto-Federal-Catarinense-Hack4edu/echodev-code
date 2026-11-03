@@ -21,6 +21,18 @@ export const UtteranceMessageSchema = z
   });
 export type UtteranceMessage = z.infer<typeof UtteranceMessageSchema>;
 
+/** Lesson-level signals sent on the same channel (e.g., the teacher ended the lesson). */
+export const ControlMessageSchema = z.object({
+  type: z.literal("lesson_ended"),
+  at: z.number().int().nonnegative(),
+});
+export type ControlMessage = z.infer<typeof ControlMessageSchema>;
+
+export function parseControl(data: unknown): ControlMessage | null {
+  const r = ControlMessageSchema.safeParse(data);
+  return r.success ? r.data : null;
+}
+
 export function parseUtterance(data: unknown): UtteranceMessage | null {
   const r = UtteranceMessageSchema.safeParse(data);
   return r.success ? r.data : null;

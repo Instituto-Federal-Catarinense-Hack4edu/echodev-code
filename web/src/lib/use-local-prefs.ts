@@ -8,11 +8,9 @@ const KEY = "echodev:prefs";
 export interface LocalPrefs {
   depth: Depth;
   lang: Lang;
-  calm: boolean;
-  literal: boolean;
 }
 
-const DEFAULTS: LocalPrefs = { depth: "curta", lang: "pt", calm: false, literal: false };
+const DEFAULTS: LocalPrefs = { depth: "curta", lang: "pt" };
 
 function read(): LocalPrefs {
   try {
@@ -20,15 +18,13 @@ function read(): LocalPrefs {
     return {
       depth: DepthSchema.safeParse(raw.depth).data ?? DEFAULTS.depth,
       lang: LangSchema.safeParse(raw.lang).data ?? DEFAULTS.lang,
-      calm: raw.calm === true,
-      literal: raw.literal === true,
     };
   } catch {
     return DEFAULTS;
   }
 }
 
-/** Per-device preferences (demo mode, and before the profile loads). */
+/** Per-device preferences for the offline demo (logged-in students use their profile). */
 export function useLocalPrefs() {
   const [prefs, setPrefs] = useState<LocalPrefs>(DEFAULTS);
   useEffect(() => {

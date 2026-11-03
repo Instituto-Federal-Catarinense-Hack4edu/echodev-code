@@ -10,8 +10,6 @@ export interface Profile {
   role: "professor" | "estudante";
   depth_pref: "curta" | "exemplo" | "passos";
   lang_pref: "pt" | "en" | "es";
-  mode: "padrao" | "calmo";
-  literal_mode: boolean;
 }
 
 /** Loads the signed-in user and own profile; redirects to /entrar when logged out. */
@@ -35,7 +33,7 @@ export function useProfile() {
       setUser(data.user);
       const { data: p } = await supabase
         .from("profiles")
-        .select("user_id,role,depth_pref,lang_pref,mode,literal_mode")
+        .select("user_id,role,depth_pref,lang_pref")
         .eq("user_id", data.user.id)
         .maybeSingle();
       if (cancelled) return;

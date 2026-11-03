@@ -50,5 +50,6 @@ Objetivo: comparar a experiência com e sem o EchoDev numa aula de verdade.
 - [ ] Aula real: criar aula → QR → estudante entra pelo celular → consentimentos → legenda → tocar termo → "Ajudou".
 - [ ] Encerrar → revisar → aprovar → estudante vê `/aula/<código>/revisao`.
 - [ ] Recarregar o celular no meio da aula recupera as frases.
-- [ ] Modo calmo e "Ao pé da letra" ficam salvos depois de recarregar.
+- [ ] Profundidade e idioma da explicação ficam salvos depois de recarregar.
+- [ ] Ao encerrar a aula, o celular do estudante mostra "A aula terminou" e o botão "Ver resumo e quiz"; a tela fica "Aguardando a aprovação" e atualiza sozinha quando o professor aprova.
 - [ ] iOS (Safari): legenda, toque no termo e quiz (o professor não precisa de iOS).

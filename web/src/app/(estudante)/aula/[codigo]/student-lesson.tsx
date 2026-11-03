@@ -8,11 +8,11 @@ import { StudentView } from "@/components/student-view";
 import { SupabaseTransport, utteranceFetcher } from "@/lib/realtime/supabase";
 import { getSupabase } from "@/lib/supabase/client";
 import { fire } from "@/lib/supabase/fire";
-import { PrefsToggles } from "@/components/prefs-toggles";
 import type { Depth } from "@/lib/terms/schemas";
 import { useProfile, type Profile } from "@/lib/supabase/use-profile";
-import { useCalmMode } from "@/lib/use-calm-mode";
 import { useDebugFlag } from "@/lib/use-debug-flag";
+
+const ENDED_POLL_MS = 30_000;
 import { t } from "@/lib/i18n/pt-BR";
 
 type Phase =
@@ -35,11 +35,11 @@ export function StudentLesson() {
   const [phase, setPhase] = useState<Phase>({ kind: "loading" });
   const debug = useDebugFlag();
   const [pseudonym, setPseudonym] = useState<string | null>(null);
-  useCalmMode(profile?.mode === "calmo");
+  const [ended, setEnded] = useState(false);
 
   /** Saves a preference on the profile (only the columns the user may update). */
   const updatePrefs = useCallback(
-    (patch: Partial<Pick<Profile, "depth_pref" | "lang_pref" | "mode" | "literal_mode">>) => {
+    (patch: Partial<Pick<Profile, "depth_pref" | "lang_pref">>) => {
       if (!profile) return;
       setProfile({ ...profile, ...patch });
       fire(getSupabase().from("profiles").update(patch).eq("user_id", profile.user_id), "save prefs");
@@ -112,6 +112,29 @@ export function StudentLesson() {
   }, [lessonId]);
   const fetchSince = useMemo(() => (lessonId ? utteranceFetcher(getSupabase(), lessonId) : null), [lessonId]);
 
+  // Lesson end: instant signal on the channel, plus a status check on every (re)connection
+  // and a slow poll, so a student who missed the signal still gets the button.
+  useEffect(() => {
+    if (!transport || !lessonId) return;
+    const check = async () => {
+      const { data } = await getSupabase().from("lessons").select("status").eq("id", lessonId).maybeSingle();
+      if (data?.status === "encerrada") setEnded(true);
+    };
+    const offControl = transport.onControl((m) => {
+      if (m.type === "lesson_ended") setEnded(true);
+    });
+    const offStatus = transport.onStatus((s) => {
+      if (s === "connected") void check();
+    });
+    void check();
+    const timer = setInterval(check, ENDED_POLL_MS);
+    return () => {
+      offControl();
+      offStatus();
+      clearInterval(timer);
+    };
+  }, [transport, lessonId]);
+
   /** Anonymous term event (own pseudonym only; nobody can read these rows back). */
   const logEvent = useCallback(
     (termId: string, kind: "tap" | "doubt" | "helped" | "not_helped", depth: Depth) => {
@@ -148,20 +171,16 @@ export function StudentLesson() {
       title={phase.title}
       depth={profile?.depth_pref ?? "curta"}
       lang={profile?.lang_pref ?? "pt"}
-      literalMode={profile?.literal_mode ?? false}
       onDepthChange={(depth_pref) => updatePrefs({ depth_pref })}
       onLangChange={(lang_pref) => updatePrefs({ lang_pref })}
       onTermOpen={(termId, depth) => logEvent(termId, "tap", depth)}
       onFeedback={(termId, kind, depth) => logEvent(termId, kind, depth)}
+      reviewHref={ended ? `/aula/${code}/revisao` : null}
       debug={debug}
       headerExtra={
-        <PrefsToggles
-          calm={profile?.mode === "calmo"}
-          literal={profile?.literal_mode ?? false}
-          onCalm={(v) => updatePrefs({ mode: v ? "calmo" : "padrao" })}
-          onLiteral={(literal_mode) => updatePrefs({ literal_mode })}
-          accountLink
-        />
+        <Link href="/conta" className="inline-flex min-h-11 items-center px-2 text-sm underline underline-offset-4">
+          {t.student.account}
+        </Link>
       }
     />
   );

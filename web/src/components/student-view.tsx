@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
+import { buttonVariants } from "@/components/ui/button";
 import { LiveCaption } from "@/components/live-caption";
 import { TermSheet, type FeedbackKind } from "@/components/term-sheet";
 import { DebugPanel } from "@/components/debug-panel";
@@ -16,19 +18,20 @@ interface Props {
   title: string;
   depth: Depth;
   lang: Lang;
-  literalMode?: boolean;
   onDepthChange: (d: Depth) => void;
   onLangChange: (l: Lang) => void;
   onTermOpen?: (termId: string, depth: Depth) => void;
   onFeedback?: (termId: string, kind: FeedbackKind, depth: Depth) => void;
   headerExtra?: React.ReactNode;
+  /** Set when the lesson is over: shows the banner with the link to summary and quiz. */
+  reviewHref?: string | null;
   debug?: boolean;
 }
 
 export function StudentView(props: Props) {
   const { items, status, lastLatency } = useCaptionClient(props.transport, props.fetchSince);
   const [openTerm, setOpenTerm] = useState<string | null>(null);
-  useWakeLock(true);
+  useWakeLock(!props.reviewHref);
 
   const statusText =
     status === "connected"
@@ -41,14 +44,27 @@ export function StudentView(props: Props) {
     <div className="flex h-dvh flex-col">
       <header className="flex flex-wrap items-center gap-3 border-b px-4 py-2">
         <h1 className="mr-auto text-base font-semibold">{props.title}</h1>
-        <span
-          className={`text-sm ${status === "connected" ? "text-muted-foreground" : "text-amber-700 dark:text-amber-400"}`}
-          aria-live="polite"
-        >
-          {statusText}
-        </span>
+        {!props.reviewHref && (
+          <span
+            className={`text-sm ${status === "connected" ? "text-muted-foreground" : "text-amber-700 dark:text-amber-400"}`}
+            aria-live="polite"
+          >
+            {statusText}
+          </span>
+        )}
         {props.headerExtra}
       </header>
+      {props.reviewHref && (
+        <div
+          role="status"
+          className="flex flex-wrap items-center gap-3 border-b bg-primary px-4 py-3 text-primary-foreground"
+        >
+          <p className="mr-auto font-semibold">{t.student.ended}</p>
+          <Link href={props.reviewHref} className={buttonVariants({ variant: "secondary" })}>
+            {t.student.review}
+          </Link>
+        </div>
+      )}
       {props.debug && (
         <DebugPanel latency={lastLatency} seq={items.at(-1)?.seq ?? 0} status={status} />
       )}
@@ -66,7 +82,6 @@ export function StudentView(props: Props) {
         lang={props.lang}
         onDepthChange={props.onDepthChange}
         onLangChange={props.onLangChange}
-        literalMode={props.literalMode}
         onFeedback={props.onFeedback}
       />
     </div>
