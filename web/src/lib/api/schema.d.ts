@@ -21,10 +21,201 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/lessons/{lesson_id}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * End Lesson
+         * @description Idempotent: ends the lesson, snapshots the report and creates draft materials once.
+         */
+        post: operations["end_lesson_lessons__lesson_id__end_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/lessons/{lesson_id}/materials/regenerate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Regenerate Materials */
+        post: operations["regenerate_materials_lessons__lesson_id__materials_regenerate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cron/purge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Purge */
+        post: operations["purge_cron_purge_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Me */
+        delete: operations["delete_me_me_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: never;
+    schemas: {
+        /** DeleteMeResponse */
+        DeleteMeResponse: {
+            /** Deleted */
+            deleted: boolean;
+        };
+        /** EndLessonResponse */
+        EndLessonResponse: {
+            /** Lesson Id */
+            lesson_id: string;
+            /**
+             * Status
+             * @constant
+             */
+            status: "encerrada";
+            /**
+             * Materials Status
+             * @enum {string}
+             */
+            materials_status: "gerado" | "existente" | "sem_transcricao";
+            /** Materials */
+            materials: components["schemas"]["MaterialOut"][];
+            report: components["schemas"]["LessonReportData"];
+        };
+        /** HTTPValidationError */
+        HTTPValidationError: {
+            /** Detail */
+            detail?: components["schemas"]["ValidationError"][];
+        };
+        /** LessonReportData */
+        LessonReportData: {
+            /** Total Utterances */
+            total_utterances: number;
+            /** Duration Minutes */
+            duration_minutes: number;
+            /** Avg Wpm */
+            avg_wpm: number;
+            /** Pace */
+            pace: components["schemas"]["PacePoint"][];
+            /** Fastest */
+            fastest: components["schemas"]["PacePoint"][];
+            /** Undefined Terms */
+            undefined_terms: string[];
+        };
+        /** MaterialOut */
+        MaterialOut: {
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "resumo" | "quiz";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "rascunho" | "aprovado" | "descartado";
+            /** Content */
+            content: components["schemas"]["Resumo"] | components["schemas"]["QuizItem"][];
+        };
+        /** PacePoint */
+        PacePoint: {
+            /** Minute */
+            minute: number;
+            /** Wpm */
+            wpm: number;
+        };
+        /** PurgeResponse */
+        PurgeResponse: {
+            /** Deleted */
+            deleted: number;
+        };
+        /** QuizItem */
+        QuizItem: {
+            /** Pergunta */
+            pergunta: string;
+            /**
+             * Tipo
+             * @enum {string}
+             */
+            tipo: "conceito" | "codigo";
+            /** Codigo */
+            codigo?: string | null;
+            /** Opcoes */
+            opcoes: string[];
+            /** Correta */
+            correta: number;
+            /** Explicacao */
+            explicacao: string;
+        };
+        /** RegenerateResponse */
+        RegenerateResponse: {
+            /** Lesson Id */
+            lesson_id: string;
+            /** Materials */
+            materials: components["schemas"]["MaterialOut"][];
+        };
+        /** Resumo */
+        Resumo: {
+            /** Titulo */
+            titulo: string;
+            /** Topicos */
+            topicos: string[];
+            /** Termos Chave */
+            termos_chave?: string[];
+        };
+        /** ValidationError */
+        ValidationError: {
+            /** Location */
+            loc: (string | number)[];
+            /** Message */
+            msg: string;
+            /** Error Type */
+            type: string;
+            /** Input */
+            input?: unknown;
+            /** Context */
+            ctx?: Record<string, never>;
+        };
+    };
     responses: never;
     parameters: never;
     requestBodies: never;
@@ -51,6 +242,119 @@ export interface operations {
                     "application/json": {
                         [key: string]: string;
                     };
+                };
+            };
+        };
+    };
+    end_lesson_lessons__lesson_id__end_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lesson_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EndLessonResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    regenerate_materials_lessons__lesson_id__materials_regenerate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lesson_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegenerateResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    purge_cron_purge_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-cron-secret"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurgeResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_me_me_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeleteMeResponse"];
                 };
             };
         };

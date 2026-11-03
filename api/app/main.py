@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import Settings, get_settings
+from app.routes import cron, lessons, me
 
 
 @asynccontextmanager
@@ -34,6 +35,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def health() -> dict[str, str]:
         return {"status": "ok"}
 
+    app.include_router(lessons.router)
+    app.include_router(cron.router)
+    app.include_router(me.router)
     return app
 
 

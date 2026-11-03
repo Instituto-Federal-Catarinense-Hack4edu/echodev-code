@@ -68,6 +68,17 @@ class _Rest:
                 return out
             start += PAGE_SIZE
 
+    async def insert(
+        self, table: str, rows: list[dict[str, Any]] | dict[str, Any]
+    ) -> list[dict[str, Any]]:
+        res = await self._request(
+            "POST",
+            f"/rest/v1/{table}",
+            json=rows,
+            headers={"Prefer": "return=representation"},
+        )
+        return res.json()
+
     async def upsert(
         self, table: str, rows: list[dict[str, Any]] | dict[str, Any], on_conflict: str
     ) -> list[dict[str, Any]]:

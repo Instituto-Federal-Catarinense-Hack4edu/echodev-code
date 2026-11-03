@@ -34,3 +34,14 @@ Registro de escolhas tomadas durante a construção (o que, por quê).
 - **`allowedDevOrigins: ["127.0.0.1"]`** (mais `DEV_ORIGINS` opcional) para testar duas sessões no mesmo navegador e abrir pelo celular na rede local em desenvolvimento.
 - **Validação local do SQL com `pgserver`** (Postgres embutido via pip): o Docker Desktop desta máquina não iniciou. `npm run db:validate` usa esquemas `auth`/`realtime` mínimos; não substitui o `check:rls` no projeto real.
 - **`pg_cron`**: a migração tenta ativar e agenda a limpeza de hora em hora; se não der, a rota `POST /cron/purge` (Fase 3) é o plano B.
+
+## Fase 3
+- **Sem "temperatura baixa"**: a API atual da Anthropic recusa `temperature`/`top_p`/`top_k` (400 desde 21/10/2026). A fidelidade vem do prompt ("use somente o que foi dito"), do esquema JSON em `output_config.format` e de `effort` configurável (`LLM_EFFORT=medium`).
+- **Modelo padrão `claude-opus-5-5`** (recomendação atual da Anthropic), trocável por `LLM_MODEL`.
+- **`fallbacks: "default"` ligado por padrão** (`LLM_FALLBACKS=true`): se o modelo recusar por engano, a API reenvia a outro modelo na mesma chamada. Exige o endpoint beta; pode ser desligado.
+- **Contagens validadas pelo Pydantic, não pelo esquema JSON**: o esquema enviado ao modelo é simples (formato), e as regras de quantidade disparam a única nova tentativa com o erro.
+- **Idempotência de `end`**: se já existem materiais, devolve os existentes sem chamar o LLM. Se a aula foi encerrada mas o LLM falhou, chamar `end` de novo (ou `regenerate`) gera.
+- **Material novo com `insert`, existente com `update`**: um upsert exigiria permissão de UPDATE em `lesson_id`/`kind`, que de propósito não existe.
+- **Termos sem definição**: procura "significa", "serve para", "é um/uma", "quer dizer", "ou seja" no resto da frase da primeira menção e nas 3 frases seguintes. "é um" exige o acento, para não confundir com "e um".
+- **"3 trechos mais rápidos" = 3 minutos com maior média de palavras/min** (sem texto, para sobreviver à limpeza de 24 h).
+- **`regenerate` responde 409** quando há material aprovado, quando a aula não foi encerrada ou quando a transcrição já expirou.

@@ -25,8 +25,17 @@
 - `npm run check:rls` contra o projeto real: **30/30** (26 regras de banco + 4 de Realtime, inclusive estudante de fora recusado no canal privado). `npm run db:validate` repete 35 verificações num Postgres embutido, sem Supabase.
 - Verificado no navegador (professor em `localhost`, estudante em `127.0.0.1`): frase chega ao estudante em 28–33 ms; recarregar o estudante recupera as frases; recarregar o professor continua do `seq` seguinte.
 
+## Fase 3: resumo, quiz e revisão (concluída)
+- API: `POST /lessons/{id}/end` (idempotente; encerra, lê todas as frases paginando, grava o instantâneo em `lesson_reports` sem texto, gera rascunhos), `POST /lessons/{id}/materials/regenerate` (409 se houver material aprovado, se a aula não terminou ou se a transcrição expirou), `POST /cron/purge` (`X-Cron-Secret`), `DELETE /me` (pronto para a Fase 4).
+- LLM: provedores `mock` e `anthropic` (SDK oficial assíncrono, `output_config.format` com esquema JSON, `effort` configurável, `fallbacks: "default"` opcional), extração de JSON tolerante a cercas e texto extra, validação Pydantic (3–6 tópicos, 5 questões, 4 opções, ≥2 de código) com uma nova tentativa informando o erro, divisão em blocos acima de 40.000 caracteres.
+- `sanitize.py` remove e-mails, URLs e telefones antes do LLM. `report.py`: ritmo por minuto, 3 minutos mais rápidos, termos sem definição (heurística).
+- 38 testes `pytest`, com um Supabase falso em memória (inclui paginação de 2.500 frases, 403 para quem não é dono, idempotência, falha do LLM mantendo a aula encerrada).
+- `web/`: `/professor/aulas/[id]/revisar` (editar resumo e cada questão, salvar, aprovar, descartar, tentar de novo) e `/aula/[codigo]/revisao` (resumo e quiz aprovados, uma questão por vez, sem gravar respostas). Tipos vindos de `npm run gen:api-types`.
+- Verificado no navegador com `LLM_PROVIDER=mock`: encerrar → rascunho → estudante ainda não vê → professor edita e aprova → estudante vê a versão editada e responde o quiz.
+
 ## Pendências
-- Botão "Encerrar aula" depende da rota `POST /lessons/{id}/end` (Fase 3).
+- **Provedor `anthropic` não foi testado com chamada real** (não há `ANTHROPIC_API_KEY`). Os testes cobrem o fluxo com provedores falsos; a primeira chamada real pode revelar ajuste de parâmetros (por exemplo, `fallbacks` junto com `output_config.format`). Se der 400, use `LLM_FALLBACKS=false`.
+- Página de relatório (Fase 4).
 - Teste com celular real na rede local e com microfone de verdade (Web Speech) ainda não feito.
 - **Revisão humana do conteúdo** dos 40 termos (explicações e traduções) antes da demo. Nada na interface diz "verificado".
 - Variações fonéticas são hipóteses: validar no Teste A (`docs/TESTE_MANUAL.md`, Fase 5).

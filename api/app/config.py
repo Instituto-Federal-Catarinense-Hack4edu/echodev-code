@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     llm_model: str = ""
     anthropic_api_key: str = ""
     llm_timeout_seconds: float = 90.0
+    llm_effort: Literal["low", "medium", "high", "xhigh", "max"] = "medium"
+    llm_fallbacks: bool = True
     environment: Literal["development", "production", "test"] = "development"
 
 
