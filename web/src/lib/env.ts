@@ -6,6 +6,7 @@ const raw = {
   NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   NEXT_PUBLIC_DEV_LOGIN: process.env.NEXT_PUBLIC_DEV_LOGIN,
+  NEXT_PUBLIC_GOOGLE_LOGIN: process.env.NEXT_PUBLIC_GOOGLE_LOGIN,
 };
 
 const PublicEnvSchema = z.object({
@@ -13,6 +14,10 @@ const PublicEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(20),
   NEXT_PUBLIC_API_URL: z.url().default("http://localhost:8000"),
   NEXT_PUBLIC_DEV_LOGIN: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((v) => v === "true"),
+  NEXT_PUBLIC_GOOGLE_LOGIN: z
     .enum(["true", "false"])
     .default("false")
     .transform((v) => v === "true"),

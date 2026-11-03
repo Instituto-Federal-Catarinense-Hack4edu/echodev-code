@@ -21,3 +21,16 @@ Registro de escolhas tomadas durante a construção (o que, por quê).
 - **Palavras por minuto**: janela móvel de 60 s, com mínimo de 10 s de janela para não explodir na primeira frase.
 - **Folha inferior sem desfoque** do fundo (alterado em `components/ui/sheet.tsx`) para a legenda continuar legível com a explicação aberta.
 - **Alvos de toque**: todo `[data-slot=button]` tem no mínimo 44×44 px (em `globals.css`).
+
+## Fase 2
+- **Chaves novas do Supabase** (`sb_publishable_`/`sb_secret_`): conforme a documentação, a chave vai no cabeçalho `apikey` e nunca como `Authorization: Bearer` (não são JWTs). A chave secreta é recusada por navegadores. Requisições de usuário usam `apikey` = publicável + `Authorization: Bearer <token do usuário>`.
+- **Scripts administrativos com `httpx`** (Auth Admin e PostgREST) em vez do `supabase-py`, que fica só como dependência da biblioteca `realtime` usada no `check_rls`. Menos camadas, mesmo comportamento.
+- **`literal_mode` no perfil** (coluna extra) para guardar o "modo literal" da Fase 4.
+- **`join_lesson` exige os dois consentimentos obrigatórios** no próprio banco (defesa em profundidade, além da tela).
+- **Mínimo de 3 estudantes no relatório é um piso**: `lesson_term_report` usa `greatest(p_min_students, 3)`, então ninguém consegue pedir 1 e desanonimizar.
+- **Frases vencidas ficam invisíveis já pela RLS** (`expires_at > now()`), mesmo antes da limpeza rodar.
+- **Exclusão de dados em duas etapas**: `delete_my_data()` (token do usuário) apaga eventos, vínculos e consentimentos; a conta em si será apagada pela API com a chave secreta (Fase 4).
+- **Proteção de rotas no `proxy.ts`** (redireciona sem sessão) e papel de professor checado no cliente; a segurança real é a RLS. Evita `cookies()` em layouts, que com Cache Components exigiria Suspense em tudo.
+- **`allowedDevOrigins: ["127.0.0.1"]`** (mais `DEV_ORIGINS` opcional) para testar duas sessões no mesmo navegador e abrir pelo celular na rede local em desenvolvimento.
+- **Validação local do SQL com `pgserver`** (Postgres embutido via pip): o Docker Desktop desta máquina não iniciou. `npm run db:validate` usa esquemas `auth`/`realtime` mínimos; não substitui o `check:rls` no projeto real.
+- **`pg_cron`**: a migração tenta ativar e agenda a limpeza de hora em hora; se não der, a rota `POST /cron/purge` (Fase 3) é o plano B.

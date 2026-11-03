@@ -14,7 +14,20 @@
 - Páginas `/demo/professor` e `/demo/estudante`: teste de microfone de 10 s com medidor, iniciar/pausar, indicador "Transcrição ativa", palavras por minuto, frases com termos destacados, legenda grande com controle de fonte, rolagem automática com "Voltar ao vivo (N novas)", folha de explicação com 3 profundidades e idioma, wake lock, painel `?debug=1`.
 - Verificado no navegador: frase chega na outra aba em ~1 ms (painel de depuração), termos destacados, toque abre explicação, recarregar a aba do estudante recupera as frases perdidas.
 
+## Fase 2: Supabase, login e aula real (concluída)
+- Migrações em `supabase/migrations/` (schema, RLS, funções, realtime, cron) e `supabase/bundle.sql` (aplicado no projeto real).
+- Clientes Supabase (navegador singleton, servidor, `proxy.ts` renovando a sessão com `getClaims()` e mandando quem não tem sessão para `/entrar?next=`).
+- Login por link no e-mail, Google (atrás de `NEXT_PUBLIC_GOOGLE_LOGIN`) e login de desenvolvimento por senha (`NEXT_PUBLIC_DEV_LOGIN`). `npm run seed:dev` cria 1 professor e 8 estudantes.
+- Estudante: `/aula/[codigo]` → login → volta ao mesmo lugar → consentimentos (um por tela, nada pré-marcado) → `join_lesson` → legenda.
+- Professor: `/professor` (minhas aulas), `/professor/aulas/nova` (código de 6 caracteres com nova tentativa em colisão), ao vivo com QR code projetável, contador via `lesson_member_count`, `seq` que continua após recarregar.
+- `SupabaseTransport` (canal privado `lesson:<id>`), gravação em `utterances`, recuperação paginada (testada com 2.500 linhas).
+- API Python: `/health`, configuração, CORS restrito a `WEB_ORIGIN`, validação do token via `/auth/v1/user` com cache de 10 s (7 testes).
+- `npm run check:rls` contra o projeto real: **30/30** (26 regras de banco + 4 de Realtime, inclusive estudante de fora recusado no canal privado). `npm run db:validate` repete 35 verificações num Postgres embutido, sem Supabase.
+- Verificado no navegador (professor em `localhost`, estudante em `127.0.0.1`): frase chega ao estudante em 28–33 ms; recarregar o estudante recupera as frases; recarregar o professor continua do `seq` seguinte.
+
 ## Pendências
+- Botão "Encerrar aula" depende da rota `POST /lessons/{id}/end` (Fase 3).
+- Teste com celular real na rede local e com microfone de verdade (Web Speech) ainda não feito.
 - **Revisão humana do conteúdo** dos 40 termos (explicações e traduções) antes da demo. Nada na interface diz "verificado".
 - Variações fonéticas são hipóteses: validar no Teste A (`docs/TESTE_MANUAL.md`, Fase 5).
 - Fases 2 a 5.

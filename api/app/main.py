@@ -1,16 +1,30 @@
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
+import httpx
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.config import get_settings
+from app.config import Settings, get_settings
 
 
-def create_app() -> FastAPI:
-    settings = get_settings()
-    app = FastAPI(title="EchoDev API", version="0.1.0")
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    # One shared async HTTP client per process (pitfall 22).
+    async with httpx.AsyncClient(timeout=httpx.Timeout(20.0, connect=5.0)) as client:
+        app.state.http = client
+        yield
+
+
+def create_app(settings: Settings | None = None) -> FastAPI:
+    settings = settings or get_settings()
+    app = FastAPI(title="EchoDev API", version="0.1.0", lifespan=lifespan)
+    if settings is not get_settings():
+        app.dependency_overrides[get_settings] = lambda: settings
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[settings.web_origin],
+        allow_origins=[settings.web_origin.rstrip("/")],
         allow_credentials=False,
         allow_methods=["GET", "POST", "DELETE"],
         allow_headers=["Authorization", "Content-Type"],

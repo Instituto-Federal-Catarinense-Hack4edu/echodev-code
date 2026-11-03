@@ -19,7 +19,12 @@ Passos que exigem conta, senha ou painel. Cada um diz como saber que deu certo.
 1. No painel, abra **SQL Editor → New query**.
 2. Cole o conteúdo inteiro de `supabase/bundle.sql` e clique em **Run**.
 
-**Deu certo se:** em **Table Editor** aparecem `profiles`, `lessons`, `utterances` etc., todas com o selo de RLS ativa.
+**Deu certo se:** aparece "Success. No rows returned" e em **Table Editor** aparecem `profiles`, `lessons`, `utterances` etc. (Pode aparecer um aviso sobre `pg_cron`; tudo bem.)
+
+3. Em **Realtime → Settings**, desligue **Allow public access** e salve. Assim só canais privados (com as regras de RLS) funcionam.
+4. Em **Authentication → URL Configuration**: Site URL `http://localhost:3000`; em Redirect URLs adicione `http://localhost:3000/**`.
+
+O bundle pode ser colado de novo sem problema se uma migração nova aparecer (as tabelas já existentes dão erro; nesse caso peça ao agente um SQL só com a parte nova).
 
 ## 3. Cadastrar o e-mail de professor
 No SQL Editor, rode (troque pelo seu e-mail):
@@ -28,7 +33,14 @@ No SQL Editor, rode (troque pelo seu e-mail):
 insert into public.teacher_allowlist (email) values ('seu-email@exemplo.com');
 ```
 
-**Deu certo se:** ao entrar no EchoDev com esse e-mail, aparece a área do professor. (Se você já tinha entrado antes do insert, rode também o `update` que a Fase 2 vai documentar aqui.)
+**Deu certo se:** ao entrar no EchoDev com esse e-mail, aparece "Minhas aulas" em `/professor`. Se você já tinha entrado antes do insert, rode também:
+
+```sql
+update public.profiles set role = 'professor'
+where user_id = (select id from auth.users where lower(email) = 'seu-email@exemplo.com');
+```
+
+Os usuários de teste (1 professor e 8 estudantes) são criados pelo agente com `npm run seed:dev`.
 
 ## 4. Opcional: login e e-mail
 - **URLs de redirecionamento**: em **Authentication → URL Configuration**, Site URL `http://localhost:3000` e, em Redirect URLs, `http://localhost:3000/**` (e depois a URL da Vercel).

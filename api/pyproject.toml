@@ -11,6 +11,9 @@ extend-exclude = [".venv"]
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "ASYNC", "DTZ"]
 
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Header", "fastapi.Query"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
