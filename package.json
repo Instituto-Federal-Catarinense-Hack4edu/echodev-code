@@ -13,6 +13,7 @@
     "db:validate": "node scripts/py.mjs scripts/validate_sql_local.py",
     "gen:api-types": "node scripts/gen_api_types.mjs",
     "seed:dev": "node scripts/py.mjs scripts/seed_dev_users.py",
+    "teacher:add": "node scripts/py.mjs scripts/add_teacher.py",
     "check:rls": "node scripts/py.mjs scripts/check_rls.py",
     "load:test": "node scripts/py.mjs scripts/load_test.py"
   },

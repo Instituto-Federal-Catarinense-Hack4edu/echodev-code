@@ -1,22 +1,32 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import type { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { authErrorMessage, MIN_PASSWORD, passwordProblem } from "@/lib/auth-errors";
 import { hasSupabaseEnv, publicEnv } from "@/lib/env";
 import { t } from "@/lib/i18n/pt-BR";
 import { safeNext } from "@/lib/safe-next";
 import { getSupabase } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
+
+type Mode = "login" | "signup" | "reset";
+type Notice = { kind: "error" | "ok"; text: string } | null;
 
 export function LoginForm() {
   const router = useRouter();
   const [next, setNext] = useState("/");
+  const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [state, setState] = useState<"idle" | "sending" | "sent" | "error" | "rate">("idle");
-  const [callbackError, setCallbackError] = useState(false);
+  const [confirm, setConfirm] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState<Notice>(null);
+  const [current, setCurrent] = useState<User | null | undefined>(undefined);
   const configured = hasSupabaseEnv();
   const env = configured ? publicEnv() : null;
 
@@ -24,51 +34,123 @@ export function LoginForm() {
     const params = new URLSearchParams(window.location.search);
     // eslint-disable-next-line react-hooks/set-state-in-effect -- URL is browser-only
     setNext(safeNext(params.get("next")));
-    setCallbackError(params.get("erro") === "link");
-  }, []);
+    if (params.get("erro") === "link") setNotice({ kind: "error", text: t.auth.callbackError });
+    if (params.get("modo") === "criar") setMode("signup");
+    if (configured) void getSupabase().auth.getUser().then(({ data }) => setCurrent(data.user ?? null));
+  }, [configured]);
 
   if (!configured || !env) return <p className="text-destructive">{t.auth.notConfigured}</p>;
 
-  const redirectTo = () =>
-    `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
+  const callbackUrl = (to: string) => `${window.location.origin}/auth/callback?next=${encodeURIComponent(to)}`;
 
-  async function sendLink(e: React.FormEvent) {
-    e.preventDefault();
-    setState("sending");
-    const { error } = await getSupabase().auth.signInWithOtp({
-      email: email.trim(),
-      options: { emailRedirectTo: redirectTo() },
-    });
-    if (error) setState(error.status === 429 ? "rate" : "error");
-    else setState("sent");
+  function switchMode(m: Mode) {
+    setMode(m);
+    setNotice(null);
+    setPassword("");
+    setConfirm("");
   }
 
-  async function google() {
-    await getSupabase().auth.signInWithOAuth({ provider: "google", options: { redirectTo: redirectTo() } });
-  }
-
-  async function devLogin(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
-    setState("sending");
-    const { error } = await getSupabase().auth.signInWithPassword({ email: email.trim(), password });
-    if (error) {
-      setState("error");
-      return;
+    const supabase = getSupabase();
+    const mail = email.trim().toLowerCase();
+    setNotice(null);
+
+    if (mode === "signup") {
+      const problem = passwordProblem(password, confirm);
+      if (problem) return setNotice({ kind: "error", text: problem });
     }
-    router.replace(next);
+
+    setBusy(true);
+    try {
+      if (mode === "login") {
+        const { error } = await supabase.auth.signInWithPassword({ email: mail, password });
+        if (error) return setNotice({ kind: "error", text: authErrorMessage(error) });
+        router.replace(next);
+        router.refresh();
+      } else if (mode === "signup") {
+        const { data, error } = await supabase.auth.signUp({
+          email: mail,
+          password,
+          options: { emailRedirectTo: callbackUrl(next) },
+        });
+        if (error) return setNotice({ kind: "error", text: authErrorMessage(error) });
+        // With e-mail confirmation off, Supabase returns a session right away.
+        if (data.session) {
+          router.replace(next);
+          router.refresh();
+          return;
+        }
+        // An existing confirmed address comes back with no identities (no e-mail is sent).
+        if (data.user && data.user.identities?.length === 0) {
+          return setNotice({ kind: "error", text: t.auth.errors.alreadyExists });
+        }
+        setNotice({ kind: "ok", text: t.auth.confirmSent(mail) });
+      } else {
+        const { error } = await supabase.auth.resetPasswordForEmail(mail, {
+          redirectTo: callbackUrl("/redefinir-senha"),
+        });
+        if (error) return setNotice({ kind: "error", text: authErrorMessage(error) });
+        setNotice({ kind: "ok", text: t.auth.resetSent(mail) });
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function signOut() {
+    await getSupabase().auth.signOut();
+    setCurrent(null);
     router.refresh();
   }
 
+  async function google() {
+    await getSupabase().auth.signInWithOAuth({ provider: "google", options: { redirectTo: callbackUrl(next) } });
+  }
+
+  if (current) {
+    return (
+      <div className="space-y-4 rounded-xl border p-4">
+        <p>{t.auth.alreadyIn(current.email ?? "")}</p>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={() => router.replace(next === "/" ? "/professor" : next)}>{t.auth.continue}</Button>
+          <Button variant="outline" onClick={signOut}>
+            {t.auth.signOut}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const submitLabel = { login: t.auth.submitLogin, signup: t.auth.submitSignup, reset: t.auth.submitReset }[mode];
+
   return (
-    <div className="space-y-6">
-      {callbackError && <p className="text-destructive">{t.auth.callbackError}</p>}
-      {state === "sent" ? (
-        <p role="status" className="rounded-lg border p-4">
-          {t.auth.linkSent(email)}
-        </p>
-      ) : (
-        <form onSubmit={sendLink} className="space-y-3">
-          <p className="text-muted-foreground">{t.auth.intro}</p>
+    <div className="space-y-5">
+      {mode !== "reset" && (
+        <div role="tablist" aria-label={t.auth.title} className="grid grid-cols-2 rounded-lg border p-1">
+          {(["login", "signup"] as const).map((m) => (
+            <button
+              key={m}
+              type="button"
+              role="tab"
+              aria-selected={mode === m}
+              onClick={() => switchMode(m)}
+              className={cn(
+                "min-h-11 rounded-md text-sm font-medium",
+                mode === m ? "bg-primary text-primary-foreground" : "text-muted-foreground",
+              )}
+            >
+              {m === "login" ? t.auth.tabLogin : t.auth.tabSignup}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <form onSubmit={submit} className="space-y-3" noValidate={false}>
+        {mode === "reset" && <p className="text-muted-foreground">{t.auth.resetIntro}</p>}
+        {mode === "signup" && <p className="text-sm text-muted-foreground">{t.auth.signupIntro}</p>}
+
+        <div className="space-y-1">
           <Label htmlFor="email">{t.auth.email}</Label>
           <Input
             id="email"
@@ -79,15 +161,67 @@ export function LoginForm() {
             onChange={(e) => setEmail(e.target.value)}
             className="h-11"
           />
-          <Button type="submit" className="w-full" disabled={state === "sending"}>
-            {state === "sending" ? t.auth.sending : t.auth.sendLink}
-          </Button>
-        </form>
-      )}
-      {state === "error" && <p className="text-destructive">{t.auth.error}</p>}
-      {state === "rate" && <p className="text-destructive">{t.auth.rateLimited}</p>}
+        </div>
 
-      {env.NEXT_PUBLIC_GOOGLE_LOGIN && (
+        {mode !== "reset" && (
+          <div className="space-y-1">
+            <Label htmlFor="password">{t.auth.password}</Label>
+            <Input
+              id="password"
+              type="password"
+              autoComplete={mode === "login" ? "current-password" : "new-password"}
+              required
+              minLength={mode === "signup" ? MIN_PASSWORD : undefined}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="h-11"
+            />
+          </div>
+        )}
+
+        {mode === "signup" && (
+          <div className="space-y-1">
+            <Label htmlFor="confirm">{t.auth.confirmPassword}</Label>
+            <Input
+              id="confirm"
+              type="password"
+              autoComplete="new-password"
+              required
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              className="h-11"
+            />
+          </div>
+        )}
+
+        <Button type="submit" className="w-full" disabled={busy}>
+          {busy ? t.auth.sending : submitLabel}
+        </Button>
+      </form>
+
+      {notice && (
+        <p
+          role={notice.kind === "error" ? "alert" : "status"}
+          className={cn("rounded-lg border p-3 text-sm", notice.kind === "error" && "border-destructive text-destructive")}
+        >
+          {notice.text}
+        </p>
+      )}
+
+      <div className="flex flex-wrap justify-between gap-2 text-sm">
+        {mode === "login" && (
+          <button type="button" className="min-h-11 underline underline-offset-4" onClick={() => switchMode("reset")}>
+            {t.auth.forgot}
+          </button>
+        )}
+        {mode === "reset" && (
+          <button type="button" className="min-h-11 underline underline-offset-4" onClick={() => switchMode("login")}>
+            {t.auth.backToLogin}
+          </button>
+        )}
+      </div>
+
+      {env.NEXT_PUBLIC_GOOGLE_LOGIN && mode !== "reset" && (
         <>
           <p className="text-center text-sm text-muted-foreground">{t.auth.or}</p>
           <Button variant="outline" className="w-full" onClick={google}>
@@ -96,32 +230,12 @@ export function LoginForm() {
         </>
       )}
 
-      {env.NEXT_PUBLIC_DEV_LOGIN && (
-        <form onSubmit={devLogin} className="space-y-3 rounded-lg border border-dashed p-4">
-          <h2 className="font-semibold">{t.auth.devTitle}</h2>
-          <p className="text-sm text-muted-foreground">{t.auth.devHint}</p>
-          <Label htmlFor="dev-email">{t.auth.email}</Label>
-          <Input
-            id="dev-email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="h-11"
-          />
-          <Label htmlFor="dev-password">{t.auth.password}</Label>
-          <Input
-            id="dev-password"
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="h-11"
-          />
-          <Button type="submit" variant="secondary" className="w-full">
-            {t.auth.devSubmit}
-          </Button>
-        </form>
-      )}
+      <p className="text-sm text-muted-foreground">
+        {t.auth.teacherNote}{" "}
+        <Link className="underline underline-offset-4" href="/">
+          {t.common.back}
+        </Link>
+      </p>
     </div>
   );
 }

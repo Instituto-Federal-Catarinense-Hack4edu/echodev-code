@@ -104,3 +104,10 @@ Riscos conhecidos que ficaram (sem mudança no banco, para não exigir SQL novo)
 - Dá para trocar entre microfone e demonstração quando pausado; a demonstração terminada tem "Recomeçar".
 - A lista de frases rola sozinha sem mover a página inteira.
 - **Início do reconhecimento à prova de travamento** (04/11/2026): antes de ligar o reconhecimento, o EchoDev pede o microfone diretamente (e fecha na hora), o que mostra a pergunta de permissão e distingue "negado", "sem microfone" e "microfone em uso". Se o navegador não começar a ouvir em 8 s (Brave, Opera, navegadores embutidos sem serviço de voz), a tela para de esperar e explica. `audio-capture` virou erro definitivo (antes ficava tentando de novo em silêncio) e uma exceção em `start()` não é mais engolida.
+
+## Contas de verdade (04/11/2026)
+- Login principal por **e-mail e senha**, com abas "Entrar" e "Criar conta", "Esqueci minha senha" (`/redefinir-senha`) e mensagens claras por código de erro do Supabase. O link mágico e o quadro "Login de desenvolvimento" saíram; os usuários de teste entram pelo formulário normal.
+- **Menu do usuário** no cabeçalho de todas as páginas: e-mail conectado, "Minhas aulas" (só para professor), "Minha conta" e "Sair".
+- **Página inicial** separa estudante (código da aula), professor (entrar ou criar conta) e a demonstração offline (recolhida).
+- **Quem é professor** continua definido pela `teacher_allowlist`; novo `npm run teacher:add -- email` autoriza e promove contas existentes.
+- O projeto Supabase exige confirmação de e-mail (`mailer_autoconfirm: false`): ver `docs/SETUP_MANUAL.md` 3b.

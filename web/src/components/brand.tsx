@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { UserMenu } from "@/components/user-menu";
 import { t } from "@/lib/i18n/pt-BR";
 import { cn } from "@/lib/utils";
 
@@ -31,8 +32,8 @@ export function BrandMark({ className }: { className?: string }) {
   );
 }
 
-/** Top bar used on regular pages: logo linking home, optional right-side content. */
-export function SiteHeader({ children }: { children?: React.ReactNode }) {
+/** Top bar used on regular pages: logo linking home, the signed-in user (or "Entrar"). */
+export function SiteHeader({ children, showUser = true }: { children?: React.ReactNode; showUser?: boolean }) {
   return (
     <header className="border-b bg-background">
       <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-4 px-4 py-3">
@@ -40,6 +41,7 @@ export function SiteHeader({ children }: { children?: React.ReactNode }) {
           <BrandLogo />
         </Link>
         {children}
+        {showUser && <UserMenu />}
       </div>
     </header>
   );

@@ -42,6 +42,20 @@ where user_id = (select id from auth.users where lower(email) = 'seu-email@exemp
 
 Os usuários de teste (1 professor e 8 estudantes) são criados pelo agente com `npm run seed:dev`.
 
+## 3b. Contas com e-mail e senha
+O EchoDev usa conta com e-mail e senha (aba "Criar conta" em `/entrar`), mais "Esqueci minha senha".
+
+- **Professor**: antes de criar a conta, autorize o e-mail:
+
+  ```bash
+  npm run teacher:add -- pessoa@escola.edu.br
+  ```
+  Se a conta já existir, ela vira professor na hora.
+- **Confirmação de e-mail**: hoje o projeto exige confirmar o e-mail ao criar conta. O envio padrão do Supabase tem limite baixo e pode entregar só para e-mails da equipe do projeto. Para o hackathon, escolha um:
+  - desligar em **Authentication → Sign In / Providers → Email → Confirm email** (a conta já entra direto ao ser criada); ou
+  - configurar SMTP próprio (item 4).
+- "Esqueci minha senha" sempre envia e-mail: com o envio padrão, vale o mesmo limite.
+
 ## 4. Opcional: login e e-mail
 - **URLs de redirecionamento**: em **Authentication → URL Configuration**, Site URL `http://localhost:3000` e, em Redirect URLs, `http://localhost:3000/**` (e depois a URL da Vercel).
 - **Google**: em **Authentication → Providers → Google**, siga o passo a passo do próprio painel.

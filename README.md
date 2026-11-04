@@ -63,6 +63,7 @@ Sobe o `web/` em http://localhost:3000 e a API em http://localhost:8000 (`/healt
 | `npm run db:validate` | aplica o bundle num Postgres embutido (sem Supabase) e testa as regras de RLS |
 | `npm run gen:api-types` | gera `web/src/lib/api/schema.d.ts` a partir do OpenAPI do FastAPI |
 | `npm run seed:dev` | cria 1 professor e 8 estudantes de teste (e-mails confirmados) |
+| `npm run teacher:add -- email` | autoriza um e-mail como professor (a pessoa cria a conta em `/entrar`) |
 | `npm run check:rls` | prova as regras de acesso no Supabase real, inclusive o canal privado |
 | `npm run load:test` | 40 clientes num canal por 10 min (`-- --clients 10 --minutes 1` para um teste curto) |
 

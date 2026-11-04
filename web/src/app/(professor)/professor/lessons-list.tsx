@@ -31,7 +31,13 @@ export function LessonsList() {
   }, [user, profile]);
 
   if (loading) return <p className="text-muted-foreground">{t.common.loading}</p>;
-  if (profile?.role !== "professor") return <p>{t.lessons.notTeacher}</p>;
+  if (profile?.role !== "professor")
+    return (
+      <div className="space-y-2">
+        <p>{t.lessons.notTeacherAs(user?.email ?? "")}</p>
+        <p className="text-sm text-muted-foreground">{t.lessons.notTeacher}</p>
+      </div>
+    );
 
   return (
     <div className="space-y-4">
