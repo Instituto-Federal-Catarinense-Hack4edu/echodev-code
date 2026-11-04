@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 
 /** Chrome restarts recognition at every pause in speech; only a long restart is worth showing. */
 const RECONNECT_NOTICE_MS = 4000;
+const SLOW_START_MS = 6000;
 
 interface Props {
   transport: RealtimeTransport | null;
@@ -85,6 +86,18 @@ export function TeacherConsole(props: Props) {
     if (status === "listening" || status === "restarting" || error) setStarting(false);
   }, [status, error]);
 
+  // Permission question not answered after a while: it may be hidden in the address bar.
+  const [slowStart, setSlowStart] = useState(false);
+  useEffect(() => {
+    if (phase !== "starting") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset when starting ends
+      setSlowStart(false);
+      return;
+    }
+    const timer = setTimeout(() => setSlowStart(true), SLOW_START_MS);
+    return () => clearTimeout(timer);
+  }, [phase]);
+
   // Only mention reconnecting when an automatic restart takes unusually long.
   useEffect(() => {
     if (status !== "restarting") {
@@ -136,14 +149,7 @@ export function TeacherConsole(props: Props) {
     setSource(null);
   }
 
-  const errorText =
-    error?.kind === "permission"
-      ? t.teacher.permissionDenied
-      : error?.kind === "too-many-errors"
-        ? t.teacher.tooManyErrors
-        : error?.kind === "unsupported"
-          ? t.teacher.unsupported
-          : null;
+  const errorText = error ? (t.teacher.errors[error.kind] ?? t.teacher.errors.transient) : null;
 
   const sourceLabel = source === "demo" ? t.teacher.sourceDemo : t.teacher.sourceMic;
   const headline = {
@@ -156,7 +162,7 @@ export function TeacherConsole(props: Props) {
   }[phase];
   const hint = {
     idle: t.teacher.hint.idle,
-    starting: source === "mic" ? t.teacher.hint.startingMic : null,
+    starting: source === "mic" ? (slowStart ? t.teacher.hint.startingSlow : t.teacher.hint.startingMic) : null,
     live: slowRestart ? t.teacher.restarting : null,
     paused: t.teacher.hint.paused,
     finished: t.teacher.hint.finished,

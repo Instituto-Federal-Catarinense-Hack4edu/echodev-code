@@ -1,4 +1,4 @@
-import { createFinalDeduper, type SttHandlers, type SttProvider } from "./types";
+import { createFinalDeduper, type SttErrorKind, type SttHandlers, type SttProvider } from "./types";
 
 type RecognitionCtor = new () => SpeechRecognition;
 
@@ -12,6 +12,8 @@ function getCtor(): RecognitionCtor | null {
 }
 
 const FATAL = new Set(["not-allowed", "service-not-allowed"]);
+/** If the browser does not start listening in this time, stop waiting and explain why. */
+export const START_TIMEOUT_MS = 8000;
 const BACKOFF_START_MS = 250;
 const BACKOFF_MAX_MS = 3000;
 const MAX_CONSECUTIVE_ERRORS = 8;
@@ -29,12 +31,26 @@ export class WebSpeechProvider implements SttProvider {
   private backoff = BACKOFF_START_MS;
   private errors = 0;
   private timer: ReturnType<typeof setTimeout> | null = null;
+  private watchdog: ReturnType<typeof setTimeout> | null = null;
+  private session = 0;
   private dedupe = createFinalDeduper();
 
   constructor(private readonly lang = "pt-BR") {}
 
   isSupported(): boolean {
     return getCtor() !== null;
+  }
+
+  private fail(kind: SttErrorKind, code: string) {
+    this.active = false;
+    this.clearWatchdog();
+    this.handlers?.onError?.({ kind, code, fatal: true });
+    this.handlers?.onStatus?.("error");
+  }
+
+  private clearWatchdog() {
+    if (this.watchdog) clearTimeout(this.watchdog);
+    this.watchdog = null;
   }
 
   start(handlers: SttHandlers): void {
@@ -50,14 +66,46 @@ export class WebSpeechProvider implements SttProvider {
     this.errors = 0;
     this.backoff = BACKOFF_START_MS;
     this.dedupe = createFinalDeduper();
+    const session = ++this.session;
+    void this.preflight().then((problem) => {
+      if (session !== this.session || !this.active) return; // stopped meanwhile
+      if (problem) this.fail(problem.kind, problem.code);
+      else this.open(Ctor);
+    });
+  }
 
+  /**
+   * Asks for the microphone directly first: it shows the browser's permission question
+   * clearly and tells apart "denied", "no microphone" and "microphone busy". The stream is
+   * closed right away so it never competes with recognition (pitfall 2).
+   */
+  private async preflight(): Promise<{ kind: SttErrorKind; code: string } | null> {
+    const media = typeof navigator !== "undefined" ? navigator.mediaDevices : undefined;
+    if (!media?.getUserMedia) return null;
+    try {
+      const stream = await media.getUserMedia({ audio: true });
+      stream.getTracks().forEach((tr) => tr.stop());
+      return null;
+    } catch (e) {
+      const name = e instanceof DOMException ? e.name : "Error";
+      if (name === "NotAllowedError" || name === "SecurityError") return { kind: "permission", code: name };
+      if (name === "NotFoundError" || name === "OverconstrainedError") return { kind: "no-microphone", code: name };
+      if (name === "NotReadableError" || name === "AbortError") return { kind: "mic-busy", code: name };
+      return null; // unknown: let recognition try and report its own error
+    }
+  }
+
+  private open(Ctor: RecognitionCtor): void {
     const rec = new Ctor();
     rec.lang = this.lang;
     rec.continuous = true;
     rec.interimResults = true;
     rec.maxAlternatives = 1;
 
-    rec.onstart = () => this.handlers?.onStatus?.("listening");
+    rec.onstart = () => {
+      this.clearWatchdog();
+      this.handlers?.onStatus?.("listening");
+    };
     rec.onresult = (ev: SpeechRecognitionEvent) => {
       this.errors = 0;
       this.backoff = BACKOFF_START_MS;
@@ -76,17 +124,17 @@ export class WebSpeechProvider implements SttProvider {
     };
     rec.onerror = (ev: SpeechRecognitionErrorEvent) => {
       if (FATAL.has(ev.error)) {
-        this.active = false;
-        this.handlers?.onError?.({ kind: "permission", code: ev.error, fatal: true });
-        this.handlers?.onStatus?.("error");
+        this.fail("permission", ev.error);
+        return;
+      }
+      if (ev.error === "audio-capture") {
+        this.fail("no-microphone", ev.error);
         return;
       }
       // "no-speech" is normal during pauses; only count real failures.
       if (ev.error !== "no-speech") this.errors++;
       if (this.errors >= MAX_CONSECUTIVE_ERRORS) {
-        this.active = false;
-        this.handlers?.onError?.({ kind: "too-many-errors", code: ev.error, fatal: true });
-        this.handlers?.onStatus?.("error");
+        this.fail("too-many-errors", ev.error);
         return;
       }
       this.handlers?.onError?.({ kind: "transient", code: ev.error, fatal: false });
@@ -113,30 +161,43 @@ export class WebSpeechProvider implements SttProvider {
     };
 
     this.rec = rec;
+    // Some browsers expose the API but never start (no speech service): don't wait forever.
+    this.watchdog = setTimeout(() => {
+      this.watchdog = null;
+      if (this.rec !== rec || !this.active) return;
+      this.detach(rec);
+      this.fail("no-response", "timeout");
+    }, START_TIMEOUT_MS);
     try {
       rec.start();
-    } catch {
-      /* already started */
+    } catch (e) {
+      this.detach(rec);
+      this.fail("no-response", e instanceof DOMException ? e.name : "start-failed");
     }
+  }
+
+  private detach(rec: SpeechRecognition) {
+    rec.onresult = null;
+    rec.onerror = null;
+    rec.onend = null;
+    rec.onstart = null;
+    try {
+      rec.abort();
+    } catch {
+      /* ignore */
+    }
+    if (this.rec === rec) this.rec = null;
   }
 
   stop(): void {
     this.active = false;
+    this.session++;
+    this.clearWatchdog();
     if (this.timer) clearTimeout(this.timer);
     this.timer = null;
     const rec = this.rec;
     this.rec = null;
-    if (rec) {
-      rec.onresult = null;
-      rec.onerror = null;
-      rec.onend = null;
-      rec.onstart = null;
-      try {
-        rec.abort();
-      } catch {
-        /* ignore */
-      }
-    }
+    if (rec) this.detach(rec);
     this.handlers?.onPartial?.("");
     this.handlers?.onStatus?.("stopped");
   }

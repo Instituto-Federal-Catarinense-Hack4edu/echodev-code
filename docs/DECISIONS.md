@@ -103,3 +103,4 @@ Riscos conhecidos que ficaram (sem mudança no banco, para não exigir SQL novo)
 - Os reinícios automáticos do Chrome entre pausas na fala contam como "ativa"; o aviso de reconexão só aparece se o reinício passar de 4 s.
 - Dá para trocar entre microfone e demonstração quando pausado; a demonstração terminada tem "Recomeçar".
 - A lista de frases rola sozinha sem mover a página inteira.
+- **Início do reconhecimento à prova de travamento** (04/11/2026): antes de ligar o reconhecimento, o EchoDev pede o microfone diretamente (e fecha na hora), o que mostra a pergunta de permissão e distingue "negado", "sem microfone" e "microfone em uso". Se o navegador não começar a ouvir em 8 s (Brave, Opera, navegadores embutidos sem serviço de voz), a tela para de esperar e explica. `audio-capture` virou erro definitivo (antes ficava tentando de novo em silêncio) e uma exceção em `start()` não é mais engolida.

@@ -53,10 +53,27 @@ export const t = {
     hint: {
       idle: "Ao iniciar, o navegador pode pedir permissão para usar o microfone.",
       startingMic: "Se o navegador perguntar, clique em \"Permitir\" para usar o microfone.",
+      startingSlow:
+        "A pergunta de permissão não apareceu? Clique no ícone de microfone (ou cadeado) na barra de endereço e escolha \"Permitir\".",
       paused: "Nada é enviado enquanto a transcrição está pausada. Os estudantes continuam na aula.",
       finished: "Você pode recomeçar o roteiro ou passar a usar o microfone.",
     },
     restarting: "O reconhecimento de fala está demorando para voltar. Confira a internet.",
+    errors: {
+      unsupported:
+        "Este navegador não tem reconhecimento de fala. Use o Chrome ou o Edge no computador (em https ou localhost), ou use a aula de demonstração.",
+      permission:
+        "O navegador bloqueou o microfone. Clique no ícone de cadeado na barra de endereço, permita o microfone e clique em \"Tentar de novo\".",
+      "no-microphone":
+        "Nenhum microfone foi encontrado. Conecte um microfone ou escolha o padrão nas configurações de som do Windows e tente de novo.",
+      "mic-busy":
+        "O microfone está sendo usado por outro programa (Meet, Teams, Zoom, gravador…). Feche-o e tente de novo.",
+      "no-response":
+        "O navegador não começou a ouvir. Use o Google Chrome ou o Microsoft Edge atualizados (Brave, Opera e navegadores embutidos costumam não ter o serviço de voz). Se já estiver no Chrome, confira a internet e tente de novo.",
+      "too-many-errors":
+        "O reconhecimento de fala falhou várias vezes seguidas. Confira a internet e clique em \"Tentar de novo\".",
+      transient: "O reconhecimento de fala teve um problema. Tente de novo.",
+    },
     partialLabel: "Ouvindo agora (só você vê):",
     sentencesTitle: "Frases enviadas",
     noSentences: "As frases aparecem aqui assim que você começar a falar.",

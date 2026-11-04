@@ -3,6 +3,9 @@ export type SttStatus = "idle" | "listening" | "restarting" | "stopped" | "error
 export type SttErrorKind =
   | "unsupported"
   | "permission" // not-allowed / service-not-allowed (fatal)
+  | "no-microphone" // no input device / audio-capture (fatal)
+  | "mic-busy" // device exists but another app holds it (fatal)
+  | "no-response" // the browser never started listening (fatal, watchdog)
   | "too-many-errors" // restart limit hit (fatal)
   | "transient"; // no-speech / network / aborted (auto-restart)
 
