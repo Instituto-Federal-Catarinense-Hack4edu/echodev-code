@@ -151,12 +151,12 @@ export async function maxSeq(supabase: SupabaseClient, lessonId: string): Promis
   return (data?.[0]?.seq as number | undefined) ?? 0;
 }
 
-/** Stores one sentence; a duplicate (lesson_id, seq) is treated as an idempotent resend. */
+/** Stores one sentence. "duplicate" = that seq already exists (the caller renumbers). */
 export async function persistUtterance(
   supabase: SupabaseClient,
   lessonId: string,
   msg: UtteranceMessage,
-): Promise<void> {
+): Promise<"ok" | "duplicate"> {
   const { error } = await supabase.from("utterances").insert({
     lesson_id: lessonId,
     seq: msg.seq,
@@ -164,5 +164,7 @@ export async function persistUtterance(
     terms: msg.terms,
     wpm: msg.wpm,
   });
-  if (error && error.code !== "23505") throw error;
+  if (!error) return "ok";
+  if (error.code === "23505") return "duplicate";
+  throw new Error(error.message);
 }

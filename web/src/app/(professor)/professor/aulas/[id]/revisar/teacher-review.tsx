@@ -8,13 +8,18 @@ import { Button } from "@/components/ui/button";
 import { PdfButton } from "@/components/pdf-button";
 import { ApiError, apiFetch, wakeApi } from "@/lib/api/client";
 import type { QuizItem, RegenerateResponse, Resumo } from "@/lib/api/types";
-import { cleanResumo, isQuiz, isResumo, validQuiz, validResumo } from "@/lib/materials";
+import { cleanResumo, isQuiz, isResumo, lessonDate, validQuiz, validResumo, type LessonDates } from "@/lib/materials";
 import { getSupabase } from "@/lib/supabase/client";
 import { useProfile } from "@/lib/supabase/use-profile";
 import { t } from "@/lib/i18n/pt-BR";
 import { QuizEditor, ResumoEditor } from "./editors";
 
 type Status = "rascunho" | "aprovado" | "descartado";
+interface LessonInfo extends LessonDates {
+  title: string;
+  code: string;
+  status: string;
+}
 interface Row<C> {
   id: string;
   kind: "resumo" | "quiz";
@@ -25,7 +30,7 @@ interface Row<C> {
 export function TeacherReview() {
   const { id } = useParams<{ id: string }>();
   const { user, loading } = useProfile();
-  const [lesson, setLesson] = useState<{ title: string; code: string; status: string } | null>(null);
+  const [lesson, setLesson] = useState<LessonInfo | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [resumo, setResumo] = useState<Row<Resumo> | null>(null);
   const [quiz, setQuiz] = useState<Row<QuizItem[]> | null>(null);
@@ -35,7 +40,11 @@ export function TeacherReview() {
 
   const load = useCallback(async () => {
     const supabase = getSupabase();
-    const { data: l } = await supabase.from("lessons").select("title,code,status,teacher_id").eq("id", id).maybeSingle();
+    const { data: l } = await supabase
+      .from("lessons")
+      .select("title,code,status,teacher_id,started_at,ended_at,created_at")
+      .eq("id", id)
+      .maybeSingle();
     if (!l || l.teacher_id !== user?.id) {
       setNotFound(true);
       return;
@@ -59,13 +68,16 @@ export function TeacherReview() {
   }, [loading, user, load]);
 
   async function generate() {
+    // Regenerating replaces the drafts, including edits that were not saved yet.
+    if ((resumo || quiz) && !window.confirm(t.review.regenerateConfirm)) return;
     setBusy(true);
     setError(null);
     setMessage(t.review.generating);
     try {
-      // /end is idempotent and also works for a lesson ended earlier without materials.
-      const path = lesson?.status === "encerrada" ? `/lessons/${id}/materials/regenerate` : `/lessons/${id}/end`;
-      await apiFetch<RegenerateResponse>(path, { method: "POST" });
+      await apiFetch<RegenerateResponse>(`/lessons/${id}/materials/regenerate`, {
+        method: "POST",
+        timeoutMs: 300_000,
+      });
       await load();
       setMessage(null);
     } catch (e) {
@@ -121,10 +133,22 @@ export function TeacherReview() {
 
       {nothing && (
         <section className="space-y-3 rounded-xl border p-4">
-          <p>{lesson.status === "encerrada" ? t.review.noMaterials : t.review.notEnded}</p>
-          <Button onClick={generate} disabled={busy}>
-            {lesson.status === "encerrada" ? t.review.retry : t.review.generate}
-          </Button>
+          {lesson.status === "encerrada" ? (
+            <>
+              <p>{t.review.noMaterials}</p>
+              <Button onClick={generate} disabled={busy}>
+                {t.review.retry}
+              </Button>
+            </>
+          ) : (
+            <>
+              {/* Ending happens only on the live screen (stops listening, notifies students). */}
+              <p>{t.review.notEnded}</p>
+              <Link className="underline underline-offset-4" href={`/professor/aulas/${id}/ao-vivo`}>
+                {t.review.goLive}
+              </Link>
+            </>
+          )}
         </section>
       )}
       {!nothing && !hasApproved && (
@@ -138,7 +162,7 @@ export function TeacherReview() {
           label={t.pdf.downloadTeacher}
           data={{
             lessonTitle: lesson.title,
-            date: new Date(),
+            date: lessonDate(lesson),
             resumo: cleanResumo(resumo.content),
             quiz: quiz && validQuiz(quiz.content) ? quiz.content : null,
           }}

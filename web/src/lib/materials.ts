@@ -34,6 +34,19 @@ export function isResumo(content: unknown): content is Resumo {
   return !!content && typeof content === "object" && !Array.isArray(content) && "titulo" in content;
 }
 
+export interface LessonDates {
+  started_at?: string | null;
+  ended_at?: string | null;
+  created_at?: string | null;
+}
+
+/** The date a lesson happened (start, then end, then creation), for the PDF header. */
+export function lessonDate(l: LessonDates): Date {
+  const iso = l.started_at ?? l.ended_at ?? l.created_at;
+  const d = iso ? new Date(iso) : new Date();
+  return Number.isNaN(d.getTime()) ? new Date() : d;
+}
+
 export function isQuiz(content: unknown): content is QuizItem[] {
   return Array.isArray(content);
 }

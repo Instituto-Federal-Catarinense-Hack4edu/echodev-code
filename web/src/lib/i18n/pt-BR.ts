@@ -50,8 +50,13 @@ export const t = {
     tooManyErrors:
       "O reconhecimento de fala falhou várias vezes seguidas. Confira a internet e clique em Iniciar de novo.",
     wpm: (n: number) => `${n} palavras/min`,
+    channelOk: "Canal ao vivo conectado: os estudantes recebem a legenda.",
+    channelDown:
+      "Canal ao vivo sem conexão. As frases continuam sendo salvas e os estudantes as recebem quando a conexão voltar.",
+    persistError: (msg: string) => `Não foi possível salvar a última frase (${msg}). Confira a internet.`,
+    waitMicTest: "Aguarde o teste de microfone terminar para iniciar a transcrição.",
     openStudentDemo: "Abrir a tela do estudante em outra aba",
-    studentsConnected: (n: number) => (n === 1 ? "1 estudante conectado" : `${n} estudantes conectados`),
+    studentsConnected: (n: number) => (n === 1 ? "1 estudante entrou" : `${n} estudantes entraram`),
   },
   micTest: {
     title: "Teste de microfone",
@@ -171,6 +176,9 @@ export const t = {
     showQr: "Projetar QR code",
     hideQr: "Fechar",
     qrHint: (url: string) => `Aponte a câmera para o QR code ou acesse ${url} e digite o código.`,
+    qrLocalWarning:
+      "Atenção: este endereço (localhost) só abre neste computador. Para celulares, use o endereço publicado ou o IP da rede (veja o README).",
+    endError: (msg: string) => `Não foi possível encerrar a aula (${msg}). Tente de novo.`,
     ending: "Encerrando…",
     endConfirm: "Encerrar a aula? Os estudantes não poderão mais entrar.",
     ended: "Aula encerrada.",
@@ -186,6 +194,9 @@ export const t = {
     noMaterials: "Ainda não há material para esta aula.",
     expired: "A transcrição desta aula já foi apagada (24 horas); não dá para gerar de novo.",
     notEnded: "Encerre a aula para gerar o resumo e o quiz.",
+    goLive: "Ir para a tela da aula ao vivo",
+    regenerateConfirm:
+      "Gerar de novo substitui o resumo e o quiz atuais, inclusive edições que você ainda não salvou. Continuar?",
     summary: "Resumo",
     quiz: "Quiz",
     title: "Título",
@@ -235,6 +246,13 @@ export const t = {
     saved: (heard: string, term: string) => `Pronto: "${heard}" agora vira "${term}".`,
     error: "Não foi possível salvar a correção.",
     selected: (term: string) => `Termo selecionado: ${term}`,
+    problems: {
+      too_short: "Escreva pelo menos 3 letras, exatamente como apareceu na tela.",
+      common_word:
+        "Essa é uma palavra comum do português; virar termo trocaria a palavra em todas as aulas.",
+      profanity: "Esse texto não pode virar correção.",
+      other_term: "Isso já é reconhecido como outro termo do dicionário.",
+    },
   },
   report: {
     title: (lesson: string) => `Relatório: ${lesson}`,
@@ -269,6 +287,10 @@ export const t = {
     deleteBody:
       "Apaga seus registros anônimos de termos consultados, suas participações em aulas, seus consentimentos e a sua conta. Não dá para desfazer.",
     deleteConfirm: "Tem certeza? Isso apaga sua conta e seus dados e não pode ser desfeito.",
+    deleteTeacherWarning:
+      "Você é professor: excluir a conta também apaga todas as suas aulas, com resumos, quizzes e relatórios, para todos os estudantes.",
+    deleteConfirmTeacher:
+      "Tem certeza? Isso apaga sua conta e TODAS as suas aulas (resumos, quizzes e relatórios). Não pode ser desfeito.",
     deleteButton: "Excluir meus dados e minha conta",
     deleting: "Excluindo…",
     deleted: "Seus dados foram excluídos.",

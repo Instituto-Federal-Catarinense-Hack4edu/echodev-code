@@ -22,7 +22,8 @@ async def purge(
 ) -> PurgeResponse:
     if not settings.cron_secret or not settings.supabase_service_role_key:
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Limpeza não configurada.")
-    if not secrets.compare_digest(x_cron_secret, settings.cron_secret):
+    # Compare bytes: compare_digest raises TypeError on non-ASCII str (would be a 500).
+    if not secrets.compare_digest(x_cron_secret.encode(), settings.cron_secret.encode()):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Segredo inválido.")
     deleted = await ServiceRest(http, settings).rpc("purge_expired_utterances")
     return PurgeResponse(deleted=int(deleted or 0))

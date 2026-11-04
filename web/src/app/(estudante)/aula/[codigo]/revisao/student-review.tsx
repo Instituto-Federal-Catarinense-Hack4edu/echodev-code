@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { PdfButton } from "@/components/pdf-button";
 import { QuizPlayer } from "@/components/quiz-player";
 import type { QuizItem, Resumo } from "@/lib/api/types";
-import { isQuiz, isResumo } from "@/lib/materials";
+import { isQuiz, isResumo, lessonDate } from "@/lib/materials";
 import { getSupabase } from "@/lib/supabase/client";
 import { useProfile } from "@/lib/supabase/use-profile";
 import { t } from "@/lib/i18n/pt-BR";
@@ -15,7 +15,7 @@ const APPROVAL_POLL_MS = 15_000;
 type State =
   | { kind: "loading" }
   | { kind: "not-member" }
-  | { kind: "ready"; title: string; resumo: Resumo | null; quiz: QuizItem[] | null };
+  | { kind: "ready"; title: string; date: Date; resumo: Resumo | null; quiz: QuizItem[] | null };
 
 /** RLS returns only approved materials to members; drafts never reach this page. */
 export function StudentReview() {
@@ -31,7 +31,7 @@ export function StudentReview() {
       const supabase = getSupabase();
       const { data: lesson } = await supabase
         .from("lessons")
-        .select("id,title")
+        .select("id,title,started_at,ended_at,created_at")
         .eq("code", (codigo ?? "").toUpperCase())
         .maybeSingle();
       if (cancelled) return;
@@ -46,6 +46,7 @@ export function StudentReview() {
       const next = {
         kind: "ready" as const,
         title: lesson.title as string,
+        date: lessonDate(lesson),
         resumo: isResumo(resumo) ? resumo : null,
         quiz: isQuiz(quiz) ? quiz : null,
       };
@@ -77,7 +78,7 @@ export function StudentReview() {
       {state.resumo && (
         <PdfButton
           label={t.pdf.download}
-          data={{ lessonTitle: state.title, date: new Date(), resumo: state.resumo }}
+          data={{ lessonTitle: state.title, date: state.date, resumo: state.resumo }}
         />
       )}
       {state.resumo && (

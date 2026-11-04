@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,9 @@ import { getSupabase } from "@/lib/supabase/client";
 import { fire } from "@/lib/supabase/fire";
 import { useProfile } from "@/lib/supabase/use-profile";
 import { t } from "@/lib/i18n/pt-BR";
+
+/** Long lessons are summarized in several LLM calls; give the API time before giving up. */
+const END_TIMEOUT_MS = 300_000;
 
 interface Lesson {
   id: string;
@@ -43,9 +46,14 @@ export function TeacherLive() {
     // Free hosts sleep after ~15 min idle; keep the API awake so "end" is fast later.
     wakeApi();
     const keepAwake = setInterval(wakeApi, 5 * 60_000);
-    void loadCorrections().then(setCorrections);
     return () => clearInterval(keepAwake);
   }, []);
+
+  const packKey = lesson?.pack_ids.join(",") ?? null;
+  useEffect(() => {
+    if (packKey === null) return;
+    void loadCorrections(packKey ? packKey.split(",") : undefined).then(setCorrections);
+  }, [packKey]);
 
   const addCorrection = useCallback((termId: string, heard: string) => {
     setCorrections((c) => ({ ...c, [termId]: [...(c[termId] ?? []), heard] }));
@@ -98,6 +106,11 @@ export function TeacherLive() {
     (msg: UtteranceMessage) => persistUtterance(getSupabase(), id, msg),
     [id],
   );
+  const currentMaxSeq = useCallback(() => maxSeq(getSupabase(), id), [id]);
+  const streamApi = useRef<{ stopAndFlush: () => Promise<void> } | null>(null);
+  const onReady = useCallback((api: { stopAndFlush: () => Promise<void> }) => {
+    streamApi.current = api;
+  }, []);
 
   const goLive = useCallback(() => {
     if (!lesson || lesson.status !== "criada") return;
@@ -115,13 +128,17 @@ export function TeacherLive() {
     if (!lesson || !window.confirm(t.lessons.endConfirm)) return;
     setEnding(true);
     setEndError(null);
+    // Stop listening and wait for pending sentences, so nothing lands after the summary.
+    await streamApi.current?.stopAndFlush();
     try {
-      await apiFetch(`/lessons/${lesson.id}/end`, { method: "POST" });
+      await apiFetch(`/lessons/${lesson.id}/end`, { method: "POST", timeoutMs: END_TIMEOUT_MS });
     } catch (e) {
-      // The API keeps the lesson ended even if the LLM fails (502); the review page retries.
-      if (!(e instanceof ApiError && e.status === 502)) {
+      // 502 (LLM failed) or a timeout still leave the lesson ended on the server: check
+      // the real status instead of trusting the error, and go to review if it ended.
+      const { data } = await getSupabase().from("lessons").select("status").eq("id", lesson.id).maybeSingle();
+      if (data?.status !== "encerrada") {
         setEnding(false);
-        setEndError(e instanceof Error ? e.message : String(e));
+        setEndError(e instanceof ApiError ? t.lessons.endError(e.message) : t.common.error);
         return;
       }
     }
@@ -134,6 +151,9 @@ export function TeacherLive() {
     () => (lesson && typeof window !== "undefined" ? `${window.location.origin}/aula/${lesson.code}` : ""),
     [lesson],
   );
+
+  // "localhost" only works on this computer: a phone scanning the QR would get nothing.
+  const isLocalOrigin = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:|\/|$)/.test(joinUrl);
 
   if (notFound) return <p className="p-6">{t.lessons.notFound}</p>;
   if (!lesson || initialSeq === null) return <p className="p-6 text-muted-foreground">{t.common.loading}</p>;
@@ -167,6 +187,8 @@ export function TeacherLive() {
           <TeacherConsole
             transport={transport}
             persist={persist}
+            currentMaxSeq={currentMaxSeq}
+            onReady={onReady}
             initialSeq={initialSeq}
             packIds={lesson.pack_ids}
             extraVariants={corrections}
@@ -184,6 +206,7 @@ export function TeacherLive() {
           </div>
           <p className="font-mono text-6xl font-bold tracking-[0.3em]">{lesson.code}</p>
           <p className="text-lg">{t.lessons.qrHint(joinUrl.replace(/\/aula\/.*/, ""))}</p>
+          {isLocalOrigin && <p className="text-base font-medium text-amber-700">{t.lessons.qrLocalWarning}</p>}
         </DialogContent>
       </Dialog>
     </main>

@@ -1,12 +1,17 @@
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 import httpx
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.config import Settings, get_settings
 from app.routes import cron, lessons, me
+from app.supabase_rest import SupabaseError
+
+log = logging.getLogger("echodev")
 
 
 @asynccontextmanager
@@ -30,6 +35,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_methods=["GET", "POST", "DELETE"],
         allow_headers=["Authorization", "Content-Type"],
     )
+
+    @app.exception_handler(SupabaseError)
+    async def supabase_error(_: Request, exc: SupabaseError) -> JSONResponse:
+        # Handled inside the CORS middleware, so the browser can read the message.
+        log.warning("Supabase error: %s", exc)
+        return JSONResponse(
+            status_code=502, content={"detail": "Falha ao acessar o banco de dados."}
+        )
 
     @app.get("/health")
     async def health() -> dict[str, str]:

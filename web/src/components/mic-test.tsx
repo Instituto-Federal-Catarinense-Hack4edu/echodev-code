@@ -13,8 +13,19 @@ type Phase = "idle" | "testing" | "done" | "error";
  * 10 s mic check with getUserMedia + AnalyserNode. The stream is always closed
  * when the test ends, so it never competes with speech recognition.
  */
-export function MicTest({ disabled }: { disabled?: boolean }) {
+export function MicTest({
+  disabled,
+  onTestingChange,
+}: {
+  disabled?: boolean;
+  /** Lets the console block speech recognition while the mic is held by the test. */
+  onTestingChange?: (testing: boolean) => void;
+}) {
   const [phase, setPhase] = useState<Phase>("idle");
+
+  useEffect(() => {
+    onTestingChange?.(phase === "testing");
+  }, [phase, onTestingChange]);
   const [level, setLevel] = useState(0);
   const [peak, setPeak] = useState(0);
   const [label, setLabel] = useState<string | null>(null);

@@ -92,6 +92,8 @@ export class WebSpeechProvider implements SttProvider {
       this.handlers?.onError?.({ kind: "transient", code: ev.error, fatal: false });
     };
     rec.onend = () => {
+      // A recognizer replaced by a newer start() must never restart itself.
+      if (this.rec !== rec) return;
       if (!this.active) {
         this.handlers?.onStatus?.("stopped");
         return;
@@ -101,7 +103,7 @@ export class WebSpeechProvider implements SttProvider {
       this.backoff = Math.min(this.backoff * 2, BACKOFF_MAX_MS);
       this.timer = setTimeout(() => {
         this.timer = null;
-        if (!this.active) return;
+        if (!this.active || this.rec !== rec) return;
         try {
           rec.start();
         } catch {
@@ -127,6 +129,8 @@ export class WebSpeechProvider implements SttProvider {
     if (rec) {
       rec.onresult = null;
       rec.onerror = null;
+      rec.onend = null;
+      rec.onstart = null;
       try {
         rec.abort();
       } catch {

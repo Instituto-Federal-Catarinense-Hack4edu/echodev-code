@@ -50,8 +50,10 @@ export function TeacherReport() {
         supabase.rpc("lesson_term_report", { p_lesson_id: id, p_min_students: 3 }),
         supabase.rpc("lesson_member_count", { p_lesson_id: id }),
       ]);
-      setReport((rep.data?.data as LessonReportData | undefined) ?? null);
-      setTerms((termRep.data as TermRow[] | null) ?? []);
+      const snapshot = (rep.data?.data as LessonReportData | undefined) ?? null;
+      setReport(snapshot && { ...snapshot, undefined_terms: snapshot.undefined_terms.filter((id) => getTerm(id)) });
+      // term_id is free text written by students: show only terms that exist in the pack.
+      setTerms(((termRep.data as TermRow[] | null) ?? []).filter((r) => getTerm(r.term_id)));
       setMembers(typeof count.data === "number" ? count.data : null);
     })();
   }, [id, user, loading]);

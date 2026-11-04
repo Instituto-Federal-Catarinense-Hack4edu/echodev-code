@@ -55,7 +55,14 @@ export interface CaptionClientOptions {
   onChange: (items: readonly UtteranceMessage[]) => void;
   onStatus?: (status: TransportStatus) => void;
   onMessage?: (msg: UtteranceMessage) => void;
+  /**
+   * Safety net: also backfill every N ms. A gap is only noticed when a later message
+   * arrives, so a lost *last* sentence (or a dead teacher channel) would otherwise go unseen.
+   */
+  pollMs?: number;
 }
+
+export const DEFAULT_POLL_MS = 20_000;
 
 /**
  * Student-side client: live messages + backfill on (re)connect and on gaps.
@@ -89,6 +96,11 @@ export class CaptionClient {
     );
     this.opts.onStatus?.(transport.status);
     if (transport.status === "connected") void this.backfill();
+    const pollMs = this.opts.pollMs ?? DEFAULT_POLL_MS;
+    if (pollMs > 0) {
+      const timer = setInterval(() => void this.backfill(), pollMs);
+      this.unsubs.push(() => clearInterval(timer));
+    }
   }
 
   stop(): void {

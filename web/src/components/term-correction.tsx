@@ -4,17 +4,28 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { correctionProblem } from "@/lib/terms/corrections";
 import { termsFor } from "@/lib/terms/pack";
 import { getSupabase } from "@/lib/supabase/client";
 import { t } from "@/lib/i18n/pt-BR";
 
 export type Corrections = Record<string, string[]>;
 
-/** Loads all teacher corrections as extra variants per term id. */
-export async function loadCorrections(): Promise<Corrections> {
+/**
+ * Loads all teacher corrections as extra variants per term id. Rows that would be unsafe
+ * (common words, unknown terms, rows saved before validation existed) are skipped.
+ */
+export async function loadCorrections(packIds?: string[]): Promise<Corrections> {
+  const terms = termsFor(packIds);
+  const known = new Set(terms.map((x) => x.id));
   const { data } = await getSupabase().from("term_corrections").select("term_id,heard").limit(1000);
   const out: Corrections = {};
-  for (const row of data ?? []) (out[row.term_id as string] ??= []).push(row.heard as string);
+  for (const row of data ?? []) {
+    const termId = row.term_id as string;
+    const heard = row.heard as string;
+    if (!known.has(termId) || correctionProblem(heard, termId, terms)) continue;
+    (out[termId] ??= []).push(heard);
+  }
   return out;
 }
 
@@ -37,8 +48,13 @@ export function TermCorrection({
   async function save(e: React.FormEvent) {
     e.preventDefault();
     const term = terms.find((x) => x.id === termId);
-    const value = heard.trim();
+    const value = heard.trim().replace(/\s+/g, " ");
     if (!term || !value) return;
+    const problem = correctionProblem(value, term.id, terms);
+    if (problem) {
+      setMsg(t.correction.problems[problem]);
+      return;
+    }
     setBusy(true);
     const { error } = await getSupabase()
       .from("term_corrections")

@@ -28,6 +28,7 @@ class FakeSupabase:
         }
         self.utterance_pages: list[str] = []
         self.service_calls: list[str] = []
+        self.fail_methods: set[str] = set()  # e.g. {"PATCH"} -> PostgREST answers 500
         mock.get(f"{SUPABASE}/auth/v1/user").mock(side_effect=self._auth_user)
         mock.route(url__regex=rf"{re.escape(SUPABASE)}/rest/v1/rpc/.*").mock(side_effect=self._rpc)
         mock.route(url__regex=rf"{re.escape(SUPABASE)}/rest/v1/\w+").mock(side_effect=self._rest)
@@ -94,6 +95,8 @@ class FakeSupabase:
         uid = self._uid(request)
         if uid is None:
             return httpx.Response(401, json={"message": "JWT required"})
+        if request.method in self.fail_methods:
+            return httpx.Response(500, json={"message": "boom"})
         if request.method == "GET":
             rows = self._filter(self._visible(table, uid), request.url.params)
             start, end = 0, ROW_CAP - 1

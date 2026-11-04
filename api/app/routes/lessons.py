@@ -4,6 +4,7 @@ if the caller is not the owner, PostgREST returns nothing and we answer 403/404.
 import logging
 from datetime import UTC, datetime
 from typing import Any
+from uuid import UUID
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -86,13 +87,34 @@ async def _save_drafts(
     for kind, content in contents.items():
         current = by_kind.get(kind)
         values = {"content": content, "status": "rascunho", "approved_at": None, "updated_at": now}
+        if current and current["status"] == "aprovado":
+            saved.append(current)  # never overwrite what the teacher approved
+            continue
         if current:
             rows = await rest.update("lesson_materials", {"id": f"eq.{current['id']}"}, values)
         else:
             # Plain insert: an upsert would need UPDATE rights on lesson_id/kind (not granted).
-            rows = await rest.insert(
-                "lesson_materials", {"lesson_id": lesson_id, "kind": kind, "content": content}
-            )
+            try:
+                rows = await rest.insert(
+                    "lesson_materials", {"lesson_id": lesson_id, "kind": kind, "content": content}
+                )
+            except SupabaseError as exc:
+                if exc.status != 409:
+                    raise
+                # A concurrent request (double click) inserted it first: update that row,
+                # unless it is already approved.
+                found = await rest.select(
+                    "lesson_materials",
+                    {
+                        "lesson_id": f"eq.{lesson_id}",
+                        "kind": f"eq.{kind}",
+                        "select": "id,kind,status,content",
+                    },
+                )
+                if not found or found[0]["status"] == "aprovado":
+                    saved.extend(found)
+                    continue
+                rows = await rest.update("lesson_materials", {"id": f"eq.{found[0]['id']}"}, values)
         saved.extend(rows)
     return saved
 
@@ -106,13 +128,14 @@ def _out(rows: list[dict[str, Any]]) -> list[MaterialOut]:
 
 @router.post("/{lesson_id}/end", response_model=EndLessonResponse)
 async def end_lesson(
-    lesson_id: str,
+    lesson_id: UUID,
     user: CurrentUser = Depends(get_current_user),
     http: httpx.AsyncClient = Depends(get_http),
     settings: Settings = Depends(get_settings),
     llm: LLMProvider = Depends(get_llm),
 ) -> EndLessonResponse:
     """Idempotent: ends the lesson, snapshots the report and creates draft materials once."""
+    lesson_id = str(lesson_id)  # validated as UUID by FastAPI; strings from here on
     rest = _rest(user, http, settings)
     lesson = await _owned_lesson(rest, lesson_id, user)
 
@@ -173,12 +196,13 @@ async def end_lesson(
 
 @router.post("/{lesson_id}/materials/regenerate", response_model=RegenerateResponse)
 async def regenerate_materials(
-    lesson_id: str,
+    lesson_id: UUID,
     user: CurrentUser = Depends(get_current_user),
     http: httpx.AsyncClient = Depends(get_http),
     settings: Settings = Depends(get_settings),
     llm: LLMProvider = Depends(get_llm),
 ) -> RegenerateResponse:
+    lesson_id = str(lesson_id)  # validated as UUID by FastAPI; strings from here on
     rest = _rest(user, http, settings)
     lesson = await _owned_lesson(rest, lesson_id, user)
     if lesson["status"] != "encerrada":

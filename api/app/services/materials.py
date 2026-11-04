@@ -1,6 +1,7 @@
 """Summary + quiz generation: sanitize -> (chunk if long) -> LLM -> extract JSON -> validate,
 with exactly one corrective retry on validation failure."""
 
+import asyncio
 import json
 import re
 from typing import TypeVar
@@ -14,6 +15,7 @@ from app.services.sanitize import sanitize
 
 MAX_DIRECT_CHARS = 40_000
 CHUNK_CHARS = 30_000
+CHUNK_CONCURRENCY = 3
 
 _FENCE = re.compile(r"^```(?:json)?\s*|\s*```$", re.IGNORECASE)
 
@@ -71,14 +73,22 @@ async def generate_materials(provider: LLMProvider, sentences: list[str]) -> Mat
     if len(transcript) > MAX_DIRECT_CHARS:
         chunks = split_chunks(transcript)
         notes: list[str] = [prompts.COMBINED_HEADER]
-        for i, chunk in enumerate(chunks, start=1):
-            n = await _ask(
-                provider,
-                ChunkNotes,
-                prompts.CHUNK_TASK.format(index=i, total=len(chunks), chunk=chunk),
-                prompts.CHUNK_SCHEMA,
-                "chunk_notes",
-            )
+        # Blocks are independent: summarize a few at a time instead of one by one, so a
+        # long lesson fits in the host's request time limit.
+        limit = asyncio.Semaphore(CHUNK_CONCURRENCY)
+
+        async def one(i: int, chunk: str) -> ChunkNotes:
+            async with limit:
+                return await _ask(
+                    provider,
+                    ChunkNotes,
+                    prompts.CHUNK_TASK.format(index=i, total=len(chunks), chunk=chunk),
+                    prompts.CHUNK_SCHEMA,
+                    "chunk_notes",
+                )
+
+        results = await asyncio.gather(*(one(i, c) for i, c in enumerate(chunks, start=1)))
+        for i, n in enumerate(results, start=1):
             notes.append(
                 f"Bloco {i}:\nTópicos: {'; '.join(n.topicos)}\nTermos: {', '.join(n.termos)}\n"
                 f"Código citado: {' | '.join(n.exemplos_de_codigo) or 'nenhum'}"

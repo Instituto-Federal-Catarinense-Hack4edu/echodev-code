@@ -13,7 +13,8 @@ const ALL: Purpose[] = ["termos_uso", "tratamento_dados", "doacao_lexico", "doac
 
 export function Account() {
   const router = useRouter();
-  const { user, loading } = useProfile();
+  const { user, profile, loading } = useProfile();
+  const isTeacher = profile?.role === "professor";
   const [active, setActive] = useState<Record<string, string>>({}); // purpose -> consent id
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +46,7 @@ export function Account() {
   }
 
   async function deleteAll() {
-    if (!window.confirm(t.account.deleteConfirm)) return;
+    if (!window.confirm(isTeacher ? t.account.deleteConfirmTeacher : t.account.deleteConfirm)) return;
     setDeleting(true);
     setError(null);
     try {
@@ -86,6 +87,7 @@ export function Account() {
       <section className="space-y-3 rounded-xl border border-destructive p-4">
         <h2 className="text-lg font-semibold">{t.account.deleteTitle}</h2>
         <p>{t.account.deleteBody}</p>
+        {isTeacher && <p className="font-medium text-destructive">{t.account.deleteTeacherWarning}</p>}
         <Button variant="destructive" onClick={deleteAll} disabled={deleting}>
           {deleting ? t.account.deleting : t.account.deleteButton}
         </Button>

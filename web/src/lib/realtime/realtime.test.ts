@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { CaptionClient, CaptionStore } from "./client-state";
 import { LocalTransport } from "./local";
 import type { UtteranceMessage } from "./schemas";
@@ -86,6 +86,7 @@ describe("CaptionClient", () => {
     let last: readonly UtteranceMessage[] = [];
     const client = new CaptionClient({
       transport: t,
+      pollMs: 0,
       fetchSince: async (after) => {
         calls.push(after);
         return server.filter((m) => m.seq > after);
@@ -111,6 +112,29 @@ describe("CaptionClient", () => {
     expect(last.map((m) => m.seq)).toEqual([1, 2, 3, 4, 5]);
     expect(calls).toEqual([0, 2, 5]);
     client.stop();
+  });
+});
+
+describe("CaptionClient polling", () => {
+  it("recovers a lost last sentence without any later message", async () => {
+    vi.useFakeTimers();
+    const server = [msg(1)];
+    const t = new FakeTransport();
+    let last: readonly UtteranceMessage[] = [];
+    const client = new CaptionClient({
+      transport: t,
+      pollMs: 1000,
+      fetchSince: async (after) => server.filter((m) => m.seq > after),
+      onChange: (items) => (last = items),
+    });
+    client.start();
+    t.setStatus("connected");
+    await vi.advanceTimersByTimeAsync(10);
+    server.push(msg(2)); // stored, but its live broadcast was lost
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(last.map((m) => m.seq)).toEqual([1, 2]);
+    client.stop();
+    vi.useRealTimers();
   });
 });
 

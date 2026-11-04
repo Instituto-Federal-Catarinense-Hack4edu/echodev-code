@@ -1,5 +1,6 @@
 import json
 
+import httpx
 import pytest
 import respx
 
@@ -151,6 +152,52 @@ def test_regenerate_forbidden_for_non_owner(client, fake, llm):
     lesson = _setup(fake)
     client.post(f"/lessons/{lesson}/end", headers=TEACHER)
     assert client.post(f"/lessons/{lesson}/materials/regenerate", headers=OTHER).status_code == 403
+
+
+def test_malformed_lesson_id_is_rejected_before_the_db(client, fake, llm):
+    fake.add_user("teacher-token")
+    res = client.post("/lessons/not-a-uuid/end", headers=TEACHER)
+    assert res.status_code == 422
+
+
+def test_db_failure_returns_readable_502_with_cors(client, fake, llm):
+    lesson = _setup(fake)
+    fake.fail_methods = {"PATCH"}  # ending the lesson fails on the DB side
+    res = client.post(
+        f"/lessons/{lesson}/end", headers={**TEACHER, "Origin": "http://localhost:3000"}
+    )
+    assert res.status_code == 502
+    assert res.json()["detail"] == "Falha ao acessar o banco de dados."
+    assert res.headers["access-control-allow-origin"] == "http://localhost:3000"
+
+
+async def test_concurrent_insert_falls_back_to_update(fake, settings):
+    from app.routes.lessons import _save_drafts
+    from app.schemas import Materials
+    from app.supabase_rest import UserRest
+
+    lesson = _setup(fake)
+    # Another request already stored drafts after we read "no materials".
+    fake.tables["lesson_materials"].append(
+        {"id": "m1", "lesson_id": lesson, "kind": "resumo", "status": "rascunho", "content": {}}
+    )
+    fake.tables["lesson_materials"].append(
+        {"id": "m2", "lesson_id": lesson, "kind": "quiz", "status": "aprovado", "content": []}
+    )
+    async with httpx.AsyncClient() as http:
+        rest = UserRest(http, settings, "teacher-token")
+        saved = await _save_drafts(rest, lesson, Materials.model_validate(MOCK_MATERIALS), [])
+    assert len(fake.tables["lesson_materials"]) == 2
+    resumo = next(m for m in fake.tables["lesson_materials"] if m["kind"] == "resumo")
+    quiz = next(m for m in fake.tables["lesson_materials"] if m["kind"] == "quiz")
+    assert resumo["content"] == MOCK_MATERIALS["resumo"]
+    assert quiz["status"] == "aprovado" and quiz["content"] == []  # approved stays untouched
+    assert {m["kind"] for m in saved} == {"resumo", "quiz"}
+
+
+def test_cron_non_ascii_secret_is_401_not_500(client, fake):
+    res = client.post("/cron/purge", headers={"X-Cron-Secret": "sénha".encode("latin-1")})
+    assert res.status_code == 401
 
 
 def test_cron_purge(client, fake):

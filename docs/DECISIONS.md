@@ -73,3 +73,27 @@ Registro de escolhas tomadas durante a construção (o que, por quê).
 - **Logo da equipe** em `web/public/brand/` (logo completa e símbolo recortados da imagem enviada; ícones do app, ícone com margem para Android, ícone Apple e favicon gerados a partir do símbolo).
 - **Paleta tirada da logo**: ferrugem `#a5400c` como cor principal (contraste ~6,6:1 no branco, AA), papel `#f4f1e9` nos fundos suaves, tinta `#17181c` no texto; termos destacados em pêssego claro `#f6dccb` com texto `#5c2306`.
 - **Onde aparece**: logo grande na página inicial; cabeçalho com logo nas telas do professor, login, conta, revisão e demonstração; só o símbolo no topo da legenda ao vivo (para não roubar espaço no celular); logo no topo do PDF do resumo (imagem comprimida, PDF ~40 KB).
+
+## Auditoria de 04/11/2026
+Corrigido (com teste automático ou verificado no navegador):
+- **Reconhecimento duplicado**: um reconhecedor antigo podia reiniciar sozinho depois de pausar e retomar, gerando frases em dobro. Agora só o reconhecedor atual reinicia (`webspeech.test.ts`).
+- **Gravar antes de publicar**: cada frase é salva no banco e só então enviada ao canal, em fila e na ordem. Se o `seq` já existir (segunda aba do professor, recarga), a frase é renumerada para depois do maior `seq` salvo e tenta de novo. O que o estudante vê ao vivo é exatamente o que a recuperação devolve. Custo: latência subiu de ~0,03 s para ~0,4 s (meta: 2 s).
+- **Encerrar com frase pendente**: o professor para de ouvir e espera a fila esvaziar antes de chamar a API, então nenhuma frase entra depois do relatório. Se a API demorar (tempo limite agora 5 min) ou o LLM falhar, a tela confere o status real da aula antes de mostrar erro.
+- **Encerrar pela tela de revisão** (sem parar a transcrição nem avisar estudantes) foi removido; a revisão agora leva à tela ao vivo.
+- **Canal ao vivo fora do ar**: o professor vê se o canal está conectado; o estudante busca frases perdidas também a cada 20 s (antes, uma última frase perdida nunca era recuperada).
+- **Teste de microfone e reconhecimento ao mesmo tempo**: iniciar a transcrição fica bloqueado enquanto o teste usa o microfone (armadilha 2).
+- **Correções de termo perigosas**: recusadas se tiverem menos de 3 letras, forem palavra comum do português, palavrão ou já forem outro termo; correções antigas inválidas são ignoradas ao carregar.
+- **Pacote de termos inexistente** no banco não derruba mais a tela (usa o pacote padrão).
+- **Contador "estudantes conectados"** na verdade contava quem entrou: rótulo corrigido para "entraram".
+- **Relatório** mostra só termos que existem no dicionário (o `term_id` é texto enviado pelo estudante).
+- **"Tentar de novo"** pede confirmação (apagava edições não salvas).
+- **Data do PDF** é a da aula, não a do download.
+- **QR code com `localhost`** mostra aviso (celulares não abrem esse endereço).
+- **Botões "Fechar"** dos diálogos estavam em inglês para leitores de tela.
+- **Excluir conta de professor** avisa que apaga todas as aulas dele.
+- **API**: erros do banco viram 502 legível com cabeçalho CORS (antes, 500 sem CORS aparecia como "erro de rede"); ids validados como UUID (422); segredo do cron comparado em bytes (acento derrubava a rota); encerramento em dobro não quebra mais nem sobrescreve material aprovado; cliente da Anthropic reutilizado; blocos de aulas longas resumidos 3 em paralelo; prompt proíbe nomes de pessoas e trata instruções dentro da transcrição como conteúdo.
+
+Riscos conhecidos que ficaram (sem mudança no banco, para não exigir SQL novo):
+- Um estudante pode registrar muitos toques no mesmo termo (o relatório conta estudantes distintos corretamente, mas "toques" pode inflar).
+- Códigos de aula podem ser testados por tentativa e erro por quem tem conta (sem limite de taxa); a proteção real é a RLS e a aula encerrada não aceitar entrada.
+- O professor pode reabrir uma aula encerrada editando o banco diretamente.

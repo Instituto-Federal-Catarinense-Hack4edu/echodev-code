@@ -6,6 +6,7 @@ import { termsFor } from "@/lib/terms/pack";
 import type { SttError, SttProvider, SttStatus } from "@/lib/stt/types";
 import { createWpmMeter } from "@/lib/stt/wpm";
 import { censor } from "@/lib/text/profanity";
+import { persistWithRenumber, type PersistFn } from "./persist";
 import type { UtteranceMessage } from "./schemas";
 import type { RealtimeTransport } from "./types";
 
@@ -14,8 +15,13 @@ export interface TeacherStreamOptions {
   packIds?: string[];
   /** Extra variants (teacher corrections) merged into the dictionary. */
   extraVariants?: Record<string, string[]>;
-  /** Persists one sentence (DB). Errors are reported but do not stop the live caption. */
-  persist?: (msg: UtteranceMessage) => Promise<void>;
+  /**
+   * Persists one sentence (DB) before it is published. "duplicate" means the seq is already
+   * taken (e.g. a second teacher tab); the stream then renumbers and retries.
+   */
+  persist?: PersistFn;
+  /** Highest stored seq, re-read after a duplicate. */
+  currentMaxSeq?: () => Promise<number>;
   /** Highest seq already stored for this lesson (reload safety). */
   initialSeq?: number;
 }
@@ -35,11 +41,15 @@ export function useTeacherStream(opts: TeacherStreamOptions) {
   const meterRef = useRef(createWpmMeter());
   const transportRef = useRef(transport);
   const persistRef = useRef(persist);
+  const maxSeqRef = useRef(opts.currentMaxSeq);
+  /** Sentences are processed one at a time, in the order they were spoken. */
+  const queueRef = useRef<Promise<void>>(Promise.resolve());
 
   useEffect(() => {
     transportRef.current = transport;
     persistRef.current = persist;
-  }, [transport, persist]);
+    maxSeqRef.current = opts.currentMaxSeq;
+  }, [transport, persist, opts.currentMaxSeq]);
 
   useEffect(() => {
     if (initialSeq > seqRef.current) seqRef.current = initialSeq;
@@ -60,28 +70,41 @@ export function useTeacherStream(opts: TeacherStreamOptions) {
     matcherRef.current = matcher;
   }, [matcher]);
 
-  const handleFinal = useCallback((raw: string) => {
+  const processFinal = useCallback(async (raw: string) => {
     // Swear words are masked before anything else, so they never leave this browser.
     const { text, terms } = matcherRef.current.match(censor(raw).text);
     const now = Date.now();
-    const msg: UtteranceMessage = {
-      seq: ++seqRef.current,
+    let msg: UtteranceMessage = {
+      seq: seqRef.current + 1,
       text,
       terms,
       wpm: meterRef.current(text, now),
       sentAt: now,
     };
+    // Store first, then publish: what students see live is exactly what backfill returns.
+    const p = persistRef.current;
+    if (p) {
+      try {
+        msg = await persistWithRenumber(msg, p, maxSeqRef.current);
+        setPersistError(null);
+      } catch (e: unknown) {
+        // Still publish live; students recover nothing for this one, but the lesson goes on.
+        setPersistError(e instanceof Error ? e.message : String(e));
+      }
+    }
+    seqRef.current = msg.seq;
     historyRef.current.push(msg);
     setSentences((s) => [...s, msg]);
     setWpm(msg.wpm);
-    void transportRef.current?.publish(msg).catch(() => undefined);
-    const p = persistRef.current;
-    if (p) {
-      p(msg)
-        .then(() => setPersistError(null))
-        .catch((e: unknown) => setPersistError(e instanceof Error ? e.message : String(e)));
-    }
+    await transportRef.current?.publish(msg).catch(() => undefined);
   }, []);
+
+  const handleFinal = useCallback(
+    (raw: string) => {
+      queueRef.current = queueRef.current.then(() => processFinal(raw)).catch(() => undefined);
+    },
+    [processFinal],
+  );
 
   const start = useCallback(
     (provider: SttProvider) => {
@@ -106,6 +129,12 @@ export function useTeacherStream(opts: TeacherStreamOptions) {
     setStatus("stopped");
   }, []);
 
+  /** Stops recognition and waits until every pending sentence is stored and published. */
+  const stopAndFlush = useCallback(async () => {
+    pause();
+    await queueRef.current;
+  }, [pause]);
+
   // Stop recognition on unmount (also covers StrictMode double-mount).
   useEffect(() => () => providerRef.current?.stop(), []);
 
@@ -124,6 +153,7 @@ export function useTeacherStream(opts: TeacherStreamOptions) {
     wpm,
     start,
     pause,
+    stopAndFlush,
     historySince,
     activeProvider: () => providerRef.current,
   };

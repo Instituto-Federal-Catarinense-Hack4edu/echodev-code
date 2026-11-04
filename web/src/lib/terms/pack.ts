@@ -14,8 +14,10 @@ export function getPack(id: string = DEFAULT_PACK_ID): Pack {
   return p;
 }
 
+/** Terms of the given packs; unknown ids are ignored (default pack if none is known). */
 export function termsFor(packIds: string[] = [DEFAULT_PACK_ID]): Term[] {
-  return packIds.flatMap((id) => getPack(id).terms);
+  const known = packIds.filter((id) => id in packs);
+  return (known.length ? known : [DEFAULT_PACK_ID]).flatMap((id) => getPack(id).terms);
 }
 
 const termIndex = new Map<string, Term>();

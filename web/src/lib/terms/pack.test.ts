@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { normalize } from "./matcher";
-import { explain, getPack, getTerm, matcherFor } from "./pack";
+import { explain, getPack, getTerm, matcherFor, termsFor } from "./pack";
 
 const normalizeKey = (s: string) => normalize(s).replace(/[^\p{L}\p{N}]+/gu, "");
 
@@ -79,6 +79,11 @@ describe("programacao-geral pack", () => {
       return r.text !== w && normalizeKey(r.text) !== normalizeKey(w);
     });
     expect(changed).toEqual([]);
+  });
+
+  it("ignores unknown pack ids instead of crashing", () => {
+    expect(termsFor(["nao-existe"])).toHaveLength(40);
+    expect(termsFor(["nao-existe", "programacao-geral"])).toHaveLength(40);
   });
 
   it("falls back to Portuguese when a language is missing", () => {
