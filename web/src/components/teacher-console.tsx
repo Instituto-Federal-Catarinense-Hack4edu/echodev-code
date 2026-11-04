@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Mic, Pause, Play, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CaptionText } from "@/components/caption-text";
 import { MicTest } from "@/components/mic-test";
+import { controlPhase, type Source } from "@/lib/stt/control-phase";
 import { FakeSttProvider } from "@/lib/stt/fake";
 import { WebSpeechProvider } from "@/lib/stt/webspeech";
 import type { SttProvider } from "@/lib/stt/types";
@@ -13,6 +15,10 @@ import type { RealtimeTransport, TransportStatus } from "@/lib/realtime/types";
 import type { PersistFn } from "@/lib/realtime/persist";
 import { useTeacherStream } from "@/lib/realtime/use-teacher-stream";
 import { t } from "@/lib/i18n/pt-BR";
+import { cn } from "@/lib/utils";
+
+/** Chrome restarts recognition at every pause in speech; only a long restart is worth showing. */
+const RECONNECT_NOTICE_MS = 4000;
 
 interface Props {
   transport: RealtimeTransport | null;
@@ -26,7 +32,7 @@ interface Props {
     historySince: (afterSeq: number) => UtteranceMessage[];
     stopAndFlush: () => Promise<void>;
   }) => void;
-  /** Called when the first sentence of a session is about to be sent (lesson goes live). */
+  /** Called when transcription starts (the lesson goes live). */
   onFirstStart?: () => void;
   /** Rendered when the teacher clicks a term in the sent list (e.g., correction form). */
   renderTermAction?: (termId: string, sentence: UtteranceMessage) => React.ReactNode;
@@ -43,9 +49,26 @@ export function TeacherConsole(props: Props) {
   });
   const { status, partial, sentences, error, persistError, wpm, start, pause, historySince, stopAndFlush } =
     stream;
+  const { onReady, onFirstStart } = props;
+
   const [supported, setSupported] = useState(true);
   const [micTesting, setMicTesting] = useState(false);
   const [channel, setChannel] = useState<TransportStatus>("connecting");
+  const [source, setSource] = useState<Source | null>(null);
+  const [starting, setStarting] = useState(false);
+  const [pausedByUser, setPausedByUser] = useState(false);
+  const [slowRestart, setSlowRestart] = useState(false);
+  const speech = useRef<WebSpeechProvider | null>(null);
+  const demo = useRef<FakeSttProvider | null>(null);
+  const list = useRef<HTMLDivElement>(null);
+  const [selected, setSelected] = useState<{ termId: string; seq: number } | null>(null);
+
+  const phase = controlPhase({ status, error, source, starting, pausedByUser });
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- browser capability check after mount
+    setSupported(new WebSpeechProvider().isSupported());
+  }, []);
 
   // Show the teacher whether students can actually receive the caption.
   useEffect(() => {
@@ -55,49 +78,63 @@ export function TeacherConsole(props: Props) {
     setChannel(tr.status);
     return tr.onStatus(setChannel);
   }, [props.transport]);
-  const [mode, setMode] = useState<"none" | "speech" | "demo">("none");
-  const speech = useRef<WebSpeechProvider | null>(null);
-  const demo = useRef<FakeSttProvider | null>(null);
-  const listEnd = useRef<HTMLDivElement>(null);
-  const [selected, setSelected] = useState<{ termId: string; seq: number } | null>(null);
-  const { onReady, onFirstStart } = props;
 
+  // "Starting" ends as soon as the recognizer reports anything.
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- browser capability check after mount
-    setSupported(new WebSpeechProvider().isSupported());
-  }, []);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- derived from the provider status
+    if (status === "listening" || status === "restarting" || error) setStarting(false);
+  }, [status, error]);
+
+  // Only mention reconnecting when an automatic restart takes unusually long.
+  useEffect(() => {
+    if (status !== "restarting") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset when the restart ends
+      setSlowRestart(false);
+      return;
+    }
+    const timer = setTimeout(() => setSlowRestart(true), RECONNECT_NOTICE_MS);
+    return () => clearTimeout(timer);
+  }, [status]);
 
   useEffect(() => {
     onReady?.({ historySince, stopAndFlush });
   }, [onReady, historySince, stopAndFlush]);
 
+  // Scroll only the sentence list (not the whole page) to the newest sentence.
   useEffect(() => {
-    listEnd.current?.scrollIntoView({ block: "end" });
+    const el = list.current;
+    if (el) el.scrollTop = el.scrollHeight;
   }, [sentences.length]);
 
-  const begin = (kind: "speech" | "demo") => {
+  function begin(kind: Source, opts: { restartDemo?: boolean } = {}) {
     let provider: SttProvider;
-    if (kind === "speech") {
+    if (kind === "mic") {
       speech.current ??= new WebSpeechProvider();
       provider = speech.current;
     } else {
       demo.current ??= new FakeSttProvider();
+      if (opts.restartDemo) demo.current.reset();
       provider = demo.current;
     }
     onFirstStart?.();
-    setMode(kind);
+    setSource(kind);
+    setPausedByUser(false);
+    setStarting(true);
     start(provider);
-  };
+  }
 
-  const running = status === "listening" || status === "restarting";
-  const statusLabel =
-    status === "listening"
-      ? t.teacher.active
-      : status === "restarting"
-        ? t.teacher.restarting
-        : mode !== "none"
-          ? t.teacher.paused
-          : t.teacher.idle;
+  function onPause() {
+    setPausedByUser(true);
+    setStarting(false);
+    pause();
+  }
+
+  function onCancelStart() {
+    pause();
+    setStarting(false);
+    setPausedByUser(false);
+    setSource(null);
+  }
 
   const errorText =
     error?.kind === "permission"
@@ -108,59 +145,136 @@ export function TeacherConsole(props: Props) {
           ? t.teacher.unsupported
           : null;
 
+  const sourceLabel = source === "demo" ? t.teacher.sourceDemo : t.teacher.sourceMic;
+  const headline = {
+    idle: t.teacher.phase.idle,
+    starting: source === "mic" ? t.teacher.phase.startingMic : t.teacher.phase.startingDemo,
+    live: t.teacher.phase.live,
+    paused: t.teacher.phase.paused,
+    finished: t.teacher.phase.finished,
+    error: t.teacher.phase.error,
+  }[phase];
+  const hint = {
+    idle: t.teacher.hint.idle,
+    starting: source === "mic" ? t.teacher.hint.startingMic : null,
+    live: slowRestart ? t.teacher.restarting : null,
+    paused: t.teacher.hint.paused,
+    finished: t.teacher.hint.finished,
+    error: errorText,
+  }[phase];
+
+  const blocked = micTesting;
+  const micDisabled = blocked || !supported;
   const selectedSentence = selected ? sentences.find((s) => s.seq === selected.seq) : undefined;
 
   return (
     <div className="grid gap-4 lg:grid-cols-[22rem_1fr]">
       <div className="space-y-4">
-        <MicTest disabled={running} onTestingChange={setMicTesting} />
-        <section className="space-y-3 rounded-xl border p-4">
+        <MicTest disabled={phase === "live" || phase === "starting"} onTestingChange={setMicTesting} />
+
+        <section className="space-y-3 rounded-xl border p-4" aria-labelledby="stt-headline">
           <div className="flex flex-wrap items-center gap-2" aria-live="polite">
             <span
-              className={`inline-block size-3 rounded-full ${running ? "bg-red-600 motion-safe:animate-pulse" : "bg-muted-foreground"}`}
               aria-hidden
+              className={cn(
+                "inline-block size-3 rounded-full",
+                phase === "live" && "bg-red-600 motion-safe:animate-pulse",
+                phase === "starting" && "bg-amber-500",
+                phase === "error" && "bg-destructive",
+                (phase === "idle" || phase === "paused" || phase === "finished") && "bg-muted-foreground",
+              )}
             />
-            <span className="font-semibold">{statusLabel}</span>
-            {running && <Badge variant="secondary">{t.teacher.wpm(wpm)}</Badge>}
+            <h2 id="stt-headline" className="font-semibold">
+              {headline}
+            </h2>
+            {source && phase !== "idle" && <Badge variant="outline">{sourceLabel}</Badge>}
+            {phase === "live" && <Badge variant="secondary">{t.teacher.wpm(wpm)}</Badge>}
           </div>
+          {hint && (
+            <p className={cn("text-sm", phase === "error" ? "text-destructive" : "text-muted-foreground")}>
+              {hint}
+            </p>
+          )}
+
+          <div className="flex flex-wrap gap-2">
+            {phase === "idle" && (
+              <>
+                <Button onClick={() => begin("mic")} disabled={micDisabled}>
+                  <Mic aria-hidden />
+                  {t.teacher.start}
+                </Button>
+                <Button variant="outline" onClick={() => begin("demo")} disabled={blocked}>
+                  {t.teacher.useDemo}
+                </Button>
+              </>
+            )}
+
+            {phase === "starting" && (
+              <>
+                <Button disabled>{t.teacher.startingButton}</Button>
+                <Button variant="outline" onClick={onCancelStart}>
+                  {t.common.cancel}
+                </Button>
+              </>
+            )}
+
+            {phase === "live" && (
+              <Button variant="secondary" onClick={onPause}>
+                <Pause aria-hidden />
+                {t.teacher.pause}
+              </Button>
+            )}
+
+            {(phase === "paused" || phase === "error") && source && (
+              <>
+                <Button onClick={() => begin(source)} disabled={source === "mic" ? micDisabled : blocked}>
+                  <Play aria-hidden />
+                  {phase === "error" ? t.common.retry : t.teacher.resume}
+                </Button>
+                {source === "mic" ? (
+                  <Button variant="outline" onClick={() => begin("demo")} disabled={blocked}>
+                    {t.teacher.switchToDemo}
+                  </Button>
+                ) : (
+                  <Button variant="outline" onClick={() => begin("mic")} disabled={micDisabled}>
+                    <Mic aria-hidden />
+                    {t.teacher.switchToMic}
+                  </Button>
+                )}
+              </>
+            )}
+
+            {phase === "finished" && (
+              <>
+                <Button onClick={() => begin("demo", { restartDemo: true })} disabled={blocked}>
+                  <RotateCcw aria-hidden />
+                  {t.teacher.restartDemo}
+                </Button>
+                <Button variant="outline" onClick={() => begin("mic")} disabled={micDisabled}>
+                  <Mic aria-hidden />
+                  {t.teacher.switchToMic}
+                </Button>
+              </>
+            )}
+          </div>
+
+          {!supported && phase !== "error" && <p className="text-sm text-destructive">{t.teacher.unsupported}</p>}
+          {micTesting && <p className="text-sm text-muted-foreground">{t.teacher.waitMicTest}</p>}
           {props.transport && (
             <p
-              className={`text-sm ${channel === "connected" ? "text-muted-foreground" : "font-medium text-amber-700"}`}
+              className={cn("text-sm", channel === "connected" ? "text-muted-foreground" : "font-medium text-amber-700")}
               aria-live="polite"
             >
               {channel === "connected" ? t.teacher.channelOk : t.teacher.channelDown}
             </p>
           )}
-          {!supported && <p className="text-sm text-destructive">{t.teacher.unsupported}</p>}
-          {errorText && <p className="text-sm text-destructive">{errorText}</p>}
           {persistError && <p className="text-sm text-destructive">{t.teacher.persistError(persistError)}</p>}
-          {micTesting && <p className="text-sm text-muted-foreground">{t.teacher.waitMicTest}</p>}
-          <div className="flex flex-wrap gap-2">
-            {!running && (
-              <Button
-                onClick={() => begin(mode === "demo" ? "demo" : "speech")}
-                disabled={micTesting || (!supported && mode !== "demo")}
-              >
-                {mode === "none" ? t.teacher.start : t.teacher.resume}
-              </Button>
-            )}
-            {running && (
-              <Button variant="secondary" onClick={pause}>
-                {t.teacher.pause}
-              </Button>
-            )}
-            {mode !== "speech" && !running && (
-              <Button variant="outline" onClick={() => begin("demo")} disabled={micTesting}>
-                {t.teacher.useDemo}
-              </Button>
-            )}
-          </div>
         </section>
       </div>
 
-      <section className="flex min-h-[50dvh] flex-col rounded-xl border">
+      <section className="flex max-h-[75dvh] min-h-[50dvh] flex-col rounded-xl border">
         <h2 className="border-b px-4 py-3 font-semibold">{t.teacher.sentencesTitle}</h2>
-        <div className="flex-1 space-y-2 overflow-y-auto p-4 text-lg">
+        <div ref={list} className="flex-1 space-y-2 overflow-y-auto p-4 text-lg">
           {sentences.length === 0 && <p className="text-muted-foreground">{t.teacher.noSentences}</p>}
           {sentences.map((s) => (
             <p key={s.seq}>
@@ -174,7 +288,6 @@ export function TeacherConsole(props: Props) {
               />
             </p>
           ))}
-          <div ref={listEnd} />
         </div>
         {selected && selectedSentence && props.renderTermAction && (
           <div className="border-t p-4">{props.renderTermAction(selected.termId, selectedSentence)}</div>

@@ -97,3 +97,9 @@ Riscos conhecidos que ficaram (sem mudança no banco, para não exigir SQL novo)
 - Um estudante pode registrar muitos toques no mesmo termo (o relatório conta estudantes distintos corretamente, mas "toques" pode inflar).
 - Códigos de aula podem ser testados por tentativa e erro por quem tem conta (sem limite de taxa); a proteção real é a RLS e a aula encerrada não aceitar entrada.
 - O professor pode reabrir uma aula encerrada editando o banco diretamente.
+
+## Controle da transcrição (04/11/2026)
+- O painel do professor passou a ter estados explícitos (`lib/stt/control-phase.ts`, com testes): pronto, iniciando (aguardando permissão do microfone), ativa, pausada, demonstração terminou e erro. Cada estado mostra só os botões que fazem sentido.
+- Os reinícios automáticos do Chrome entre pausas na fala contam como "ativa"; o aviso de reconexão só aparece se o reinício passar de 4 s.
+- Dá para trocar entre microfone e demonstração quando pausado; a demonstração terminada tem "Recomeçar".
+- A lista de frases rola sozinha sem mover a página inteira.
