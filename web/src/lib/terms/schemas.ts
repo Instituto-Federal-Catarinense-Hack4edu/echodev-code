@@ -27,6 +27,8 @@ export const TermSchema = z.object({
   variants: z.array(z.string().min(1)),
   /** Legit inflections (plural etc.); highlighted but kept as spoken. */
   forms: z.array(z.string().min(1)).optional(),
+  /** false for ordinary Portuguese words: never approximate-matched (only exact). */
+  fuzzy: z.boolean().optional(),
   category: TermCategorySchema,
   figurative: z.boolean().optional(),
   literalMeaning: z.string().optional(),

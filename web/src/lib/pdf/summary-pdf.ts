@@ -1,0 +1,140 @@
+import type { jsPDF as JsPDF } from "jspdf";
+import type { QuizItem, Resumo } from "@/lib/api/types";
+import { getTerm, matcherFor } from "@/lib/terms/pack";
+import { t } from "@/lib/i18n/pt-BR";
+
+export interface SummaryPdfData {
+  lessonTitle: string;
+  date: Date;
+  resumo: Resumo;
+  /** Teacher copy only: quiz with answer key. */
+  quiz?: QuizItem[] | null;
+}
+
+/**
+ * The 14 standard PDF fonts only cover WinAnsi (Latin-1 + a few symbols). Portuguese
+ * accents are fine; arrows, ellipses, smart quotes etc. are mapped to plain equivalents.
+ */
+export function toPdfText(s: string): string {
+  return s
+    .replace(/[→⇒]/g, "->")
+    .replace(/[←⇐]/g, "<-")
+    .replace(/…/g, "...")
+    .replace(/[–—]/g, "-")
+    .replace(/[“”]/g, '"')
+    .replace(/[‘’]/g, "'")
+    .replace(/\t/g, "  ")
+    .replace(/[^\n\x20-\x7E -ÿ]/g, "");
+}
+
+export function pdfFileName(title: string): string {
+  const slug = title
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 60);
+  return `resumo-${slug || "aula"}.pdf`;
+}
+
+/** Key terms explained with the (pt) short definition from the term pack, when known. */
+export function glossary(keyTerms: string[]): { term: string; short: string | null }[] {
+  const m = matcherFor();
+  return keyTerms
+    .map((k) => k.trim())
+    .filter(Boolean)
+    .map((k) => {
+      const span = m.match(k).terms[0];
+      const term = span ? getTerm(span.termId) : undefined;
+      return { term: term?.canonical ?? k, short: term?.explanations.pt.short ?? null };
+    });
+}
+
+const MARGIN = 56;
+const PAGE_BOTTOM_GAP = 64;
+
+/** Builds the PDF document (pure: takes the jsPDF class so it can run in tests). */
+export function buildSummaryPdf(JsPDFCtor: typeof JsPDF, data: SummaryPdfData): JsPDF {
+  const doc = new JsPDFCtor({ unit: "pt", format: "a4" });
+  const width = doc.internal.pageSize.getWidth();
+  const height = doc.internal.pageSize.getHeight();
+  const maxW = width - MARGIN * 2;
+  let y = MARGIN;
+
+  const ensure = (needed: number) => {
+    if (y + needed > height - PAGE_BOTTOM_GAP) {
+      doc.addPage();
+      y = MARGIN;
+    }
+  };
+  const write = (
+    text: string,
+    opts: { size?: number; bold?: boolean; mono?: boolean; indent?: number; gap?: number; color?: number } = {},
+  ) => {
+    const size = opts.size ?? 11;
+    const indent = opts.indent ?? 0;
+    doc.setFont(opts.mono ? "courier" : "helvetica", opts.bold ? "bold" : "normal");
+    doc.setFontSize(size);
+    doc.setTextColor(opts.color ?? 20);
+    const lines: string[] = doc.splitTextToSize(toPdfText(text), maxW - indent);
+    const lineH = size * 1.35;
+    for (const line of lines) {
+      ensure(lineH);
+      doc.text(line, MARGIN + indent, y);
+      y += lineH;
+    }
+    y += opts.gap ?? 4;
+  };
+
+  write(t.pdf.header, { size: 10, color: 90, gap: 10 });
+  write(data.lessonTitle, { size: 18, bold: true, gap: 2 });
+  write(t.pdf.date(data.date), { size: 10, color: 90, gap: 14 });
+
+  write(data.resumo.titulo, { size: 14, bold: true, gap: 6 });
+  for (const topic of data.resumo.topicos) write(`-  ${topic}`, { indent: 8, gap: 6 });
+
+  const terms = glossary(data.resumo.termos_chave ?? []);
+  if (terms.length) {
+    y += 8;
+    write(t.pdf.glossary, { size: 13, bold: true, gap: 6 });
+    for (const g of terms) {
+      write(g.term, { bold: true, gap: 0 });
+      write(g.short ?? t.pdf.noDefinition, { indent: 12, gap: 6, color: g.short ? 20 : 110 });
+    }
+  }
+
+  if (data.quiz?.length) {
+    y += 8;
+    write(t.pdf.quiz, { size: 13, bold: true, gap: 6 });
+    data.quiz.forEach((q, i) => {
+      ensure(60);
+      write(`${i + 1}. ${q.pergunta}`, { bold: true, gap: 2 });
+      if (q.codigo) write(q.codigo, { mono: true, size: 10, indent: 12, gap: 4 });
+      q.opcoes.forEach((o, j) => write(`${String.fromCharCode(65 + j)}) ${o}`, { indent: 12, gap: 1 }));
+      y += 6;
+    });
+    y += 6;
+    write(t.pdf.answerKey, { size: 13, bold: true, gap: 6 });
+    data.quiz.forEach((q, i) =>
+      write(`${i + 1}. ${String.fromCharCode(65 + q.correta)} - ${q.explicacao}`, { indent: 8, gap: 4 }),
+    );
+  }
+
+  const pages = doc.getNumberOfPages();
+  for (let p = 1; p <= pages; p++) {
+    doc.setPage(p);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(110);
+    doc.text(toPdfText(t.pdf.footer), MARGIN, height - 32);
+    doc.text(t.pdf.page(p, pages), width - MARGIN, height - 32, { align: "right" });
+  }
+  return doc;
+}
+
+/** Browser download (jsPDF is loaded only when the button is clicked). */
+export async function downloadSummaryPdf(data: SummaryPdfData): Promise<void> {
+  const { jsPDF } = await import("jspdf");
+  buildSummaryPdf(jsPDF, data).save(pdfFileName(data.lessonTitle));
+}

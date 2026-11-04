@@ -53,6 +53,8 @@
 - API mantida acordada durante a aula (`/health` a cada 5 min na tela ao vivo).
 - `docs/TESTE_MANUAL.md` (Teste A, Teste B, A/B de 1 hora, checklist), `docs/DEPLOY.md`, `README.md`.
 
+- **Ajustes de 03/11/2026**: correção aproximada de termos (grafias a 1 letra de distância, com proteções contra palavras do português), filtro de palavrões antes de publicar (`***`), botão "Baixar resumo em PDF" para estudante e professor (este com quiz e gabarito). Testados com unidade e no navegador.
+
 ### Resultado do teste de carga (rede doméstica, Supabase região padrão do projeto)
 `npm run load:test` em 03/11/2026: **40 clientes, 300 frases (1 a cada 2 s, 10 min), 12.000/12.000 recebimentos, 0 perdas. Latência p50 51 ms, p95 635 ms, média 220 ms, máximo 18,5 s.** Meta (p95 < 2 s) atingida. O máximo isolado de 18,5 s indica uma pausa de conexão (provável reconexão de um cliente); no app, a recuperação por `seq` cobre esse caso, mas vale repetir o teste na rede da escola. Teste curto anterior (10 clientes, 30 s): p95 289 ms.
 

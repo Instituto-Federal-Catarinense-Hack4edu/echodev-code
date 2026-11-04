@@ -5,6 +5,7 @@ import { createMatcher, type MatchableTerm } from "@/lib/terms/matcher";
 import { termsFor } from "@/lib/terms/pack";
 import type { SttError, SttProvider, SttStatus } from "@/lib/stt/types";
 import { createWpmMeter } from "@/lib/stt/wpm";
+import { censor } from "@/lib/text/profanity";
 import type { UtteranceMessage } from "./schemas";
 import type { RealtimeTransport } from "./types";
 
@@ -60,7 +61,8 @@ export function useTeacherStream(opts: TeacherStreamOptions) {
   }, [matcher]);
 
   const handleFinal = useCallback((raw: string) => {
-    const { text, terms } = matcherRef.current.match(raw);
+    // Swear words are masked before anything else, so they never leave this browser.
+    const { text, terms } = matcherRef.current.match(censor(raw).text);
     const now = Date.now();
     const msg: UtteranceMessage = {
       seq: ++seqRef.current,
@@ -88,7 +90,7 @@ export function useTeacherStream(opts: TeacherStreamOptions) {
       setError(null);
       provider.start({
         onFinal: handleFinal,
-        onPartial: setPartial,
+        onPartial: (p) => setPartial(censor(p).text),
         onStatus: setStatus,
         onError: (e) => {
           if (e.fatal) setError(e);

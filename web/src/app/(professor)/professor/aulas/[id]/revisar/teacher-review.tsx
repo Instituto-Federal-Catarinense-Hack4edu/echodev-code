@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PdfButton } from "@/components/pdf-button";
 import { ApiError, apiFetch, wakeApi } from "@/lib/api/client";
 import type { QuizItem, RegenerateResponse, Resumo } from "@/lib/api/types";
 import { cleanResumo, isQuiz, isResumo, validQuiz, validResumo } from "@/lib/materials";
@@ -132,6 +133,17 @@ export function TeacherReview() {
         </Button>
       )}
       {!nothing && hasApproved && <p className="text-sm text-muted-foreground">{t.review.discardFirst}</p>}
+      {resumo && validResumo(cleanResumo(resumo.content)) && (
+        <PdfButton
+          label={t.pdf.downloadTeacher}
+          data={{
+            lessonTitle: lesson.title,
+            date: new Date(),
+            resumo: cleanResumo(resumo.content),
+            quiz: quiz && validQuiz(quiz.content) ? quiz.content : null,
+          }}
+        />
+      )}
 
       {resumo && (
         <MaterialCard

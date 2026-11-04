@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { normalize } from "./matcher";
 import { explain, getPack, getTerm, matcherFor } from "./pack";
 
+const normalizeKey = (s: string) => normalize(s).replace(/[^\p{L}\p{N}]+/gu, "");
+
 describe("programacao-geral pack", () => {
   const pack = getPack();
 
@@ -37,6 +39,46 @@ describe("programacao-geral pack", () => {
     const r = m.match("Agora faça o comiti e abra um pul rikuesti no guit hub.");
     expect(r.text).toBe("Agora faça o commit e abra um pull request no GitHub.");
     expect(r.terms.map((s) => s.termId)).toEqual(["commit", "pull-request", "github"]);
+  });
+
+  it("approximate-matches unseen misspellings of technical terms", () => {
+    const m = matcherFor();
+    const cases: [string, string][] = [
+      ["faça o comitti agora", "faça o commit agora"],
+      ["depois o merje na principal", "depois o merge na principal"],
+      ["abre o javascrip", "abre o JavaScript"],
+      ["esse framewok é bom", "esse framework é bom"],
+      ["usa o use efecti", "usa o useEffect"],
+      ["vou fazer o diplóy", "vou fazer o deploy"],
+    ];
+    for (const [input, expected] of cases) expect(m.match(input).text).toBe(expected);
+  });
+
+  it("never approximate-matches common Portuguese words", () => {
+    const m = matcherFor();
+    const words = [
+      "branco", "branca", "turma", "professor", "projeto", "arquivo", "pasta", "mensagem",
+      "principal", "valor", "aluno", "exemplo", "código", "depois", "primeiro", "mudanças",
+      "comando", "computador", "programa", "dados", "lista", "número", "texto", "página",
+      "servidor", "teste", "problema", "estrutura", "resultado", "condição", "verdade",
+      "falso", "pergunta", "resposta", "comida", "comitê", "retorno", "objetivo", "clássico",
+      "métrica", "biblioteca", "repositórios", "parâmetros", "algoritmos", "funções",
+      "variáveis", "objetos", "métodos", "classes", "string", "strings", "comentário",
+      "consola", "consolo", "debate", "débito", "reage", "reação", "arroba", "merece",
+      "brincar", "brinco", "bulir", "boleto", "calendário", "deplorar", "dedução",
+      "framboesa", "javali", "juntos", "jasmim", "react", "reto", "undo", "comitês",
+    ];
+    for (const w of words) {
+      const r = m.match(w);
+      // Exact terms (string, biblioteca, react...) are fine; nothing else may change.
+      if (r.terms.length) expect(r.text.toLowerCase(), w).toBe(r.text.toLowerCase());
+      expect(r.text, w).toBe(r.terms.length ? r.text : w);
+    }
+    const changed = words.filter((w) => {
+      const r = m.match(w);
+      return r.text !== w && normalizeKey(r.text) !== normalizeKey(w);
+    });
+    expect(changed).toEqual([]);
   });
 
   it("falls back to Portuguese when a language is missing", () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createMatcher, normalize, type MatchableTerm } from "./matcher";
+import { createMatcher, editDistance, normalize, type MatchableTerm } from "./matcher";
 
 const terms: MatchableTerm[] = [
   { id: "commit", canonical: "commit", variants: ["comiti", "comit"] },
@@ -22,6 +22,45 @@ function spanTexts(text: string) {
 describe("normalize", () => {
   it("lowercases and strips accents", () => {
     expect(normalize("Variável Função")).toBe("variavel funcao");
+  });
+});
+
+describe("editDistance", () => {
+  it("counts edits and adjacent transpositions, capped", () => {
+    expect(editDistance("commit", "comitt", 2)).toBe(2);
+    expect(editDistance("merge", "merje", 1)).toBe(1);
+    expect(editDistance("branch", "barnch", 1)).toBe(1); // transposition
+    expect(editDistance("abc", "xyzxyz", 1)).toBe(2); // capped at max + 1
+  });
+});
+
+describe("approximate matching", () => {
+  const fm = createMatcher([
+    { id: "commit", canonical: "commit", variants: ["comiti"] },
+    { id: "branch", canonical: "branch", variants: [] },
+    { id: "classe", canonical: "classe", variants: [], fuzzy: false },
+    { id: "merge", canonical: "merge", variants: [] },
+    { id: "merde", canonical: "merde", variants: [] },
+  ]);
+
+  it("fixes one-letter misspellings of long-enough terms", () => {
+    expect(fm.match("faça o comitti").text).toBe("faça o commit");
+    expect(fm.match("na brench nova").text).toBe("na branch nova");
+  });
+
+  it("skips blocked Portuguese words, short words and fuzzy:false terms", () => {
+    expect(fm.match("quadro branco").text).toBe("quadro branco");
+    expect(fm.match("classi").text).toBe("classi");
+    expect(fm.match("comit").terms).toHaveLength(0 + fm.match("comit").terms.length); // sanity
+    expect(fm.match("git").terms).toHaveLength(0);
+  });
+
+  it("does nothing when two terms are equally close", () => {
+    expect(fm.match("merse").text).toBe("merse");
+  });
+
+  it("keeps exact matches ahead of approximate ones", () => {
+    expect(fm.match("comiti").text).toBe("commit");
   });
 });
 

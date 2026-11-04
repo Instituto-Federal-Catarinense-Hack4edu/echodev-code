@@ -51,5 +51,8 @@ Objetivo: comparar a experiência com e sem o EchoDev numa aula de verdade.
 - [ ] Encerrar → revisar → aprovar → estudante vê `/aula/<código>/revisao`.
 - [ ] Recarregar o celular no meio da aula recupera as frases.
 - [ ] Profundidade e idioma da explicação ficam salvos depois de recarregar.
+- [ ] Falar um palavrão: ele aparece como `***` no professor e no estudante (e nunca vai para o banco).
+- [ ] Falar um termo com 1 letra trocada (ex.: "comitti", "merje"): sai corrigido. "Quadro branco" continua "branco".
+- [ ] "Baixar resumo em PDF" no estudante (sem gabarito) e "Baixar PDF (resumo + quiz com gabarito)" no professor.
 - [ ] Ao encerrar a aula, o celular do estudante mostra "A aula terminou" e o botão "Ver resumo e quiz"; a tela fica "Aguardando a aprovação" e atualiza sozinha quando o professor aprova.
 - [ ] iOS (Safari): legenda, toque no termo e quiz (o professor não precisa de iOS).

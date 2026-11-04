@@ -5,6 +5,7 @@
   "terms": [
     {
       "id": "variavel",
+      "fuzzy": false,
       "canonical": "variável",
       "variants": [],
       "forms": ["variáveis"],
@@ -22,6 +23,7 @@
     },
     {
       "id": "funcao",
+      "fuzzy": false,
       "canonical": "função",
       "variants": [],
       "forms": ["funções"],
@@ -39,6 +41,7 @@
     },
     {
       "id": "parametro",
+      "fuzzy": false,
       "canonical": "parâmetro",
       "variants": [],
       "forms": ["parâmetros"],
@@ -190,6 +193,7 @@
     },
     {
       "id": "objeto",
+      "fuzzy": false,
       "canonical": "objeto",
       "variants": [],
       "forms": ["objetos"],
@@ -207,6 +211,7 @@
     },
     {
       "id": "classe",
+      "fuzzy": false,
       "canonical": "classe",
       "variants": [],
       "forms": ["classes"],
@@ -222,6 +227,7 @@
     },
     {
       "id": "metodo",
+      "fuzzy": false,
       "canonical": "método",
       "variants": [],
       "forms": ["métodos"],
@@ -237,6 +243,7 @@
     },
     {
       "id": "algoritmo",
+      "fuzzy": false,
       "canonical": "algoritmo",
       "variants": [],
       "forms": ["algoritmos"],
@@ -349,6 +356,7 @@
     },
     {
       "id": "biblioteca",
+      "fuzzy": false,
       "canonical": "biblioteca",
       "variants": [],
       "forms": ["bibliotecas"],
@@ -483,6 +491,7 @@
     },
     {
       "id": "repositorio",
+      "fuzzy": false,
       "canonical": "repositório",
       "variants": ["repo"],
       "forms": ["repositórios"],

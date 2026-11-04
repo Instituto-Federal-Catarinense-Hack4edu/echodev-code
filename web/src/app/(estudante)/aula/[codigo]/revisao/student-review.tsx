@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { PdfButton } from "@/components/pdf-button";
 import { QuizPlayer } from "@/components/quiz-player";
 import type { QuizItem, Resumo } from "@/lib/api/types";
 import { isQuiz, isResumo } from "@/lib/materials";
@@ -72,6 +73,12 @@ export function StudentReview() {
         <p role="status" className="rounded-lg border p-4">
           {t.review.notApproved}
         </p>
+      )}
+      {state.resumo && (
+        <PdfButton
+          label={t.pdf.download}
+          data={{ lessonTitle: state.title, date: new Date(), resumo: state.resumo }}
+        />
       )}
       {state.resumo && (
         <section className="space-y-3" aria-labelledby="resumo-h">
