@@ -11,6 +11,15 @@ export interface SummaryPdfData {
   quiz?: QuizItem[] | null;
 }
 
+export interface PdfLogo {
+  dataUrl: string;
+  width: number;
+  height: number;
+}
+
+const LOGO_URL = "/brand/echodev-logo-640.png";
+const LOGO_HEIGHT_PT = 30;
+
 /**
  * The 14 standard PDF fonts only cover WinAnsi (Latin-1 + a few symbols). Portuguese
  * accents are fine; arrows, ellipses, smart quotes etc. are mapped to plain equivalents.
@@ -55,7 +64,7 @@ const MARGIN = 56;
 const PAGE_BOTTOM_GAP = 64;
 
 /** Builds the PDF document (pure: takes the jsPDF class so it can run in tests). */
-export function buildSummaryPdf(JsPDFCtor: typeof JsPDF, data: SummaryPdfData): JsPDF {
+export function buildSummaryPdf(JsPDFCtor: typeof JsPDF, data: SummaryPdfData, logo?: PdfLogo | null): JsPDF {
   const doc = new JsPDFCtor({ unit: "pt", format: "a4" });
   const width = doc.internal.pageSize.getWidth();
   const height = doc.internal.pageSize.getHeight();
@@ -87,7 +96,14 @@ export function buildSummaryPdf(JsPDFCtor: typeof JsPDF, data: SummaryPdfData): 
     y += opts.gap ?? 4;
   };
 
-  write(t.pdf.header, { size: 10, color: 90, gap: 10 });
+  if (logo) {
+    const w = (logo.width / logo.height) * LOGO_HEIGHT_PT;
+    doc.addImage(logo.dataUrl, "PNG", MARGIN, y - 10, w, LOGO_HEIGHT_PT, "echodev-logo", "FAST");
+    y += LOGO_HEIGHT_PT + 6;
+    write(t.pdf.subtitle, { size: 10, color: 90, gap: 10 });
+  } else {
+    write(t.pdf.header, { size: 10, color: 90, gap: 10 });
+  }
   write(data.lessonTitle, { size: 18, bold: true, gap: 2 });
   write(t.pdf.date(data.date), { size: 10, color: 90, gap: 14 });
 
@@ -135,6 +151,28 @@ export function buildSummaryPdf(JsPDFCtor: typeof JsPDF, data: SummaryPdfData): 
 
 /** Browser download (jsPDF is loaded only when the button is clicked). */
 export async function downloadSummaryPdf(data: SummaryPdfData): Promise<void> {
-  const { jsPDF } = await import("jspdf");
-  buildSummaryPdf(jsPDF, data).save(pdfFileName(data.lessonTitle));
+  const [{ jsPDF }, logo] = await Promise.all([import("jspdf"), loadLogo()]);
+  buildSummaryPdf(jsPDF, data, logo).save(pdfFileName(data.lessonTitle));
+}
+
+/** Loads the logo as a data URL; null (text header) if it cannot be loaded. */
+async function loadLogo(): Promise<PdfLogo | null> {
+  try {
+    const blob = await fetch(LOGO_URL).then((r) => (r.ok ? r.blob() : Promise.reject(r.status)));
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    });
+    const size = await new Promise<{ width: number; height: number }>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+      img.onerror = reject;
+      img.src = dataUrl;
+    });
+    return { dataUrl, ...size };
+  } catch {
+    return null;
+  }
 }

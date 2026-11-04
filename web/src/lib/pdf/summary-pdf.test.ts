@@ -1,3 +1,4 @@
+import { readFileSync, writeFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { jsPDF } from "jspdf";
 import type { QuizItem } from "@/lib/api/types";
@@ -33,6 +34,16 @@ describe("summary pdf", () => {
     expect(g[0].short).toMatch(/ponto salvo/);
     expect(g[1].term).toBe("pull request");
     expect(g[2]).toEqual({ term: "algo que não é termo", short: null });
+  });
+
+  it("embeds the logo image when provided", () => {
+    const png = readFileSync(new URL("../../../public/brand/echodev-logo-640.png", import.meta.url));
+    const logo = { dataUrl: `data:image/png;base64,${png.toString("base64")}`, width: 640, height: 135 };
+    const doc = buildSummaryPdf(jsPDF, { lessonTitle: "Aula", date: new Date(), resumo }, logo);
+    const out = doc.output();
+    expect(out).toContain("/Subtype /Image");
+    expect(out).toContain("Resumo da aula");
+    if (process.env.PDF_OUT) writeFileSync(process.env.PDF_OUT, Buffer.from(doc.output("arraybuffer")));
   });
 
   it("produces a student PDF without the quiz and a teacher PDF with the answer key", () => {

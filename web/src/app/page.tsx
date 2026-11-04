@@ -1,12 +1,16 @@
 import Link from "next/link";
+import { BrandLogo } from "@/components/brand";
 import { t } from "@/lib/i18n/pt-BR";
 import { JoinForm } from "./join-form";
 
 export default function Home() {
   return (
     <main className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center gap-8 p-6">
-      <div className="space-y-3">
-        <h1 className="text-4xl font-bold">{t.app.name}</h1>
+      <div className="space-y-4">
+        <h1>
+          <span className="sr-only">{t.app.name}</span>
+          <BrandLogo priority className="h-16 sm:h-20" />
+        </h1>
         <p className="text-lg text-muted-foreground">{t.app.tagline}</p>
       </div>
       <JoinForm />

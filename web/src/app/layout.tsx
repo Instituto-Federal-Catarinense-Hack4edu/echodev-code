@@ -16,13 +16,13 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: t.app.name,
   description: t.app.tagline,
-  icons: { apple: "/icons/icon-192.png" },
+  icons: { apple: "/icons/apple-icon-180.png" },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#0f172a",
+  themeColor: "#a5400c",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

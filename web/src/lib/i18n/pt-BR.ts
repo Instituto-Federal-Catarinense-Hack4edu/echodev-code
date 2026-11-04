@@ -5,6 +5,9 @@ export const t = {
     tagline:
       "Uma mesma explicação que pode servir para todo tipo de estudante, com qualquer ritmo de aprendizado.",
   },
+  brand: {
+    home: "EchoDev: página inicial",
+  },
   home: {
     demoTeacher: "Demonstração: professor",
     demoStudent: "Demonstração: estudante",
@@ -277,6 +280,7 @@ export const t = {
     generating: "Gerando PDF…",
     error: "Não foi possível gerar o PDF.",
     header: "EchoDev · Resumo da aula",
+    subtitle: "Resumo da aula",
     date: (d: Date) => d.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" }),
     glossary: "Termos-chave",
     noDefinition: "Termo citado na aula.",

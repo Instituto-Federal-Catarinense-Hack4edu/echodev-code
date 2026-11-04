@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { buttonVariants } from "@/components/ui/button";
+import { BrandMark } from "@/components/brand";
 import { LiveCaption } from "@/components/live-caption";
 import { TermSheet, type FeedbackKind } from "@/components/term-sheet";
 import { DebugPanel } from "@/components/debug-panel";
@@ -43,6 +44,9 @@ export function StudentView(props: Props) {
   return (
     <div className="flex h-dvh flex-col">
       <header className="flex flex-wrap items-center gap-3 border-b px-4 py-2">
+        <Link href="/" aria-label={t.brand.home} className="inline-flex min-h-11 items-center">
+          <BrandMark />
+        </Link>
         <h1 className="mr-auto text-base font-semibold">{props.title}</h1>
         {!props.reviewHref && (
           <span

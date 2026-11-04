@@ -50,23 +50,24 @@
 
 :root {
   --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  /* EchoDev brand (from the logo): rust #a5400c, peach #e8b697, paper #f4f1e9, ink #17181c */
+  --foreground: #17181c;
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: #17181c;
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --popover-foreground: #17181c;
+  --primary: #a5400c;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f1e9;
+  --secondary-foreground: #17181c;
+  --muted: #f4f1e9;
+  --muted-foreground: #5f5a54;
+  --accent: #f4f1e9;
+  --accent-foreground: #17181c;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --border: #e7e1d6;
+  --input: #ddd5c8;
+  --ring: #a5400c;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -130,8 +131,8 @@
 }
 /* ===== EchoDev ===== */
 :root {
-  --term-bg: oklch(0.93 0.09 95);
-  --term-fg: oklch(0.25 0.05 80);
+  --term-bg: #f6dccb; /* light peach */
+  --term-fg: #5c2306; /* dark rust, ~10:1 on the peach */
 }
 .dark {
   --term-bg: oklch(0.42 0.09 85);
