@@ -66,6 +66,10 @@
 - **Link por e-mail e Google**: implementados; os testes usaram o login de desenvolvimento por senha.
 - **`pg_cron`**: não verifiquei se a extensão foi ativada no seu projeto. Se não estiver, use o plano B (`POST /cron/purge`, veja `docs/DEPLOY.md`).
 
+## Papéis e painel da aula (04/11/2026)
+- Professor e aluno separados no banco, nas rotas e no menu; área do aluno em `/aluno`; painel da aula após encerrar (PDF, conferir quiz, relatório); termo clicável no console do professor.
+- **Ação manual**: colar `supabase/migrations/20261104000600_roles.sql` no SQL Editor do Supabase (só esse arquivo, não o bundle).
+
 ## Pendências para a equipe
 - **Revisão humana do conteúdo** dos 40 termos (explicações e traduções) antes da demo. Nada na interface diz "verificado".
 - Variações fonéticas são hipóteses: validar no Teste A (`docs/TESTE_MANUAL.md`).
@@ -80,6 +84,4 @@ Palavras comuns do português que também são termos: `objeto`, `classe`, `mét
 ## Ideias fora do escopo
 - Legenda traduzida ao vivo (fora do MVP por definição).
 - Ensinar ao corretor plurais automáticos (hoje são listados em `forms`).
-- Avisar o estudante conectado quando a aula termina (mensagem no canal) com link direto para o resumo.
-- Lista de aulas para o estudante (hoje ele volta pelo código ou pelo link de revisão).
 - Painel de curadoria das correções de termos (`term_corrections`) para promovê-las ao pacote versionado.

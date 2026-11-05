@@ -6,7 +6,7 @@ import { publicEnv } from "@/lib/env";
 
 let browserClient: SupabaseClient | null = null;
 
-/** Single Supabase client for the whole browser session (pitfall 8). */
+/** One Supabase client for the whole browser session. */
 export function getSupabase(): SupabaseClient {
   if (browserClient) return browserClient;
   const env = publicEnv();

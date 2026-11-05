@@ -1,10 +1,11 @@
 import { SiteHeader } from "@/components/brand";
+import { RoleGate } from "@/components/role-gate";
 
 export default function ProfessorLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <SiteHeader />
-      {children}
+      <RoleGate role="professor">{children}</RoleGate>
     </>
   );
 }

@@ -14,13 +14,12 @@ const MAX_ATTEMPTS = 5;
 
 export function NewLessonForm() {
   const router = useRouter();
-  const { user, profile, loading } = useProfile();
+  const { user, loading } = useProfile();
   const [title, setTitle] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
 
   if (loading) return <p className="text-muted-foreground">{t.common.loading}</p>;
-  if (profile?.role !== "professor") return <p>{t.lessons.notTeacher}</p>;
 
   async function create(e: React.FormEvent) {
     e.preventDefault();

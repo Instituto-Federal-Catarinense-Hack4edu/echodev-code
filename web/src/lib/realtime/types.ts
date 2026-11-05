@@ -5,7 +5,6 @@ export type TransportStatus = "connecting" | "connected" | "disconnected" | "err
 export interface RealtimeTransport {
   readonly status: TransportStatus;
   publish(msg: UtteranceMessage): Promise<void>;
-  /** Returns an unsubscribe function. Invalid messages are dropped. */
   subscribe(handler: (msg: UtteranceMessage) => void): () => void;
   /** Fires on every status change; "connected" also fires after a reconnection. */
   onStatus(handler: (status: TransportStatus) => void): () => void;

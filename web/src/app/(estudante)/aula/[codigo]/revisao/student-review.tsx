@@ -51,7 +51,6 @@ export function StudentReview() {
         quiz: isQuiz(quiz) ? quiz : null,
       };
       setState(next);
-      // Waiting for the teacher's approval: check again until both are available.
       if (!next.resumo || !next.quiz) timer = setTimeout(load, APPROVAL_POLL_MS);
     };
     void load();

@@ -8,9 +8,8 @@ type Envelope =
   | { kind: "history-response"; requestId: string; payload: unknown[] };
 
 /**
- * BroadcastChannel between tabs of the same browser. Used in Phase 1 and as the
- * offline demo mode. The teacher tab can answer history requests so a student tab
- * opened late (or after a gap) recovers missed sentences, like the DB backfill.
+ * BroadcastChannel between tabs of the same browser (offline demo). The teacher tab answers
+ * history requests, so a student tab opened late recovers missed sentences, like the DB backfill.
  */
 export class LocalTransport implements RealtimeTransport {
   private channel: BroadcastChannel;
@@ -81,12 +80,10 @@ export class LocalTransport implements RealtimeTransport {
     return () => this.controlHandlers.delete(handler);
   }
 
-  /** Teacher side: answer students' history requests. */
   serveHistory(provider: (afterSeq: number) => UtteranceMessage[]): void {
     this.historyProvider = provider;
   }
 
-  /** Student side: ask the teacher tab for missed sentences (empty if nobody answers). */
   fetchSince: FetchSince = (afterSeq) =>
     new Promise((resolve) => {
       const requestId = Math.random().toString(36).slice(2);

@@ -26,7 +26,6 @@ export type PublicEnv = z.infer<typeof PublicEnvSchema>;
 
 let cached: PublicEnv | null = null;
 
-/** Validated public env. Throws a clear message when Supabase is not configured. */
 export function publicEnv(): PublicEnv {
   if (cached) return cached;
   const r = PublicEnvSchema.safeParse(raw);
@@ -41,7 +40,6 @@ export function publicEnv(): PublicEnv {
   return cached;
 }
 
-/** True when Supabase vars are present (the offline demo works without them). */
 export function hasSupabaseEnv(): boolean {
   return PublicEnvSchema.safeParse(raw).success;
 }

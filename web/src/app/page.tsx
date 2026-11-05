@@ -2,11 +2,13 @@ import Link from "next/link";
 import { BrandLogo, SiteHeader } from "@/components/brand";
 import { buttonVariants } from "@/components/ui/button";
 import { t } from "@/lib/i18n/pt-BR";
+import { HomeRedirect } from "./home-redirect";
 import { JoinForm } from "./join-form";
 
 export default function Home() {
   return (
     <>
+      <HomeRedirect />
       <SiteHeader />
       <main className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center gap-8 p-6">
         <div className="space-y-4">

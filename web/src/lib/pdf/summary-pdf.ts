@@ -47,7 +47,6 @@ export function pdfFileName(title: string): string {
   return `resumo-${slug || "aula"}.pdf`;
 }
 
-/** Key terms explained with the (pt) short definition from the term pack, when known. */
 export function glossary(keyTerms: string[]): { term: string; short: string | null }[] {
   const m = matcherFor();
   return keyTerms
@@ -155,7 +154,6 @@ export async function downloadSummaryPdf(data: SummaryPdfData): Promise<void> {
   buildSummaryPdf(jsPDF, data, logo).save(pdfFileName(data.lessonTitle));
 }
 
-/** Loads the logo as a data URL; null (text header) if it cannot be loaded. */
 async function loadLogo(): Promise<PdfLogo | null> {
   try {
     const blob = await fetch(LOGO_URL).then((r) => (r.ok ? r.blob() : Promise.reject(r.status)));

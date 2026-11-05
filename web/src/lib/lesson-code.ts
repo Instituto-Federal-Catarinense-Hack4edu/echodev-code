@@ -14,7 +14,6 @@ function randomValues(n: number): Uint32Array {
   return crypto.getRandomValues(new Uint32Array(n));
 }
 
-/** Normalizes what a student types ("abc 234" -> "ABC234"). */
 export function normalizeCode(input: string): string {
   return input.toUpperCase().replace(/[^A-Z0-9]/g, "");
 }

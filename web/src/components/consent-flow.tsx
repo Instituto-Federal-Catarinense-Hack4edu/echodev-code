@@ -12,11 +12,9 @@ export const OPTIONAL_PURPOSES: Purpose[] = ["doacao_lexico", "doacao_sinais"];
 
 interface Props {
   purposes: Purpose[];
-  /** Saves the purposes the student agreed to (never pre-checked). */
   onDone: (granted: Purpose[]) => Promise<void>;
 }
 
-/** One screen per purpose. Required ones cannot be skipped; optional ones can. */
 export function ConsentFlow({ purposes, onDone }: Props) {
   const [index, setIndex] = useState(0);
   const [checked, setChecked] = useState(false);

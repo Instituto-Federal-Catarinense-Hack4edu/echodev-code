@@ -2,7 +2,6 @@ import { t } from "@/lib/i18n/pt-BR";
 
 export const MIN_PASSWORD = 8;
 
-/** Maps Supabase Auth error codes to clear Portuguese messages. */
 export function authErrorMessage(error: { code?: string; status?: number; message?: string } | null): string {
   if (!error) return t.auth.errors.generic;
   switch (error.code) {

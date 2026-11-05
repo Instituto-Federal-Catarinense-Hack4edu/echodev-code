@@ -5,7 +5,6 @@ import { CaptionClient } from "./client-state";
 import type { UtteranceMessage } from "./schemas";
 import type { FetchSince, RealtimeTransport, TransportStatus } from "./types";
 
-/** Student side: subscribes, backfills by seq and exposes the ordered caption. */
 export function useCaptionClient(
   transport: RealtimeTransport | null,
   fetchSince: FetchSince | null,

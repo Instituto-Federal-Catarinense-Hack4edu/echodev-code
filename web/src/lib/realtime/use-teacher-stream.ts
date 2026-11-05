@@ -20,7 +20,6 @@ export interface TeacherStreamOptions {
    * taken (e.g. a second teacher tab); the stream then renumbers and retries.
    */
   persist?: PersistFn;
-  /** Highest stored seq, re-read after a duplicate. */
   currentMaxSeq?: () => Promise<number>;
   /** Highest seq already stored for this lesson (reload safety). */
   initialSeq?: number;
@@ -42,7 +41,6 @@ export function useTeacherStream(opts: TeacherStreamOptions) {
   const transportRef = useRef(transport);
   const persistRef = useRef(persist);
   const maxSeqRef = useRef(opts.currentMaxSeq);
-  /** Sentences are processed one at a time, in the order they were spoken. */
   const queueRef = useRef<Promise<void>>(Promise.resolve());
 
   useEffect(() => {
@@ -129,7 +127,6 @@ export function useTeacherStream(opts: TeacherStreamOptions) {
     setStatus("stopped");
   }, []);
 
-  /** Stops recognition and waits until every pending sentence is stored and published. */
   const stopAndFlush = useCallback(async () => {
     pause();
     await queueRef.current;
@@ -138,7 +135,6 @@ export function useTeacherStream(opts: TeacherStreamOptions) {
   // Stop recognition on unmount (also covers StrictMode double-mount).
   useEffect(() => () => providerRef.current?.stop(), []);
 
-  /** Sentences after a seq, for the local demo history server. */
   const historySince = useCallback(
     (afterSeq: number) => historyRef.current.filter((m) => m.seq > afterSeq),
     [],

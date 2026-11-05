@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 
-/** Keeps the screen on while mounted; re-acquired on visibilitychange. No-op if unsupported. */
 export function useWakeLock(enabled = true) {
   useEffect(() => {
     if (!enabled || typeof navigator === "undefined" || !("wakeLock" in navigator)) return;

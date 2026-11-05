@@ -24,7 +24,6 @@ function read(): LocalPrefs {
   }
 }
 
-/** Per-device preferences for the offline demo (logged-in students use their profile). */
 export function useLocalPrefs() {
   const [prefs, setPrefs] = useState<LocalPrefs>(DEFAULTS);
   useEffect(() => {

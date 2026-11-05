@@ -40,7 +40,6 @@ export class SupabaseTransport implements RealtimeTransport {
   }
 
   private async connect() {
-    // Private channels authorize with the user's JWT.
     await this.supabase.realtime.setAuth();
     if (this.closed) return;
     const channel = this.supabase.channel(lessonTopic(this.lessonId), {
@@ -121,7 +120,6 @@ export function rowToMessage(r: UtteranceRow): UtteranceMessage | null {
   });
 }
 
-/** Backfill from `utterances` (RLS: owner and members), paginated, ordered by seq. */
 export function utteranceFetcher(supabase: SupabaseClient, lessonId: string): FetchSince {
   return async (afterSeq) => {
     const rows = await fetchAllPages<UtteranceRow>(async (from, to) => {
@@ -139,7 +137,7 @@ export function utteranceFetcher(supabase: SupabaseClient, lessonId: string): Fe
   };
 }
 
-/** Highest stored seq for the lesson (teacher reload safety, pitfall 26). */
+/** Highest stored seq: a reloaded teacher page continues numbering from here. */
 export async function maxSeq(supabase: SupabaseClient, lessonId: string): Promise<number> {
   const { data, error } = await supabase
     .from("utterances")
@@ -151,7 +149,6 @@ export async function maxSeq(supabase: SupabaseClient, lessonId: string): Promis
   return (data?.[0]?.seq as number | undefined) ?? 0;
 }
 
-/** Stores one sentence. "duplicate" = that seq already exists (the caller renumbers). */
 export async function persistUtterance(
   supabase: SupabaseClient,
   lessonId: string,

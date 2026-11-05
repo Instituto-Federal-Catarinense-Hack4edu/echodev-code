@@ -17,7 +17,6 @@ interface Props {
   lang: Lang;
   onDepthChange: (d: Depth) => void;
   onLangChange: (l: Lang) => void;
-  /** When provided, shows the anonymous feedback buttons. */
   onFeedback?: (termId: string, kind: FeedbackKind, depth: Depth) => void;
 }
 

@@ -15,7 +15,6 @@ interface Props {
 const SIZES = [18, 22, 26, 32, 40];
 const FONT_KEY = "echodev:font-size";
 
-/** Big live caption with auto-scroll that pauses when the student scrolls up (re-read). */
 export function LiveCaption({ items, onTermClick }: Props) {
   const scroller = useRef<HTMLDivElement>(null);
   const [follow, setFollow] = useState(true);

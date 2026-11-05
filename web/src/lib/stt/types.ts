@@ -18,7 +18,6 @@ export interface SttError {
 export interface SttHandlers {
   /** Interim text (teacher screen only, never published). */
   onPartial?: (text: string) => void;
-  /** Final sentence, already deduplicated. */
   onFinal: (text: string) => void;
   onStatus?: (status: SttStatus) => void;
   onError?: (error: SttError) => void;
@@ -27,9 +26,7 @@ export interface SttHandlers {
 export interface SttProvider {
   readonly name: string;
   isSupported(): boolean;
-  /** Idempotent: calling start twice does not create two recognizers. */
   start(handlers: SttHandlers): void;
-  /** Idempotent; after stop no more callbacks fire. */
   stop(): void;
 }
 

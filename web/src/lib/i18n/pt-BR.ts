@@ -1,9 +1,46 @@
-// All user-facing strings live here (pt-BR).
 export const t = {
   app: {
     name: "EchoDev",
     tagline:
       "Uma mesma explicação que pode servir para todo tipo de estudante, com qualquer ritmo de aprendizado.",
+  },
+  dashboard: {
+    numbers: "Números da aula",
+    students: "Alunos que entraram",
+    duration: "Fala transcrita",
+    sentences: "Frases",
+    avgPace: "Ritmo médio",
+    wpmUnit: "palavras/min",
+    materials: "Resumo e quiz",
+    notGenerated: "Não gerado",
+    review: "Revisar e aprovar",
+    checkQuiz: "Conferir quiz",
+    hideQuiz: "Esconder quiz",
+    quizPreview: "Assim o aluno vê o quiz. As respostas aqui não são salvas.",
+    approveHint: "Os alunos só recebem o resumo e o quiz depois que você aprovar os dois.",
+    approvedHint: "Resumo e quiz aprovados: os alunos já podem ver e baixar o resumo.",
+    report: "Relatório da aula",
+    tapsTotal: (n: number) => (n === 1 ? "1 consulta a termos" : `${n} consultas a termos`),
+    notEnded: "Esta aula ainda não foi encerrada. O resumo, o quiz e o relatório aparecem aqui depois que você encerrar.",
+    open: "Painel da aula",
+  },
+  roles: {
+    teacherOnly: "Esta é a área do professor",
+    studentOnly: "Esta é a área do aluno",
+    youAreStudent: (email: string) =>
+      `Você está conectado como ${email}, que é uma conta de aluno. Contas de aluno não acessam a área do professor.`,
+    youAreTeacher: (email: string) =>
+      `Você está conectado como ${email}, que é uma conta de professor. Contas de professor não entram em aulas como aluno.`,
+    goTeacher: "Ir para minhas aulas (professor)",
+    goStudent: "Ir para a área do aluno",
+    noProfile: "Não encontramos o perfil desta conta. Saia e entre de novo.",
+  },
+  student_area: {
+    title: "Área do aluno",
+    lessons: "Minhas aulas",
+    empty: "Você ainda não entrou em nenhuma aula. Digite o código que o professor mostrar.",
+    live: "Entrar na aula",
+    review: "Resumo e quiz",
   },
   brand: {
     home: "EchoDev: página inicial",
@@ -220,6 +257,7 @@ export const t = {
     joining: "Entrando na aula…",
     invalidCode: "Não encontramos uma aula com esse código. Confira com o professor.",
     ended: "Esta aula já foi encerrada.",
+    teacherCannotJoin: "Contas de professor não entram em aulas como aluno.",
     review: "Ver resumo e quiz desta aula",
     error: "Não foi possível entrar na aula.",
   },
@@ -290,7 +328,7 @@ export const t = {
     invalidSummary: "O resumo precisa de título e de pelo menos 1 tópico.",
     discardFirst: "Para gerar de novo, descarte antes o material aprovado.",
     studentLink: (url: string) => `Os estudantes veem o material aprovado em ${url}`,
-    report: "Ver relatório da aula",
+    backToDashboard: "Voltar ao painel da aula",
     back: "Voltar para minhas aulas",
     studentTitle: "Resumo e quiz",
     notApproved:

@@ -21,7 +21,6 @@ export function validQuiz(q: QuizItem[]): boolean {
   );
 }
 
-/** Removes blank topics/terms before saving. */
 export function cleanResumo(r: Resumo): Resumo {
   return {
     titulo: r.titulo.trim(),
@@ -40,7 +39,6 @@ export interface LessonDates {
   created_at?: string | null;
 }
 
-/** The date a lesson happened (start, then end, then creation), for the PDF header. */
 export function lessonDate(l: LessonDates): Date {
   const iso = l.started_at ?? l.ended_at ?? l.created_at;
   const d = iso ? new Date(iso) : new Date();

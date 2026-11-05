@@ -12,7 +12,6 @@ export interface Profile {
   lang_pref: "pt" | "en" | "es";
 }
 
-/** Loads the signed-in user and own profile; redirects to /entrar when logged out. */
 export function useProfile() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);

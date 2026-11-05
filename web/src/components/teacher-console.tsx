@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CaptionText } from "@/components/caption-text";
 import { MicTest } from "@/components/mic-test";
+import { TermSheet } from "@/components/term-sheet";
+import type { Depth, Lang } from "@/lib/terms/schemas";
 import { controlPhase, type Source } from "@/lib/stt/control-phase";
 import { FakeSttProvider } from "@/lib/stt/fake";
 import { WebSpeechProvider } from "@/lib/stt/webspeech";
@@ -33,10 +35,7 @@ interface Props {
     historySince: (afterSeq: number) => UtteranceMessage[];
     stopAndFlush: () => Promise<void>;
   }) => void;
-  /** Called when transcription starts (the lesson goes live). */
   onFirstStart?: () => void;
-  /** Rendered when the teacher clicks a term in the sent list (e.g., correction form). */
-  renderTermAction?: (termId: string, sentence: UtteranceMessage) => React.ReactNode;
 }
 
 export function TeacherConsole(props: Props) {
@@ -62,7 +61,9 @@ export function TeacherConsole(props: Props) {
   const speech = useRef<WebSpeechProvider | null>(null);
   const demo = useRef<FakeSttProvider | null>(null);
   const list = useRef<HTMLDivElement>(null);
-  const [selected, setSelected] = useState<{ termId: string; seq: number } | null>(null);
+  const [openTerm, setOpenTerm] = useState<string | null>(null);
+  const [depth, setDepth] = useState<Depth>("curta");
+  const [lang, setLang] = useState<Lang>("pt");
 
   const phase = controlPhase({ status, error, source, starting, pausedByUser });
 
@@ -71,7 +72,6 @@ export function TeacherConsole(props: Props) {
     setSupported(new WebSpeechProvider().isSupported());
   }, []);
 
-  // Show the teacher whether students can actually receive the caption.
   useEffect(() => {
     const tr = props.transport;
     if (!tr) return;
@@ -80,7 +80,6 @@ export function TeacherConsole(props: Props) {
     return tr.onStatus(setChannel);
   }, [props.transport]);
 
-  // "Starting" ends as soon as the recognizer reports anything.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- derived from the provider status
     if (status === "listening" || status === "restarting" || error) setStarting(false);
@@ -98,7 +97,6 @@ export function TeacherConsole(props: Props) {
     return () => clearTimeout(timer);
   }, [phase]);
 
-  // Only mention reconnecting when an automatic restart takes unusually long.
   useEffect(() => {
     if (status !== "restarting") {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- reset when the restart ends
@@ -171,7 +169,6 @@ export function TeacherConsole(props: Props) {
 
   const blocked = micTesting;
   const micDisabled = blocked || !supported;
-  const selectedSentence = selected ? sentences.find((s) => s.seq === selected.seq) : undefined;
 
   return (
     <div className="grid gap-4 lg:grid-cols-[22rem_1fr]">
@@ -285,19 +282,10 @@ export function TeacherConsole(props: Props) {
           {sentences.map((s) => (
             <p key={s.seq}>
               <span className="mr-2 font-mono text-xs text-muted-foreground">#{s.seq}</span>
-              <CaptionText
-                text={s.text}
-                terms={s.terms}
-                onTermClick={
-                  props.renderTermAction ? (termId) => setSelected({ termId, seq: s.seq }) : undefined
-                }
-              />
+              <CaptionText text={s.text} terms={s.terms} onTermClick={setOpenTerm} />
             </p>
           ))}
         </div>
-        {selected && selectedSentence && props.renderTermAction && (
-          <div className="border-t p-4">{props.renderTermAction(selected.termId, selectedSentence)}</div>
-        )}
         {partial && (
           <div className="border-t bg-muted/50 px-4 py-3">
             <span className="text-sm text-muted-foreground">{t.teacher.partialLabel} </span>
@@ -305,6 +293,15 @@ export function TeacherConsole(props: Props) {
           </div>
         )}
       </section>
+
+      <TermSheet
+        termId={openTerm}
+        onClose={() => setOpenTerm(null)}
+        depth={depth}
+        lang={lang}
+        onDepthChange={setDepth}
+        onLangChange={setLang}
+      />
     </div>
   );
 }

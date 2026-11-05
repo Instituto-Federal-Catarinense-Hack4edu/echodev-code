@@ -49,9 +49,9 @@ grant execute on function realtime.topic() to authenticated;
 fails = 0
 
 
-def check(name, cond):
+def check(name, cond, detail=""):
     global fails
-    print(("OK   " if cond else "FAIL ") + name)
+    print(("OK   " if cond else "FAIL ") + name + (f"  ({detail})" if detail and not cond else ""))
     if not cond:
         fails += 1
 
@@ -251,6 +251,37 @@ with psycopg.connect(uri, autocommit=True) as c:
         (outsider, outsider),
     )
     check("ended lesson rejects join", fails_as(outsider, "select public.join_lesson('ABC234')"))
+
+    lesson2 = as_user(
+        teacher,
+        "insert into public.lessons (teacher_id, title, code) values (%s, 'Aula 2', 'DEF234') returning id",
+        (teacher,),
+    )[0][0]
+    try:
+        as_user(teacher, "select public.join_lesson('DEF234')")
+        teacher_join = "joined"
+    except psycopg.Error as exc:
+        teacher_join = str(exc)
+    check(
+        "teacher account cannot join as student",
+        "teacher_cannot_join" in teacher_join,
+        teacher_join,
+    )
+
+    as_user(outsider, "select public.join_lesson('DEF234')")
+    p_out = as_user(outsider, "select public.current_pseudonym()")[0][0]
+    as_user(
+        outsider,
+        "insert into public.term_events (lesson_id, pseudonym_id, term_id, kind) values (%s, %s, 'git', 'tap')",
+        (lesson2, p_out),
+    )
+    c.execute("update public.profiles set role = 'professor' where user_id = %s", (outsider,))
+    left = c.execute(
+        "select (select count(*) from public.lesson_members where pseudonym_id = %s)"
+        " + (select count(*) from public.term_events where pseudonym_id = %s)",
+        (p_out, p_out),
+    ).fetchone()[0]
+    check("promotion to teacher removes student traces", left == 0, str(left))
 
 print("FAILURES:", fails)
 sys.exit(1 if fails else 0)

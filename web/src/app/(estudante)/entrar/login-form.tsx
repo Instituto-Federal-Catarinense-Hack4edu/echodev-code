@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { authErrorMessage, MIN_PASSWORD, passwordProblem } from "@/lib/auth-errors";
 import { hasSupabaseEnv, publicEnv } from "@/lib/env";
 import { t } from "@/lib/i18n/pt-BR";
+import { destinationFor, type Role } from "@/lib/roles";
 import { safeNext } from "@/lib/safe-next";
 import { getSupabase } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -64,10 +65,9 @@ export function LoginForm() {
     setBusy(true);
     try {
       if (mode === "login") {
-        const { error } = await supabase.auth.signInWithPassword({ email: mail, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email: mail, password });
         if (error) return setNotice({ kind: "error", text: authErrorMessage(error) });
-        router.replace(next);
-        router.refresh();
+        await goToArea(data.user?.id);
       } else if (mode === "signup") {
         const { data, error } = await supabase.auth.signUp({
           email: mail,
@@ -76,11 +76,7 @@ export function LoginForm() {
         });
         if (error) return setNotice({ kind: "error", text: authErrorMessage(error) });
         // With e-mail confirmation off, Supabase returns a session right away.
-        if (data.session) {
-          router.replace(next);
-          router.refresh();
-          return;
-        }
+        if (data.session) return goToArea(data.user?.id);
         // An existing confirmed address comes back with no identities (no e-mail is sent).
         if (data.user && data.user.identities?.length === 0) {
           return setNotice({ kind: "error", text: t.auth.errors.alreadyExists });
@@ -98,6 +94,17 @@ export function LoginForm() {
     }
   }
 
+  async function roleOf(userId: string | undefined): Promise<Role> {
+    if (!userId) return "estudante";
+    const { data } = await getSupabase().from("profiles").select("role").eq("user_id", userId).maybeSingle();
+    return data?.role === "professor" ? "professor" : "estudante";
+  }
+
+  async function goToArea(userId: string | undefined) {
+    router.replace(destinationFor(await roleOf(userId), next));
+    router.refresh();
+  }
+
   async function signOut() {
     await getSupabase().auth.signOut();
     setCurrent(null);
@@ -113,7 +120,7 @@ export function LoginForm() {
       <div className="space-y-4 rounded-xl border p-4">
         <p>{t.auth.alreadyIn(current.email ?? "")}</p>
         <div className="flex flex-wrap gap-2">
-          <Button onClick={() => router.replace(next === "/" ? "/professor" : next)}>{t.auth.continue}</Button>
+          <Button onClick={() => void goToArea(current.id)}>{t.auth.continue}</Button>
           <Button variant="outline" onClick={signOut}>
             {t.auth.signOut}
           </Button>

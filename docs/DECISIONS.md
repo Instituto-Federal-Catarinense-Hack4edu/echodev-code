@@ -111,3 +111,10 @@ Riscos conhecidos que ficaram (sem mudança no banco, para não exigir SQL novo)
 - **Página inicial** separa estudante (código da aula), professor (entrar ou criar conta) e a demonstração offline (recolhida).
 - **Quem é professor** continua definido pela `teacher_allowlist`; novo `npm run teacher:add -- email` autoriza e promove contas existentes.
 - O projeto Supabase exige confirmação de e-mail (`mailer_autoconfirm: false`): ver `docs/SETUP_MANUAL.md` 3b.
+
+## Papéis separados e painel da aula (04/11/2026)
+- **Um e-mail é professor ou aluno, nunca os dois.** Migração `20261104000600_roles.sql`: `join_lesson` recusa conta de professor (`teacher_cannot_join`); promover uma conta a professor apaga os rastros de aluno dela (matrículas e eventos de termo), por gatilho.
+- **Áreas separadas**: `/professor/*` e `/aluno` + `/aula/*` passam por `RoleGate`; quem entra na área errada vê um aviso e o link para a própria área. Depois do login cada papel vai para a sua casa (`lib/roles.ts`). Nova página `/aluno` com o código da aula e as aulas que o estudante já entrou.
+- **Termo clicável também no console do professor**: abre a mesma ficha que o aluno vê (sem os botões de avaliação, que são só do aluno).
+- **Painel da aula** (`/professor/aulas/[id]`): ao encerrar, o professor cai nele. Mostra estudantes, duração, frases e ritmo médio, o estado do resumo e do quiz, o PDF do professor, a prévia do quiz ("Conferir quiz") e o relatório de ritmo e termos. A página `/relatorio` foi absorvida pelo painel.
+- Comentários que só repetiam o código foram removidos; ficaram os que explicam um porquê não óbvio.

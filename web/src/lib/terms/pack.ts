@@ -38,7 +38,6 @@ export interface ResolvedExplanation {
   text: string | string[];
 }
 
-/** Picks the explanation for a depth and language, falling back to Portuguese. */
 export function explain(term: Term, depth: Depth, lang: Lang): ResolvedExplanation {
   const key = depth === "curta" ? "short" : depth === "exemplo" ? "example" : "steps";
   const wanted = term.explanations[lang];

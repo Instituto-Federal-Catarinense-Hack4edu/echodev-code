@@ -15,7 +15,6 @@ export interface FakeOptions {
   loop?: boolean;
 }
 
-/** Replays a scripted lesson with realistic delays (tests, rehearsal, offline plan B). */
 export class FakeSttProvider implements SttProvider {
   readonly name = "fake";
   private timers: ReturnType<typeof setTimeout>[] = [];
@@ -83,7 +82,6 @@ export class FakeSttProvider implements SttProvider {
     this.timers = [];
   }
 
-  /** Restart from the first sentence. */
   reset(): void {
     this.stop();
     this.index = 0;

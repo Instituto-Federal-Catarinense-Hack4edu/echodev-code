@@ -18,7 +18,6 @@ const COMMON = new Set(
 
 export type CorrectionProblem = "too_short" | "common_word" | "profanity" | "other_term" | null;
 
-/** Why a heard phrase cannot become a variant of `termId` (null = acceptable). */
 export function correctionProblem(heard: string, termId: string, terms: MatchableTerm[]): CorrectionProblem {
   const words = normalize(heard).match(/[\p{L}\p{N}_]+/gu) ?? [];
   const joined = words.join("");

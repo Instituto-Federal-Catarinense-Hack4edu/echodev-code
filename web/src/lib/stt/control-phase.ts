@@ -2,7 +2,6 @@ import type { SttError, SttStatus } from "./types";
 
 export type Source = "mic" | "demo";
 
-/** What the teacher sees in the transcription panel. One state, one clear set of buttons. */
 export type ControlPhase =
   | "idle" // nothing started yet
   | "starting" // clicked start, waiting for the browser (mic permission) or the first result

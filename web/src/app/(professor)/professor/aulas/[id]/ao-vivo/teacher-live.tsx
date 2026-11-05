@@ -88,7 +88,6 @@ export function TeacherLive() {
     return () => tr.close();
   }, [liveLessonId]);
 
-  // Connected students counter (aggregate only, never pseudonyms).
   const lessonId = lesson?.id ?? null;
   useEffect(() => {
     if (!lessonId) return;
@@ -133,8 +132,8 @@ export function TeacherLive() {
     try {
       await apiFetch(`/lessons/${lesson.id}/end`, { method: "POST", timeoutMs: END_TIMEOUT_MS });
     } catch (e) {
-      // 502 (LLM failed) or a timeout still leave the lesson ended on the server: check
-      // the real status instead of trusting the error, and go to review if it ended.
+      // 502 (LLM failed) or a timeout still leave the lesson ended on the server: trust the
+      // real status, not the error.
       const { data } = await getSupabase().from("lessons").select("status").eq("id", lesson.id).maybeSingle();
       if (data?.status !== "encerrada") {
         setEnding(false);
@@ -144,7 +143,7 @@ export function TeacherLive() {
     }
     // Tell connected students right away (they also re-check the status on reconnect).
     await transport?.publishControl({ type: "lesson_ended", at: Date.now() }).catch(() => undefined);
-    router.push(`/professor/aulas/${lesson.id}/revisar`);
+    router.push(`/professor/aulas/${lesson.id}`);
   }
 
   const joinUrl = useMemo(
@@ -174,8 +173,8 @@ export function TeacherLive() {
             {ending ? t.lessons.ending : t.teacher.end}
           </Button>
         ) : (
-          <Link className="underline underline-offset-4" href={`/professor/aulas/${lesson.id}/revisar`}>
-            {t.lessons.reviewMaterials}
+          <Link className="underline underline-offset-4" href={`/professor/aulas/${lesson.id}`}>
+            {t.dashboard.open}
           </Link>
         )}
       </header>

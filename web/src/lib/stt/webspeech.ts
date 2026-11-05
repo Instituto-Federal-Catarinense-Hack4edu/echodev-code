@@ -77,7 +77,7 @@ export class WebSpeechProvider implements SttProvider {
   /**
    * Asks for the microphone directly first: it shows the browser's permission question
    * clearly and tells apart "denied", "no microphone" and "microphone busy". The stream is
-   * closed right away so it never competes with recognition (pitfall 2).
+   * closed right away so it never competes with recognition.
    */
   private async preflight(): Promise<{ kind: SttErrorKind; code: string } | null> {
     const media = typeof navigator !== "undefined" ? navigator.mediaDevices : undefined;

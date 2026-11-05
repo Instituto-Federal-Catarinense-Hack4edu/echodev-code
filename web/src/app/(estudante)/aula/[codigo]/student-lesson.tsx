@@ -25,6 +25,7 @@ type Phase =
 function joinErrorMessage(message: string): { message: string; reviewLink?: boolean } {
   if (message.includes("invalid_code")) return { message: t.join.invalidCode };
   if (message.includes("lesson_ended")) return { message: t.join.ended, reviewLink: true };
+  if (message.includes("teacher_cannot_join")) return { message: t.join.teacherCannotJoin };
   return { message: t.join.error };
 }
 
@@ -37,7 +38,6 @@ export function StudentLesson() {
   const [pseudonym, setPseudonym] = useState<string | null>(null);
   const [ended, setEnded] = useState(false);
 
-  /** Saves a preference on the profile (only the columns the user may update). */
   const updatePrefs = useCallback(
     (patch: Partial<Pick<Profile, "depth_pref" | "lang_pref">>) => {
       if (!profile) return;
@@ -61,7 +61,6 @@ export function StudentLesson() {
     setPhase({ kind: "live", lessonId, title: (lesson?.title as string | undefined) ?? code });
   }, [code]);
 
-  // Consents first (only the missing ones), then join.
   useEffect(() => {
     if (loading || !user) return;
     let cancelled = false;

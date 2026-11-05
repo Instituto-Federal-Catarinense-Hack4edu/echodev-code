@@ -9,7 +9,6 @@ import { hasSupabaseEnv } from "@/lib/env";
 import { getSupabase } from "@/lib/supabase/client";
 import { t } from "@/lib/i18n/pt-BR";
 
-/** Who is signed in, with links to their area and a sign-out button (or "Entrar"). */
 export function UserMenu() {
   const router = useRouter();
   const [user, setUser] = useState<User | null | undefined>(undefined);
@@ -47,11 +46,12 @@ export function UserMenu() {
   return (
     <div className="flex flex-wrap items-center gap-2 text-sm">
       <span className="hidden text-muted-foreground sm:inline">{t.auth.signedInAs(user.email ?? "")}</span>
-      {isTeacher && (
-        <Link className="inline-flex min-h-11 items-center px-2 underline underline-offset-4" href="/professor">
-          {t.lessons.title}
-        </Link>
-      )}
+      <Link
+        className="inline-flex min-h-11 items-center px-2 underline underline-offset-4"
+        href={isTeacher ? "/professor" : "/aluno"}
+      >
+        {isTeacher ? t.lessons.title : t.student_area.title}
+      </Link>
       <Link className="inline-flex min-h-11 items-center px-2 underline underline-offset-4" href="/conta">
         {t.student.account}
       </Link>

@@ -24,7 +24,6 @@ interface Props {
   onTermOpen?: (termId: string, depth: Depth) => void;
   onFeedback?: (termId: string, kind: FeedbackKind, depth: Depth) => void;
   headerExtra?: React.ReactNode;
-  /** Set when the lesson is over: shows the banner with the link to summary and quiz. */
   reviewHref?: string | null;
   debug?: boolean;
 }

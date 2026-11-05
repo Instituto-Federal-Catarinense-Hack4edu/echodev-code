@@ -129,7 +129,6 @@
     @apply font-sans;
   }
 }
-/* ===== EchoDev ===== */
 :root {
   --term-bg: #f6dccb; /* light peach */
   --term-fg: #5c2306; /* dark rust, ~10:1 on the peach */
@@ -145,7 +144,6 @@
     min-height: 44px;
     min-width: 44px;
   }
-  /* Visible focus everywhere. */
   :focus-visible {
     outline: 3px solid var(--ring);
     outline-offset: 2px;

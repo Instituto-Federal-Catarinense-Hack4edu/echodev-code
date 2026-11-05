@@ -21,7 +21,6 @@ export const UtteranceMessageSchema = z
   });
 export type UtteranceMessage = z.infer<typeof UtteranceMessageSchema>;
 
-/** Lesson-level signals sent on the same channel (e.g., the teacher ended the lesson). */
 export const ControlMessageSchema = z.object({
   type: z.literal("lesson_ended"),
   at: z.number().int().nonnegative(),

@@ -51,7 +51,6 @@ describe("approximate matching", () => {
   it("skips blocked Portuguese words, short words and fuzzy:false terms", () => {
     expect(fm.match("quadro branco").text).toBe("quadro branco");
     expect(fm.match("classi").text).toBe("classi");
-    expect(fm.match("comit").terms).toHaveLength(0 + fm.match("comit").terms.length); // sanity
     expect(fm.match("git").terms).toHaveLength(0);
   });
 

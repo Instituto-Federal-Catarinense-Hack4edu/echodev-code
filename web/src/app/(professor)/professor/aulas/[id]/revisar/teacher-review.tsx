@@ -119,8 +119,8 @@ export function TeacherReview() {
         <p className="text-muted-foreground">{t.review.intro}</p>
         <p className="text-sm">{t.review.studentLink(studentUrl)}</p>
         <nav className="flex flex-wrap gap-4 text-sm">
-          <Link className="underline underline-offset-4" href={`/professor/aulas/${id}/relatorio`}>
-            {t.review.report}
+          <Link className="underline underline-offset-4" href={`/professor/aulas/${id}`}>
+            {t.review.backToDashboard}
           </Link>
           <Link className="underline underline-offset-4" href="/professor">
             {t.review.back}

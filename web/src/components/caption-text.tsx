@@ -12,13 +12,12 @@ interface Props {
   className?: string;
 }
 
-/** Renders a sentence with highlighted terms (buttons when clickable). */
 export function CaptionText({ text, terms, onTermClick, className }: Props) {
   const parts: React.ReactNode[] = [];
   let cursor = 0;
   const sorted = [...terms].sort((a, b) => a.start - b.start);
   sorted.forEach((s, i) => {
-    if (s.start < cursor) return; // defensive: skip overlaps
+    if (s.start < cursor) return;
     if (s.start > cursor) parts.push(<Fragment key={`t${i}`}>{text.slice(cursor, s.start)}</Fragment>);
     const word = text.slice(s.start, s.end);
     parts.push(

@@ -18,7 +18,6 @@ export function MicTest({
   onTestingChange,
 }: {
   disabled?: boolean;
-  /** Lets the console block speech recognition while the mic is held by the test. */
   onTestingChange?: (testing: boolean) => void;
 }) {
   const [phase, setPhase] = useState<Phase>("idle");

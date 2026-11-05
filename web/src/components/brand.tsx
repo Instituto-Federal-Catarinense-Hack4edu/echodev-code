@@ -4,7 +4,6 @@ import { UserMenu } from "@/components/user-menu";
 import { t } from "@/lib/i18n/pt-BR";
 import { cn } from "@/lib/utils";
 
-/** Full logo (mark + "EchoDev" wordmark). The image already contains the name. */
 export function BrandLogo({ className, priority }: { className?: string; priority?: boolean }) {
   return (
     <Image
@@ -18,7 +17,6 @@ export function BrandLogo({ className, priority }: { className?: string; priorit
   );
 }
 
-/** Speech-bubble mark only (for tight headers such as the live caption). */
 export function BrandMark({ className }: { className?: string }) {
   return (
     <Image
@@ -32,7 +30,6 @@ export function BrandMark({ className }: { className?: string }) {
   );
 }
 
-/** Top bar used on regular pages: logo linking home, the signed-in user (or "Entrar"). */
 export function SiteHeader({ children, showUser = true }: { children?: React.ReactNode; showUser?: boolean }) {
   return (
     <header className="border-b bg-background">

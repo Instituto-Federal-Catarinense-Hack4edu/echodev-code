@@ -1,6 +1,5 @@
 import type { TermSpan } from "@/lib/realtime/schemas";
 
-/** Minimal shape the matcher needs (a subset of Term). */
 export interface MatchableTerm {
   id: string;
   canonical: string;
@@ -133,7 +132,6 @@ export function createMatcher(terms: MatchableTerm[]): Matcher {
     }
   }
 
-  /** Picks the single closest entry; undefined when none or when two terms tie. */
   function pickBest(candidates: { d: number; entry: Entry }[]): Entry | undefined {
     let best: Entry | undefined;
     let bestDist = Infinity;
@@ -213,7 +211,7 @@ export function createMatcher(terms: MatchableTerm[]): Matcher {
     match(text: string): MatchResult {
       const tokens = tokenize(text);
       let out = "";
-      let cursor = 0; // position in the original text
+      let cursor = 0;
       const spans: TermSpan[] = [];
 
       let i = 0;
@@ -226,8 +224,7 @@ export function createMatcher(terms: MatchableTerm[]): Matcher {
             break;
           }
         }
-        // Exact matches always win; only then try an approximate match: one word first,
-        // then two words joined (each with 3+ letters, so short words like "é" are never eaten).
+        // Exact matches always win; only then try an approximate match (one word, then a pair).
         if (!found) {
           for (let n = 1; n <= Math.min(2, tokens.length - i); n++) {
             const entry = fuzzyLookup(tokens, i, n, text);

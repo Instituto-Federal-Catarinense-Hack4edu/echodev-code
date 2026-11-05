@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { SiteHeader } from "@/components/brand";
+import { RoleGate } from "@/components/role-gate";
 import { t } from "@/lib/i18n/pt-BR";
 import { StudentReview } from "./student-review";
 
@@ -8,7 +9,9 @@ export default function Page() {
     <>
       <SiteHeader />
       <Suspense fallback={<p className="p-6 text-muted-foreground">{t.common.loading}</p>}>
-        <StudentReview />
+        <RoleGate role="estudante">
+          <StudentReview />
+        </RoleGate>
       </Suspense>
     </>
   );

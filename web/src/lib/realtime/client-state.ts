@@ -18,14 +18,12 @@ export class CaptionStore {
     return this.sorted;
   }
 
-  /** Adds one message. Returns true when a gap (missing seq) exists after this insert. */
   ingest(msg: UtteranceMessage): { added: boolean; gap: boolean } {
     const added = this.insert(msg);
     if (added) this.rebuild();
     return { added, gap: this.hasGap() };
   }
 
-  /** Merges many messages (backfill). Returns how many were new. */
   merge(msgs: UtteranceMessage[]): number {
     let n = 0;
     for (const m of msgs) if (this.insert(m)) n++;
