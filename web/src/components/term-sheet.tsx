@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { explain, getTerm } from "@/lib/terms/pack";
+import { explain, getTerm, literalMeaning } from "@/lib/terms/pack";
 import type { Depth, Lang } from "@/lib/terms/schemas";
-import { t } from "@/lib/i18n/pt-BR";
+import { useT } from "@/lib/i18n/context";
 import { cn } from "@/lib/utils";
 
 export type FeedbackKind = "helped" | "not_helped" | "doubt";
@@ -58,10 +58,12 @@ function Segmented<T extends string>({
 }
 
 export function TermSheet(props: Props) {
+  const t = useT();
   const { termId, onClose, depth, lang, onDepthChange, onLangChange, onFeedback } = props;
   const term = termId ? getTerm(termId) : undefined;
   const [sentFor, setSentFor] = useState<string | null>(null);
   const resolved = term ? explain(term, depth, lang) : null;
+  const literal = term ? literalMeaning(term, lang) : undefined;
 
   return (
     <Sheet open={!!term} onOpenChange={(open) => !open && onClose()}>
@@ -96,10 +98,10 @@ export function TermSheet(props: Props) {
             </div>
             {resolved.fellBack && <p className="text-sm text-muted-foreground">{t.termSheet.fallback}</p>}
 
-            {term.figurative && term.literalMeaning && (
+            {literal && (
               <p className="rounded-lg border p-3 text-base">
                 <strong>{t.termSheet.literal}: </strong>
-                {term.literalMeaning}
+                {literal}
               </p>
             )}
 

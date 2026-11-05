@@ -12,6 +12,8 @@ import { cleanResumo, isQuiz, isResumo, lessonDate, validQuiz, validResumo, type
 import { getSupabase } from "@/lib/supabase/client";
 import { useProfile } from "@/lib/supabase/use-profile";
 import { t } from "@/lib/i18n/pt-BR";
+import { createEsTranslator, esAvailability } from "@/lib/translate/browser";
+import { translateMaterials } from "@/lib/translate/materials";
 import { QuizEditor, ResumoEditor } from "./editors";
 
 type Status = "rascunho" | "aprovado" | "descartado";
@@ -22,7 +24,7 @@ interface LessonInfo extends LessonDates {
 }
 interface Row<C> {
   id: string;
-  kind: "resumo" | "quiz";
+  kind: "resumo" | "quiz" | "resumo_es" | "quiz_es";
   status: Status;
   content: C;
 }
@@ -34,6 +36,8 @@ export function TeacherReview() {
   const [notFound, setNotFound] = useState(false);
   const [resumo, setResumo] = useState<Row<Resumo> | null>(null);
   const [quiz, setQuiz] = useState<Row<QuizItem[]> | null>(null);
+  const [resumoEs, setResumoEs] = useState<Row<Resumo> | null>(null);
+  const [quizEs, setQuizEs] = useState<Row<QuizItem[]> | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -52,10 +56,18 @@ export function TeacherReview() {
     setLesson(l);
     const { data } = await supabase.from("lesson_materials").select("id,kind,status,content").eq("lesson_id", id);
     const rows = (data ?? []) as Row<unknown>[];
-    const r = rows.find((x) => x.kind === "resumo");
-    const q = rows.find((x) => x.kind === "quiz");
-    setResumo(r && isResumo(r.content) ? (r as Row<Resumo>) : null);
-    setQuiz(q && isQuiz(q.content) ? (q as Row<QuizItem[]>) : null);
+    const resumoRow = (kind: Row<unknown>["kind"]) => {
+      const r = rows.find((x) => x.kind === kind);
+      return r && isResumo(r.content) ? (r as Row<Resumo>) : null;
+    };
+    const quizRow = (kind: Row<unknown>["kind"]) => {
+      const q = rows.find((x) => x.kind === kind);
+      return q && isQuiz(q.content) ? (q as Row<QuizItem[]>) : null;
+    };
+    setResumo(resumoRow("resumo"));
+    setQuiz(quizRow("quiz"));
+    setResumoEs(resumoRow("resumo_es"));
+    setQuizEs(quizRow("quiz_es"));
   }, [id, user]);
 
   useEffect(() => {
@@ -86,6 +98,49 @@ export function TeacherReview() {
     } finally {
       setBusy(false);
     }
+  }
+
+  async function translateToSpanish() {
+    if (!resumo || !quiz) {
+      setError(t.review.esNeedsPt);
+      return;
+    }
+    if ((resumoEs || quizEs) && !window.confirm(t.review.esConfirm)) return;
+    setBusy(true);
+    setError(null);
+    setMessage(t.review.esTranslating);
+    try {
+      const translate = await createEsTranslator();
+      const out = await translateMaterials(translate, cleanResumo(resumo.content), quiz.content);
+      await storeSpanish("resumo_es", resumoEs, out.resumo);
+      await storeSpanish("quiz_es", quizEs, out.quiz);
+      await load();
+      setMessage(t.review.esDone);
+    } catch {
+      const a = await esAvailability();
+      setMessage(null);
+      setError(
+        a === "unsupported"
+          ? t.teacher.translation.unsupported
+          : a === "unavailable"
+            ? t.teacher.translation.unavailable
+            : t.teacher.translation.error,
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function storeSpanish(kind: "resumo_es" | "quiz_es", existing: Row<unknown> | null, content: unknown) {
+    const supabase = getSupabase();
+    const now = new Date().toISOString();
+    const { error: err } = existing
+      ? await supabase
+          .from("lesson_materials")
+          .update({ content, status: "rascunho", approved_at: null, updated_at: now })
+          .eq("id", existing.id)
+      : await supabase.from("lesson_materials").insert({ lesson_id: id, kind, content });
+    if (err) throw new Error(err.message);
   }
 
   async function save<C>(row: Row<C>, content: C, status: Status) {
@@ -192,6 +247,44 @@ export function TeacherReview() {
         >
           <QuizEditor value={quiz.content} onChange={(content) => setQuiz({ ...quiz, content })} />
         </MaterialCard>
+      )}
+
+      {!nothing && (
+        <section className="space-y-4 border-t pt-6" aria-labelledby="es-title">
+          <div className="space-y-2">
+            <h2 id="es-title" className="text-xl font-semibold">
+              {t.review.esTitle}
+            </h2>
+            <p className="text-sm text-muted-foreground">{t.review.esIntro}</p>
+            <Button variant="outline" onClick={translateToSpanish} disabled={busy || !resumo || !quiz}>
+              {t.review.esTranslate}
+            </Button>
+          </div>
+          {resumoEs && (
+            <MaterialCard
+              title={t.review.esSummary}
+              row={resumoEs}
+              busy={busy}
+              valid={validResumo(cleanResumo(resumoEs.content))}
+              invalidText={t.review.invalidSummary}
+              onSave={(status) => save(resumoEs, cleanResumo(resumoEs.content), status)}
+            >
+              <ResumoEditor value={resumoEs.content} onChange={(content) => setResumoEs({ ...resumoEs, content })} />
+            </MaterialCard>
+          )}
+          {quizEs && (
+            <MaterialCard
+              title={t.review.esQuiz}
+              row={quizEs}
+              busy={busy}
+              valid={validQuiz(quizEs.content)}
+              invalidText={t.review.invalidQuiz}
+              onSave={(status) => save(quizEs, quizEs.content, status)}
+            >
+              <QuizEditor value={quizEs.content} onChange={(content) => setQuizEs({ ...quizEs, content })} />
+            </MaterialCard>
+          )}
+        </section>
       )}
     </main>
   );

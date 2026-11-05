@@ -11,25 +11,30 @@ import { fire } from "@/lib/supabase/fire";
 import type { Depth } from "@/lib/terms/schemas";
 import { useProfile, type Profile } from "@/lib/supabase/use-profile";
 import { useDebugFlag } from "@/lib/use-debug-flag";
+import { LanguageSelect } from "@/components/language-select";
+import { useT } from "@/lib/i18n/context";
+import { useProfileLang } from "@/lib/i18n/use-profile-lang";
 
 const ENDED_POLL_MS = 30_000;
-import { t } from "@/lib/i18n/pt-BR";
 
 type Phase =
   | { kind: "loading" }
   | { kind: "consent"; purposes: Purpose[] }
   | { kind: "joining" }
   | { kind: "live"; lessonId: string; title: string }
-  | { kind: "error"; message: string; reviewLink?: boolean };
+  | { kind: "error"; reason: JoinError };
 
-function joinErrorMessage(message: string): { message: string; reviewLink?: boolean } {
-  if (message.includes("invalid_code")) return { message: t.join.invalidCode };
-  if (message.includes("lesson_ended")) return { message: t.join.ended, reviewLink: true };
-  if (message.includes("teacher_cannot_join")) return { message: t.join.teacherCannotJoin };
-  return { message: t.join.error };
+type JoinError = "invalidCode" | "ended" | "teacherCannotJoin" | "error" | "generic";
+
+function joinError(message: string): JoinError {
+  if (message.includes("invalid_code")) return "invalidCode";
+  if (message.includes("lesson_ended")) return "ended";
+  if (message.includes("teacher_cannot_join")) return "teacherCannotJoin";
+  return "error";
 }
 
 export function StudentLesson() {
+  const t = useT();
   const params = useParams<{ codigo: string }>();
   const code = (params.codigo ?? "").toUpperCase();
   const { user, profile, setProfile, loading } = useProfile();
@@ -38,8 +43,10 @@ export function StudentLesson() {
   const [pseudonym, setPseudonym] = useState<string | null>(null);
   const [ended, setEnded] = useState(false);
 
+  const [lang, changeLang] = useProfileLang(profile, setProfile);
+
   const updatePrefs = useCallback(
-    (patch: Partial<Pick<Profile, "depth_pref" | "lang_pref">>) => {
+    (patch: Partial<Pick<Profile, "depth_pref">>) => {
       if (!profile) return;
       setProfile({ ...profile, ...patch });
       fire(getSupabase().from("profiles").update(patch).eq("user_id", profile.user_id), "save prefs");
@@ -52,7 +59,7 @@ export function StudentLesson() {
     setPhase({ kind: "joining" });
     const { data: lessonId, error } = await supabase.rpc("join_lesson", { p_code: code });
     if (error || typeof lessonId !== "string") {
-      setPhase({ kind: "error", ...joinErrorMessage(error?.message ?? "") });
+      setPhase({ kind: "error", reason: joinError(error?.message ?? "") });
       return;
     }
     const { data: lesson } = await supabase.from("lessons").select("title").eq("id", lessonId).single();
@@ -93,7 +100,7 @@ export function StudentLesson() {
         .from("consents")
         .insert(granted.map((purpose) => ({ user_id: user.id, purpose })));
       if (error && error.code !== "23505") {
-        setPhase({ kind: "error", message: t.common.error });
+        setPhase({ kind: "error", reason: "generic" });
         return;
       }
     }
@@ -148,12 +155,20 @@ export function StudentLesson() {
     [lessonId, pseudonym],
   );
 
-  if (phase.kind === "consent") return <ConsentFlow purposes={phase.purposes} onDone={onConsentDone} />;
+  if (phase.kind === "consent")
+    return (
+      <>
+        <div className="flex justify-end px-4 pt-2">
+          <LanguageSelect value={lang} onChange={changeLang} />
+        </div>
+        <ConsentFlow purposes={phase.purposes} onDone={onConsentDone} />
+      </>
+    );
   if (phase.kind === "error")
     return (
       <main className="mx-auto max-w-md space-y-4 p-6">
-        <p className="text-lg">{phase.message}</p>
-        {phase.reviewLink && (
+        <p className="text-lg">{phase.reason === "generic" ? t.common.error : t.join[phase.reason]}</p>
+        {phase.reason === "ended" && (
           <Link className="underline underline-offset-4" href={`/aula/${code}/revisao`}>
             {t.join.review}
           </Link>
@@ -169,17 +184,20 @@ export function StudentLesson() {
       fetchSince={fetchSince}
       title={phase.title}
       depth={profile?.depth_pref ?? "curta"}
-      lang={profile?.lang_pref ?? "pt"}
+      lang={lang}
       onDepthChange={(depth_pref) => updatePrefs({ depth_pref })}
-      onLangChange={(lang_pref) => updatePrefs({ lang_pref })}
+      onLangChange={changeLang}
       onTermOpen={(termId, depth) => logEvent(termId, "tap", depth)}
       onFeedback={(termId, kind, depth) => logEvent(termId, kind, depth)}
       reviewHref={ended ? `/aula/${code}/revisao` : null}
       debug={debug}
       headerExtra={
-        <Link href="/conta" className="inline-flex min-h-11 items-center px-2 text-sm underline underline-offset-4">
-          {t.student.account}
-        </Link>
+        <>
+          <LanguageSelect value={lang} onChange={changeLang} />
+          <Link href="/conta" className="inline-flex min-h-11 items-center px-2 text-sm underline underline-offset-4">
+            {t.student.account}
+          </Link>
+        </>
       }
     />
   );

@@ -8,6 +8,12 @@
       "port": 3000
     },
     {
+      "name": "web-3100",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "web", "run", "dev", "--", "--port", "3100"],
+      "port": 3100
+    },
+    {
       "name": "api",
       "runtimeExecutable": "node",
       "runtimeArgs": ["scripts/py.mjs", "--cwd", "api", "-m", "uvicorn", "app.main:app", "--port", "8000"],

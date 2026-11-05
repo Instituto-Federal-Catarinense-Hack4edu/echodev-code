@@ -2,7 +2,7 @@
 
 import { Fragment } from "react";
 import type { TermSpan } from "@/lib/realtime/schemas";
-import { t } from "@/lib/i18n/pt-BR";
+import { useT } from "@/lib/i18n/context";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -13,6 +13,7 @@ interface Props {
 }
 
 export function CaptionText({ text, terms, onTermClick, className }: Props) {
+  const t = useT();
   const parts: React.ReactNode[] = [];
   let cursor = 0;
   const sorted = [...terms].sort((a, b) => a.start - b.start);

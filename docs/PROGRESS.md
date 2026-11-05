@@ -70,6 +70,11 @@
 - Professor e aluno separados no banco, nas rotas e no menu; área do aluno em `/aluno`; painel da aula após encerrar (PDF, conferir quiz, relatório); termo clicável no console do professor.
 - **Ação manual**: colar `supabase/migrations/20261104000600_roles.sql` no SQL Editor do Supabase (só esse arquivo, não o bundle).
 
+## Espanhol (05/11/2026)
+- Legenda traduzida ao vivo (Chrome do professor), telas do aluno, explicações completas dos 40 termos, resumo, quiz e PDF em espanhol.
+- **Ação manual**: colar `supabase/migrations/20261105000100_spanish.sql` no SQL Editor do Supabase (depois da migração de papéis). Sem ela, as frases continuam sendo salvas só em português.
+- Para traduzir, o professor usa o Google Chrome 138+ no computador e clica em "Ativar tradução para espanhol" (o Chrome baixa o pacote de idioma uma vez).
+
 ## Pendências para a equipe
 - **Revisão humana do conteúdo** dos 40 termos (explicações e traduções) antes da demo. Nada na interface diz "verificado".
 - Variações fonéticas são hipóteses: validar no Teste A (`docs/TESTE_MANUAL.md`).
@@ -82,6 +87,5 @@
 Palavras comuns do português que também são termos: `objeto`, `classe`, `método`, `função`, `variável`, `parâmetro`, `biblioteca`, `repositório`, `algoritmo`. Outros riscos: `jason` (nome próprio) como variação de JSON; `repo`; `bug`/`merge` em conversa informal. `for` ficou de fora de propósito ("se ele **for**").
 
 ## Ideias fora do escopo
-- Legenda traduzida ao vivo (fora do MVP por definição).
 - Ensinar ao corretor plurais automáticos (hoje são listados em `forms`).
 - Painel de curadoria das correções de termos (`term_corrections`) para promovê-las ao pacote versionado.

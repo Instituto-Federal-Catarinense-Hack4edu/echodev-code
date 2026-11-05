@@ -16,6 +16,7 @@ import type { UtteranceMessage } from "@/lib/realtime/schemas";
 import type { RealtimeTransport, TransportStatus } from "@/lib/realtime/types";
 import type { PersistFn } from "@/lib/realtime/persist";
 import { useTeacherStream } from "@/lib/realtime/use-teacher-stream";
+import { useEsTranslation } from "@/lib/translate/use-es-translation";
 import { t } from "@/lib/i18n/pt-BR";
 import { cn } from "@/lib/utils";
 
@@ -39,7 +40,9 @@ interface Props {
 }
 
 export function TeacherConsole(props: Props) {
+  const translation = useEsTranslation();
   const stream = useTeacherStream({
+    translate: translation.translate,
     transport: props.transport,
     persist: props.persist,
     currentMaxSeq: props.currentMaxSeq,
@@ -273,6 +276,8 @@ export function TeacherConsole(props: Props) {
           )}
           {persistError && <p className="text-sm text-destructive">{t.teacher.persistError(persistError)}</p>}
         </section>
+
+        <TranslationPanel translation={translation} />
       </div>
 
       <section className="flex max-h-[75dvh] min-h-[50dvh] flex-col rounded-xl border">
@@ -283,6 +288,11 @@ export function TeacherConsole(props: Props) {
             <p key={s.seq}>
               <span className="mr-2 font-mono text-xs text-muted-foreground">#{s.seq}</span>
               <CaptionText text={s.text} terms={s.terms} onTermClick={setOpenTerm} />
+              {s.es && (
+                <span lang="es" className="mt-0.5 block pl-8 text-base text-muted-foreground">
+                  {s.es}
+                </span>
+              )}
             </p>
           ))}
         </div>
@@ -303,5 +313,46 @@ export function TeacherConsole(props: Props) {
         onLangChange={setLang}
       />
     </div>
+  );
+}
+
+function TranslationPanel({ translation }: { translation: ReturnType<typeof useEsTranslation> }) {
+  const { state, enable, disable } = translation;
+  const tr = t.teacher.translation;
+  const status = {
+    checking: tr.checking,
+    unsupported: tr.unsupported,
+    unavailable: tr.unavailable,
+    off: null,
+    downloading: state.kind === "downloading" ? tr.downloading(state.percent) : null,
+    on: tr.on,
+    error: tr.error,
+  }[state.kind];
+
+  return (
+    <section className="space-y-3 rounded-xl border p-4" aria-labelledby="translation-title">
+      <h2 id="translation-title" className="font-semibold">
+        {tr.title}
+      </h2>
+      <p className="text-sm text-muted-foreground">{tr.hint}</p>
+      {status && (
+        <p
+          aria-live="polite"
+          className={cn("text-sm", state.kind === "on" ? "font-medium text-emerald-700 dark:text-emerald-400" : "")}
+        >
+          {status}
+        </p>
+      )}
+      {(state.kind === "off" || state.kind === "error") && (
+        <Button variant="outline" onClick={() => void enable()}>
+          {tr.enable}
+        </Button>
+      )}
+      {state.kind === "on" && (
+        <Button variant="ghost" onClick={disable}>
+          {tr.disable}
+        </Button>
+      )}
+    </section>
   );
 }

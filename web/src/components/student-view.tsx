@@ -11,7 +11,7 @@ import type { Depth, Lang } from "@/lib/terms/schemas";
 import type { FetchSince, RealtimeTransport } from "@/lib/realtime/types";
 import { useCaptionClient } from "@/lib/realtime/use-caption-client";
 import { useWakeLock } from "@/lib/use-wake-lock";
-import { t } from "@/lib/i18n/pt-BR";
+import { useT } from "@/lib/i18n/context";
 
 interface Props {
   transport: RealtimeTransport | null;
@@ -29,6 +29,7 @@ interface Props {
 }
 
 export function StudentView(props: Props) {
+  const t = useT();
   const { items, status, lastLatency } = useCaptionClient(props.transport, props.fetchSince);
   const [openTerm, setOpenTerm] = useState<string | null>(null);
   useWakeLock(!props.reviewHref);
@@ -73,6 +74,7 @@ export function StudentView(props: Props) {
       )}
       <LiveCaption
         items={items}
+        lang={props.lang}
         onTermClick={(id) => {
           setOpenTerm(id);
           props.onTermOpen?.(id, props.depth);

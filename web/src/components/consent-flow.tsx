@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { t } from "@/lib/i18n/pt-BR";
+import { useT } from "@/lib/i18n/context";
 
 export type Purpose = "termos_uso" | "tratamento_dados" | "doacao_lexico" | "doacao_sinais";
 export const REQUIRED_PURPOSES: Purpose[] = ["termos_uso", "tratamento_dados"];
@@ -16,6 +16,7 @@ interface Props {
 }
 
 export function ConsentFlow({ purposes, onDone }: Props) {
+  const t = useT();
   const [index, setIndex] = useState(0);
   const [checked, setChecked] = useState(false);
   const [granted, setGranted] = useState<Purpose[]>([]);

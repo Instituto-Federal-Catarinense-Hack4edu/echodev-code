@@ -8,19 +8,31 @@ import type { QuizItem, Resumo } from "@/lib/api/types";
 import { isQuiz, isResumo, lessonDate } from "@/lib/materials";
 import { getSupabase } from "@/lib/supabase/client";
 import { useProfile } from "@/lib/supabase/use-profile";
-import { t } from "@/lib/i18n/pt-BR";
+import { LanguageSelect } from "@/components/language-select";
+import { useT } from "@/lib/i18n/context";
+import { useProfileLang } from "@/lib/i18n/use-profile-lang";
 
 const APPROVAL_POLL_MS = 15_000;
 
 type State =
   | { kind: "loading" }
   | { kind: "not-member" }
-  | { kind: "ready"; title: string; date: Date; resumo: Resumo | null; quiz: QuizItem[] | null };
+  | {
+      kind: "ready";
+      title: string;
+      date: Date;
+      resumo: Resumo | null;
+      quiz: QuizItem[] | null;
+      resumoEs: Resumo | null;
+      quizEs: QuizItem[] | null;
+    };
 
 /** RLS returns only approved materials to members; drafts never reach this page. */
 export function StudentReview() {
+  const t = useT();
   const { codigo } = useParams<{ codigo: string }>();
-  const { user, loading } = useProfile();
+  const { user, profile, setProfile, loading } = useProfile();
+  const [lang, changeLang] = useProfileLang(profile, setProfile);
   const [state, setState] = useState<State>({ kind: "loading" });
 
   useEffect(() => {
@@ -41,14 +53,17 @@ export function StudentReview() {
       }
       const { data } = await supabase.from("lesson_materials").select("kind,content").eq("lesson_id", lesson.id);
       if (cancelled) return;
-      const resumo = data?.find((m) => m.kind === "resumo")?.content;
-      const quiz = data?.find((m) => m.kind === "quiz")?.content;
+      const content = (kind: string) => data?.find((m) => m.kind === kind)?.content;
+      const asResumo = (c: unknown) => (isResumo(c) ? c : null);
+      const asQuiz = (c: unknown) => (isQuiz(c) ? c : null);
       const next = {
         kind: "ready" as const,
         title: lesson.title as string,
         date: lessonDate(lesson),
-        resumo: isResumo(resumo) ? resumo : null,
-        quiz: isQuiz(quiz) ? quiz : null,
+        resumo: asResumo(content("resumo")),
+        quiz: asQuiz(content("quiz")),
+        resumoEs: asResumo(content("resumo_es")),
+        quizEs: asQuiz(content("quiz_es")),
       };
       setState(next);
       if (!next.resumo || !next.quiz) timer = setTimeout(load, APPROVAL_POLL_MS);
@@ -63,42 +78,56 @@ export function StudentReview() {
   if (state.kind === "loading") return <p className="p-6 text-muted-foreground">{t.common.loading}</p>;
   if (state.kind === "not-member") return <p className="p-6">{t.review.notMember}</p>;
 
+  const spanish = lang === "es";
+  const resumo = (spanish && state.resumoEs) || state.resumo;
+  const quiz = (spanish && state.quizEs) || state.quiz;
+  const fellBack = spanish && ((!!state.resumo && !state.resumoEs) || (!!state.quiz && !state.quizEs));
+
   return (
     <main className="mx-auto w-full max-w-2xl space-y-8 p-6 text-lg">
-      <header className="space-y-1">
-        <p className="text-sm text-muted-foreground">{t.review.studentTitle}</p>
-        <h1 className="text-2xl font-bold">{state.title}</h1>
+      <header className="flex flex-wrap items-start gap-3">
+        <div className="mr-auto space-y-1">
+          <p className="text-sm text-muted-foreground">{t.review.studentTitle}</p>
+          <h1 className="text-2xl font-bold">{state.title}</h1>
+        </div>
+        <LanguageSelect value={lang} onChange={changeLang} />
       </header>
+      {fellBack && <p className="text-base text-muted-foreground">{t.review.esFallback}</p>}
       {(!state.resumo || !state.quiz) && (
         <p role="status" className="rounded-lg border p-4">
           {t.review.notApproved}
         </p>
       )}
-      {state.resumo && (
+      {resumo && (
         <PdfButton
           label={t.pdf.download}
-          data={{ lessonTitle: state.title, date: state.date, resumo: state.resumo }}
+          data={{
+            lessonTitle: state.title,
+            date: state.date,
+            resumo,
+            lang: resumo === state.resumoEs ? "es" : "pt",
+          }}
         />
       )}
-      {state.resumo && (
+      {resumo && (
         <section className="space-y-3" aria-labelledby="resumo-h">
           <h2 id="resumo-h" className="text-xl font-semibold">
-            {state.resumo.titulo}
+            {resumo.titulo}
           </h2>
           <ul className="list-disc space-y-2 pl-6">
-            {state.resumo.topicos.map((topic, i) => (
+            {resumo.topicos.map((topic, i) => (
               <li key={i}>{topic}</li>
             ))}
           </ul>
-          {!!state.resumo.termos_chave?.length && (
-            <p className="text-base text-muted-foreground">{state.resumo.termos_chave.join(" · ")}</p>
+          {!!resumo.termos_chave?.length && (
+            <p className="text-base text-muted-foreground">{resumo.termos_chave.join(" · ")}</p>
           )}
         </section>
       )}
-      {state.quiz && (
+      {quiz && (
         <section className="space-y-3 rounded-xl border p-4" aria-label={t.review.quiz}>
           <h2 className="text-xl font-semibold">{t.review.quiz}</h2>
-          <QuizPlayer items={state.quiz} />
+          <QuizPlayer key={quiz === state.quizEs ? "es" : "pt"} items={quiz} />
         </section>
       )}
       <p className="text-sm text-muted-foreground">{t.review.aiNotice}</p>

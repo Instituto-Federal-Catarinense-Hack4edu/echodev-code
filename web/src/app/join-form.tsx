@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CODE_RE, normalizeCode } from "@/lib/lesson-code";
-import { t } from "@/lib/i18n/pt-BR";
+import { useT } from "@/lib/i18n/context";
 
 export function JoinForm() {
+  const t = useT();
   const router = useRouter();
   const [code, setCode] = useState("");
   const valid = CODE_RE.test(code);

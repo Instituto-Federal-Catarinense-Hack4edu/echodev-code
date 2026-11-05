@@ -1,7 +1,8 @@
 import type { jsPDF as JsPDF } from "jspdf";
 import type { QuizItem, Resumo } from "@/lib/api/types";
 import { getTerm, matcherFor } from "@/lib/terms/pack";
-import { t } from "@/lib/i18n/pt-BR";
+import { messagesFor } from "@/lib/i18n/messages";
+import type { Lang } from "@/lib/terms/schemas";
 
 export interface SummaryPdfData {
   lessonTitle: string;
@@ -9,6 +10,7 @@ export interface SummaryPdfData {
   resumo: Resumo;
   /** Teacher copy only: quiz with answer key. */
   quiz?: QuizItem[] | null;
+  lang?: Lang;
 }
 
 export interface PdfLogo {
@@ -21,7 +23,7 @@ const LOGO_URL = "/brand/echodev-logo-640.png";
 const LOGO_HEIGHT_PT = 30;
 
 /**
- * The 14 standard PDF fonts only cover WinAnsi (Latin-1 + a few symbols). Portuguese
+ * The 14 standard PDF fonts only cover WinAnsi (Latin-1 + a few symbols). Portuguese and Spanish
  * accents are fine; arrows, ellipses, smart quotes etc. are mapped to plain equivalents.
  */
 export function toPdfText(s: string): string {
@@ -47,7 +49,7 @@ export function pdfFileName(title: string): string {
   return `resumo-${slug || "aula"}.pdf`;
 }
 
-export function glossary(keyTerms: string[]): { term: string; short: string | null }[] {
+export function glossary(keyTerms: string[], lang: Lang = "pt"): { term: string; short: string | null }[] {
   const m = matcherFor();
   return keyTerms
     .map((k) => k.trim())
@@ -55,7 +57,8 @@ export function glossary(keyTerms: string[]): { term: string; short: string | nu
     .map((k) => {
       const span = m.match(k).terms[0];
       const term = span ? getTerm(span.termId) : undefined;
-      return { term: term?.canonical ?? k, short: term?.explanations.pt.short ?? null };
+      const short = term ? (term.explanations[lang]?.short ?? term.explanations.pt.short) : null;
+      return { term: term?.canonical ?? k, short };
     });
 }
 
@@ -64,6 +67,7 @@ const PAGE_BOTTOM_GAP = 64;
 
 /** Builds the PDF document (pure: takes the jsPDF class so it can run in tests). */
 export function buildSummaryPdf(JsPDFCtor: typeof JsPDF, data: SummaryPdfData, logo?: PdfLogo | null): JsPDF {
+  const t = messagesFor(data.lang ?? "pt");
   const doc = new JsPDFCtor({ unit: "pt", format: "a4" });
   const width = doc.internal.pageSize.getWidth();
   const height = doc.internal.pageSize.getHeight();
@@ -109,7 +113,7 @@ export function buildSummaryPdf(JsPDFCtor: typeof JsPDF, data: SummaryPdfData, l
   write(data.resumo.titulo, { size: 14, bold: true, gap: 6 });
   for (const topic of data.resumo.topicos) write(`-  ${topic}`, { indent: 8, gap: 6 });
 
-  const terms = glossary(data.resumo.termos_chave ?? []);
+  const terms = glossary(data.resumo.termos_chave ?? [], data.lang);
   if (terms.length) {
     y += 8;
     write(t.pdf.glossary, { size: 13, bold: true, gap: 6 });

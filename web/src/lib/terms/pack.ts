@@ -38,6 +38,11 @@ export interface ResolvedExplanation {
   text: string | string[];
 }
 
+export function literalMeaning(term: Term, lang: Lang): string | undefined {
+  if (!term.figurative) return undefined;
+  return (lang !== "pt" ? term.explanations[lang]?.literal : undefined) ?? term.literalMeaning;
+}
+
 export function explain(term: Term, depth: Depth, lang: Lang): ResolvedExplanation {
   const key = depth === "curta" ? "short" : depth === "exemplo" ? "example" : "steps";
   const wanted = term.explanations[lang];

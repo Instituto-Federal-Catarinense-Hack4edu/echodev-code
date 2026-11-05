@@ -133,6 +133,17 @@ def test_regenerate_overwrites_draft(client, fake, llm):
     assert resumo["content"] == MOCK_MATERIALS["resumo"]
 
 
+def test_regenerate_ignores_spanish_versions(client, fake, llm):
+    lesson = _setup(fake)
+    client.post(f"/lessons/{lesson}/end", headers=TEACHER)
+    fake.tables["lesson_materials"].append(
+        {"id": "es1", "lesson_id": lesson, "kind": "resumo_es", "status": "aprovado", "content": {}}
+    )
+    res = client.post(f"/lessons/{lesson}/materials/regenerate", headers=TEACHER)
+    assert res.status_code == 200
+    assert {m["kind"] for m in res.json()["materials"]} == {"resumo", "quiz"}
+
+
 def test_regenerate_refuses_approved(client, fake, llm):
     lesson = _setup(fake)
     client.post(f"/lessons/{lesson}/end", headers=TEACHER)

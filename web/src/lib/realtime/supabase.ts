@@ -105,6 +105,7 @@ export class SupabaseTransport implements RealtimeTransport {
 interface UtteranceRow {
   seq: number;
   text: string;
+  text_es?: string | null;
   terms: unknown;
   wpm: number;
   created_at: string;
@@ -114,6 +115,7 @@ export function rowToMessage(r: UtteranceRow): UtteranceMessage | null {
   return parseUtterance({
     seq: r.seq,
     text: r.text,
+    ...(r.text_es ? { es: r.text_es } : {}),
     terms: r.terms,
     wpm: r.wpm,
     sentAt: Date.parse(r.created_at),
@@ -125,7 +127,7 @@ export function utteranceFetcher(supabase: SupabaseClient, lessonId: string): Fe
     const rows = await fetchAllPages<UtteranceRow>(async (from, to) => {
       const { data, error } = await supabase
         .from("utterances")
-        .select("seq,text,terms,wpm,created_at")
+        .select("*")
         .eq("lesson_id", lessonId)
         .gt("seq", afterSeq)
         .order("seq", { ascending: true })
@@ -154,13 +156,16 @@ export async function persistUtterance(
   lessonId: string,
   msg: UtteranceMessage,
 ): Promise<"ok" | "duplicate"> {
-  const { error } = await supabase.from("utterances").insert({
+  const row: Record<string, unknown> = {
     lesson_id: lessonId,
     seq: msg.seq,
     text: msg.text,
     terms: msg.terms,
     wpm: msg.wpm,
-  });
+  };
+  let { error } = await supabase.from("utterances").insert(msg.es ? { ...row, text_es: msg.es } : row);
+  // Database without the translation column yet: keep the Portuguese sentence.
+  if (error?.code === "PGRST204" && msg.es) ({ error } = await supabase.from("utterances").insert(row));
   if (!error) return "ok";
   if (error.code === "23505") return "duplicate";
   throw new Error(error.message);

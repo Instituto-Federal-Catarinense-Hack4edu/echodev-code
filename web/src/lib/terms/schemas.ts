@@ -15,9 +15,12 @@ const FullExplanationSchema = z.object({
 });
 
 const PartialExplanationSchema = z.object({
+  /** How the term is written in this language; used to highlight it in translated captions. */
+  names: z.array(z.string().min(1)).optional(),
   short: z.string().min(1),
   example: z.string().min(1).optional(),
   steps: z.array(z.string().min(1)).optional(),
+  literal: z.string().min(1).optional(),
 });
 
 export const TermSchema = z.object({

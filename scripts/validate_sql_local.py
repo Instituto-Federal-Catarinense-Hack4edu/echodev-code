@@ -102,7 +102,7 @@ with psycopg.connect(uri, autocommit=True) as c:
     )
     as_user(
         teacher,
-        "insert into public.utterances (lesson_id, seq, text) values (%s, 1, 'oi')",
+        "insert into public.utterances (lesson_id, seq, text, text_es) values (%s, 1, 'oi', 'hola')",
         (lesson,),
     )
     as_user(
@@ -209,6 +209,28 @@ with psycopg.connect(uri, autocommit=True) as c:
     check(
         "outsider does not see approved material",
         len(as_user(outsider, "select * from public.lesson_materials")) == 0,
+    )
+    as_user(
+        teacher,
+        "insert into public.lesson_materials (lesson_id, kind, content, status) values (%s, 'resumo_es', '{}', 'aprovado')",
+        (lesson,),
+    )
+    check(
+        "member sees approved Spanish material",
+        len(as_user(member, "select kind from public.lesson_materials where kind = 'resumo_es'"))
+        == 1,
+    )
+    check(
+        "member reads the Spanish caption",
+        as_user(member, "select text_es from public.utterances where seq = 1") == [("hola",)],
+    )
+    check(
+        "unknown material kind rejected",
+        fails_as(
+            teacher,
+            "insert into public.lesson_materials (lesson_id, kind, content) values (%s, 'resumo_fr', '{}')",
+            (lesson,),
+        ),
     )
 
     check(

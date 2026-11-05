@@ -3,7 +3,7 @@
 import * as React from "react"
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog"
 import { cn } from "cn"
-import { t } from "@/lib/i18n/pt-BR"
+import { useT } from "@/lib/i18n/context"
 
 import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
@@ -47,6 +47,7 @@ function SheetContent({
   side?: "top" | "right" | "bottom" | "left"
   showCloseButton?: boolean
 }) {
+  const t = useT()
   return (
     <SheetPortal>
       <SheetOverlay />

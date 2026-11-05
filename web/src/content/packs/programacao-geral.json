@@ -1,23 +1,45 @@
 {
   "id": "programacao-geral",
   "name": "Programação geral",
-  "version": 1,
+  "version": 2,
   "terms": [
     {
       "id": "variavel",
       "fuzzy": false,
       "canonical": "variável",
       "variants": [],
-      "forms": ["variáveis"],
+      "forms": [
+        "variáveis"
+      ],
       "category": "conceitos",
       "explanations": {
         "pt": {
           "short": "Um nome que guarda um valor para você usar depois no programa.",
           "example": "let idade = 17; → a variável idade guarda o número 17.",
-          "steps": ["Escolha um nome que descreva o valor.", "Atribua um valor com =.", "Use o nome sempre que precisar do valor.", "Você pode trocar o valor depois (se não for const)."]
+          "steps": [
+            "Escolha um nome que descreva o valor.",
+            "Atribua um valor com =.",
+            "Use o nome sempre que precisar do valor.",
+            "Você pode trocar o valor depois (se não for const)."
+          ]
         },
-        "en": { "short": "Variable: a name that stores a value so you can use it later." },
-        "es": { "short": "Variable: un nombre que guarda un valor para usarlo después." }
+        "en": {
+          "short": "Variable: a name that stores a value so you can use it later."
+        },
+        "es": {
+          "names": [
+            "variable",
+            "variables"
+          ],
+          "short": "Variable: un nombre que guarda un valor para usarlo después en el programa.",
+          "example": "let edad = 17; → la variable edad guarda el número 17.",
+          "steps": [
+            "Elige un nombre que describa el valor.",
+            "Asigna un valor con =.",
+            "Usa el nombre siempre que necesites el valor.",
+            "Puedes cambiar el valor después (si no es const)."
+          ]
+        }
       },
       "reviewed": false
     },
@@ -26,16 +48,39 @@
       "fuzzy": false,
       "canonical": "função",
       "variants": [],
-      "forms": ["funções"],
+      "forms": [
+        "funções"
+      ],
       "category": "conceitos",
       "explanations": {
         "pt": {
           "short": "Um bloco de código com nome que faz uma tarefa e pode ser chamado várias vezes.",
           "example": "function somar(a, b) { return a + b; } → somar(2, 3) devolve 5.",
-          "steps": ["Dê um nome à função.", "Defina os parâmetros (as entradas).", "Escreva o código que faz a tarefa.", "Chame a função pelo nome sempre que precisar."]
+          "steps": [
+            "Dê um nome à função.",
+            "Defina os parâmetros (as entradas).",
+            "Escreva o código que faz a tarefa.",
+            "Chame a função pelo nome sempre que precisar."
+          ]
         },
-        "en": { "short": "Function: a named block of code that does a task and can be called many times." },
-        "es": { "short": "Función: un bloque de código con nombre que hace una tarea y se puede llamar muchas veces." }
+        "en": {
+          "short": "Function: a named block of code that does a task and can be called many times."
+        },
+        "es": {
+          "names": [
+            "función",
+            "funciones",
+            "funcion"
+          ],
+          "short": "Función: un bloque de código con nombre que hace una tarea y se puede llamar muchas veces.",
+          "example": "function sumar(a, b) { return a + b; } → sumar(2, 3) devuelve 5.",
+          "steps": [
+            "Dale un nombre a la función.",
+            "Define los parámetros (las entradas).",
+            "Escribe el código que hace la tarea.",
+            "Llama a la función por su nombre cuando la necesites."
+          ]
+        }
       },
       "reviewed": false
     },
@@ -44,13 +89,33 @@
       "fuzzy": false,
       "canonical": "parâmetro",
       "variants": [],
-      "forms": ["parâmetros"],
+      "forms": [
+        "parâmetros"
+      ],
       "category": "conceitos",
       "explanations": {
         "pt": {
           "short": "Uma entrada que a função recebe para trabalhar.",
           "example": "Em function dobro(n), n é o parâmetro; em dobro(4), 4 é o valor passado.",
-          "steps": ["Declare o parâmetro entre parênteses na função.", "Use o parâmetro dentro da função como uma variável.", "Ao chamar a função, passe um valor para ele."]
+          "steps": [
+            "Declare o parâmetro entre parênteses na função.",
+            "Use o parâmetro dentro da função como uma variável.",
+            "Ao chamar a função, passe um valor para ele."
+          ]
+        },
+        "es": {
+          "names": [
+            "parámetro",
+            "parámetros",
+            "parametro"
+          ],
+          "short": "Parámetro: una entrada que la función recibe para trabajar.",
+          "example": "En function doble(n), n es el parámetro; en doble(4), 4 es el valor que se pasa.",
+          "steps": [
+            "Declara el parámetro entre paréntesis en la función.",
+            "Usa el parámetro dentro de la función como una variable.",
+            "Al llamar a la función, pásale un valor."
+          ]
         }
       },
       "reviewed": false
@@ -58,24 +123,55 @@
     {
       "id": "return",
       "canonical": "return",
-      "variants": ["ritórn", "riturn", "ritorni"],
+      "variants": [
+        "ritórn",
+        "riturn",
+        "ritorni"
+      ],
       "category": "conceitos",
       "explanations": {
         "pt": {
           "short": "Palavra que encerra a função e devolve um resultado para quem a chamou.",
           "example": "function dobro(n) { return n * 2; } → dobro(5) devolve 10.",
-          "steps": ["A função calcula um valor.", "return entrega esse valor para fora.", "O código depois do return na função não roda.", "Quem chamou pode guardar o resultado numa variável."]
+          "steps": [
+            "A função calcula um valor.",
+            "return entrega esse valor para fora.",
+            "O código depois do return na função não roda.",
+            "Quem chamou pode guardar o resultado numa variável."
+          ]
         },
-        "en": { "short": "return: ends the function and gives a result back to the caller." },
-        "es": { "short": "return: termina la función y devuelve un resultado a quien la llamó." }
+        "en": {
+          "short": "return: ends the function and gives a result back to the caller."
+        },
+        "es": {
+          "names": [
+            "return",
+            "retorno",
+            "devuelve"
+          ],
+          "short": "return: termina la función y devuelve un resultado a quien la llamó.",
+          "example": "function doble(n) { return n * 2; } → doble(5) devuelve 10.",
+          "steps": [
+            "La función calcula un valor.",
+            "return entrega ese valor hacia afuera.",
+            "El código después del return dentro de la función no se ejecuta.",
+            "Quien la llamó puede guardar el resultado en una variable."
+          ]
+        }
       },
       "reviewed": false
     },
     {
       "id": "loop",
       "canonical": "loop",
-      "variants": ["lupi", "lup", "lúpi"],
-      "forms": ["loops"],
+      "variants": [
+        "lupi",
+        "lup",
+        "lúpi"
+      ],
+      "forms": [
+        "loops"
+      ],
       "category": "conceitos",
       "figurative": true,
       "literalMeaning": "Em inglês, \"loop\" quer dizer \"laço\" ou \"volta\": algo que gira e volta ao começo.",
@@ -83,17 +179,44 @@
         "pt": {
           "short": "Uma repetição: o mesmo trecho de código roda várias vezes.",
           "example": "for (let i = 1; i <= 3; i++) { console.log(i); } → mostra 1, 2 e 3.",
-          "steps": ["Defina quando o loop começa.", "Defina a condição para continuar.", "Escreva o que repetir.", "Garanta que a condição um dia fique falsa, senão o loop não termina."]
+          "steps": [
+            "Defina quando o loop começa.",
+            "Defina a condição para continuar.",
+            "Escreva o que repetir.",
+            "Garanta que a condição um dia fique falsa, senão o loop não termina."
+          ]
         },
-        "en": { "short": "Loop: repeating the same piece of code several times." },
-        "es": { "short": "Bucle (loop): repetir el mismo trozo de código varias veces." }
+        "en": {
+          "short": "Loop: repeating the same piece of code several times."
+        },
+        "es": {
+          "names": [
+            "bucle",
+            "bucles",
+            "ciclo",
+            "loop"
+          ],
+          "short": "Bucle (loop): repetir el mismo trozo de código varias veces.",
+          "example": "for (let i = 1; i <= 3; i++) { console.log(i); } → muestra 1, 2 y 3.",
+          "steps": [
+            "Define cuándo empieza el bucle.",
+            "Define la condición para continuar.",
+            "Escribe lo que se repite.",
+            "Asegúrate de que la condición algún día sea falsa; si no, el bucle no termina."
+          ],
+          "literal": "En inglés, \"loop\" significa \"lazo\" o \"vuelta\": algo que gira y vuelve al inicio."
+        }
       },
       "reviewed": false
     },
     {
       "id": "while",
       "canonical": "while",
-      "variants": ["uaile", "uáiou", "uaiou"],
+      "variants": [
+        "uaile",
+        "uáiou",
+        "uaiou"
+      ],
       "category": "conceitos",
       "figurative": true,
       "literalMeaning": "Em inglês, \"while\" quer dizer \"enquanto\".",
@@ -101,7 +224,27 @@
         "pt": {
           "short": "Um loop que repete enquanto uma condição for verdadeira.",
           "example": "let n = 3; while (n > 0) { n--; } → repete até n chegar a 0.",
-          "steps": ["Escreva a condição entre parênteses.", "O bloco roda se a condição for verdadeira.", "No fim do bloco, a condição é testada de novo.", "Mude algo dentro do bloco para a condição um dia ficar falsa."]
+          "steps": [
+            "Escreva a condição entre parênteses.",
+            "O bloco roda se a condição for verdadeira.",
+            "No fim do bloco, a condição é testada de novo.",
+            "Mude algo dentro do bloco para a condição um dia ficar falsa."
+          ]
+        },
+        "es": {
+          "names": [
+            "while",
+            "mientras"
+          ],
+          "short": "while: un bucle que se repite mientras una condición sea verdadera.",
+          "example": "let n = 3; while (n > 0) { n--; } → se repite hasta que n llega a 0.",
+          "steps": [
+            "Escribe la condición entre paréntesis.",
+            "El bloque se ejecuta si la condición es verdadera.",
+            "Al final del bloque, la condición se vuelve a comprobar.",
+            "Cambia algo dentro del bloque para que la condición algún día sea falsa."
+          ],
+          "literal": "En inglés, \"while\" significa \"mientras\"."
         }
       },
       "reviewed": false
@@ -109,7 +252,10 @@
     {
       "id": "if",
       "canonical": "if",
-      "variants": ["ífi", "ifi"],
+      "variants": [
+        "ífi",
+        "ifi"
+      ],
       "category": "conceitos",
       "figurative": true,
       "literalMeaning": "Em inglês, \"if\" quer dizer \"se\".",
@@ -117,17 +263,40 @@
         "pt": {
           "short": "Uma decisão: o código só roda se a condição for verdadeira.",
           "example": "if (nota >= 6) { console.log(\"aprovado\"); }",
-          "steps": ["Escreva a condição entre parênteses.", "Se ela for verdadeira, o bloco entre chaves roda.", "Se for falsa, o programa pula o bloco (ou vai para o else)."]
+          "steps": [
+            "Escreva a condição entre parênteses.",
+            "Se ela for verdadeira, o bloco entre chaves roda.",
+            "Se for falsa, o programa pula o bloco (ou vai para o else)."
+          ]
         },
-        "en": { "short": "if: a decision; the code runs only when the condition is true." },
-        "es": { "short": "if: una decisión; el código solo se ejecuta si la condición es verdadera." }
+        "en": {
+          "short": "if: a decision; the code runs only when the condition is true."
+        },
+        "es": {
+          "names": [
+            "if",
+            "si"
+          ],
+          "short": "if: una decisión; el código solo se ejecuta si la condición es verdadera.",
+          "example": "if (nota >= 6) { console.log(\"aprobado\"); }",
+          "steps": [
+            "Escribe la condición entre paréntesis.",
+            "Si es verdadera, se ejecuta el bloque entre llaves.",
+            "Si es falsa, el programa salta el bloque (o va al else)."
+          ],
+          "literal": "En inglés, \"if\" significa \"si\"."
+        }
       },
       "reviewed": false
     },
     {
       "id": "else",
       "canonical": "else",
-      "variants": ["élse", "elsi", "élsi"],
+      "variants": [
+        "élse",
+        "elsi",
+        "élsi"
+      ],
       "category": "conceitos",
       "figurative": true,
       "literalMeaning": "Em inglês, \"else\" quer dizer \"senão\".",
@@ -135,7 +304,26 @@
         "pt": {
           "short": "O caminho alternativo do if: roda quando a condição é falsa.",
           "example": "if (nota >= 6) { ok(); } else { recuperacao(); }",
-          "steps": ["Escreva um if com a condição.", "Logo depois, escreva else e um bloco.", "Se a condição do if for falsa, o bloco do else roda."]
+          "steps": [
+            "Escreva um if com a condição.",
+            "Logo depois, escreva else e um bloco.",
+            "Se a condição do if for falsa, o bloco do else roda."
+          ]
+        },
+        "es": {
+          "names": [
+            "else",
+            "sino",
+            "si no"
+          ],
+          "short": "else: el camino alternativo del if; se ejecuta cuando la condición es falsa.",
+          "example": "if (nota >= 6) { ok(); } else { recuperacion(); }",
+          "steps": [
+            "Escribe un if con la condición.",
+            "Justo después, escribe else y un bloque.",
+            "Si la condición del if es falsa, se ejecuta el bloque del else."
+          ],
+          "literal": "En inglés, \"else\" significa \"si no\"."
         }
       },
       "reviewed": false
@@ -143,25 +331,59 @@
     {
       "id": "array",
       "canonical": "array",
-      "variants": ["arrei", "arrêi", "arrai"],
-      "forms": ["arrays"],
+      "variants": [
+        "arrei",
+        "arrêi",
+        "arrai"
+      ],
+      "forms": [
+        "arrays"
+      ],
       "category": "conceitos",
       "explanations": {
         "pt": {
           "short": "Uma lista ordenada de valores guardada em uma única variável.",
           "example": "const frutas = [\"maçã\", \"uva\"]; → frutas[0] é \"maçã\".",
-          "steps": ["Crie a lista com colchetes [ ].", "Separe os itens com vírgulas.", "Acesse cada item pela posição, começando em 0.", "Use .length para saber quantos itens há."]
+          "steps": [
+            "Crie a lista com colchetes [ ].",
+            "Separe os itens com vírgulas.",
+            "Acesse cada item pela posição, começando em 0.",
+            "Use .length para saber quantos itens há."
+          ]
         },
-        "en": { "short": "Array: an ordered list of values stored in one variable." },
-        "es": { "short": "Array (arreglo): una lista ordenada de valores en una sola variable." }
+        "en": {
+          "short": "Array: an ordered list of values stored in one variable."
+        },
+        "es": {
+          "names": [
+            "array",
+            "arreglo",
+            "arreglos",
+            "matriz"
+          ],
+          "short": "Array (arreglo): una lista ordenada de valores en una sola variable.",
+          "example": "const frutas = [\"manzana\", \"uva\"]; → frutas[0] es \"manzana\".",
+          "steps": [
+            "Crea la lista con corchetes [ ].",
+            "Separa los elementos con comas.",
+            "Accede a cada elemento por su posición, empezando en 0.",
+            "Usa .length para saber cuántos elementos hay."
+          ]
+        }
       },
       "reviewed": false
     },
     {
       "id": "string",
       "canonical": "string",
-      "variants": ["istring", "estring", "estringue"],
-      "forms": ["strings"],
+      "variants": [
+        "istring",
+        "estring",
+        "estringue"
+      ],
+      "forms": [
+        "strings"
+      ],
       "category": "conceitos",
       "figurative": true,
       "literalMeaning": "Em inglês, \"string\" quer dizer \"cordão\" ou \"fio\": letras enfileiradas como contas num fio.",
@@ -169,24 +391,69 @@
         "pt": {
           "short": "Um texto: uma sequência de caracteres entre aspas.",
           "example": "const nome = \"Ana\"; → \"Ana\" é uma string.",
-          "steps": ["Escreva o texto entre aspas simples, duplas ou crases.", "Junte strings com + ou com crases e ${ }.", "Use .length para contar os caracteres."]
+          "steps": [
+            "Escreva o texto entre aspas simples, duplas ou crases.",
+            "Junte strings com + ou com crases e ${ }.",
+            "Use .length para contar os caracteres."
+          ]
         },
-        "en": { "short": "String: text, a sequence of characters inside quotes." },
-        "es": { "short": "String (cadena): un texto, una secuencia de caracteres entre comillas." }
+        "en": {
+          "short": "String: text, a sequence of characters inside quotes."
+        },
+        "es": {
+          "names": [
+            "string",
+            "cadena",
+            "cadenas"
+          ],
+          "short": "String (cadena): un texto, una secuencia de caracteres entre comillas.",
+          "example": "const nombre = \"Ana\"; → \"Ana\" es un string.",
+          "steps": [
+            "Escribe el texto entre comillas simples, dobles o acentos graves.",
+            "Une strings con + o con acentos graves y ${ }.",
+            "Usa .length para contar los caracteres."
+          ],
+          "literal": "En inglés, \"string\" significa \"cordón\" o \"hilo\": letras en fila como cuentas en un hilo."
+        }
       },
       "reviewed": false
     },
     {
       "id": "boolean",
       "canonical": "boolean",
-      "variants": ["buleano", "booleano", "bulian", "buliano"],
-      "forms": ["booleanos"],
+      "variants": [
+        "buleano",
+        "booleano",
+        "bulian",
+        "buliano"
+      ],
+      "forms": [
+        "booleanos"
+      ],
       "category": "conceitos",
       "explanations": {
         "pt": {
           "short": "Um valor que só pode ser verdadeiro (true) ou falso (false).",
           "example": "const maiorDeIdade = idade >= 18; → vale true ou false.",
-          "steps": ["Comparações (>, <, ===) geram booleans.", "Use booleans em if e while para decidir.", "Combine com && (e), || (ou) e ! (não)."]
+          "steps": [
+            "Comparações (>, <, ===) geram booleans.",
+            "Use booleans em if e while para decidir.",
+            "Combine com && (e), || (ou) e ! (não)."
+          ]
+        },
+        "es": {
+          "names": [
+            "booleano",
+            "booleanos",
+            "boolean"
+          ],
+          "short": "Booleano (boolean): un valor que solo puede ser verdadero (true) o falso (false).",
+          "example": "const mayorDeEdad = edad >= 18; → vale true o false.",
+          "steps": [
+            "Las comparaciones (>, <, ===) generan booleanos.",
+            "Usa booleanos en if y while para decidir.",
+            "Combínalos con && (y), || (o) y ! (no)."
+          ]
         }
       },
       "reviewed": false
@@ -196,16 +463,36 @@
       "fuzzy": false,
       "canonical": "objeto",
       "variants": [],
-      "forms": ["objetos"],
+      "forms": [
+        "objetos"
+      ],
       "category": "conceitos",
       "explanations": {
         "pt": {
           "short": "Um conjunto de pares nome e valor que descreve uma coisa.",
           "example": "const aluno = { nome: \"Ana\", idade: 17 }; → aluno.nome é \"Ana\".",
-          "steps": ["Crie o objeto com chaves { }.", "Escreva cada propriedade como nome: valor.", "Acesse com ponto: objeto.propriedade."]
+          "steps": [
+            "Crie o objeto com chaves { }.",
+            "Escreva cada propriedade como nome: valor.",
+            "Acesse com ponto: objeto.propriedade."
+          ]
         },
-        "en": { "short": "Object: a set of name–value pairs that describes one thing." },
-        "es": { "short": "Objeto: un conjunto de pares nombre–valor que describe una cosa." }
+        "en": {
+          "short": "Object: a set of name–value pairs that describes one thing."
+        },
+        "es": {
+          "names": [
+            "objeto",
+            "objetos"
+          ],
+          "short": "Objeto: un conjunto de pares nombre–valor que describe una cosa.",
+          "example": "const alumno = { nombre: \"Ana\", edad: 17 }; → alumno.nombre es \"Ana\".",
+          "steps": [
+            "Crea el objeto con llaves { }.",
+            "Escribe cada propiedad como nombre: valor.",
+            "Accede con un punto: objeto.propiedad."
+          ]
+        }
       },
       "reviewed": false
     },
@@ -214,13 +501,32 @@
       "fuzzy": false,
       "canonical": "classe",
       "variants": [],
-      "forms": ["classes"],
+      "forms": [
+        "classes"
+      ],
       "category": "conceitos",
       "explanations": {
         "pt": {
           "short": "Um molde para criar vários objetos com a mesma estrutura.",
           "example": "class Aluno { constructor(nome) { this.nome = nome; } } → new Aluno(\"Ana\").",
-          "steps": ["Declare a classe com class e um nome.", "Use o constructor para definir os dados iniciais.", "Crie objetos com new NomeDaClasse()."]
+          "steps": [
+            "Declare a classe com class e um nome.",
+            "Use o constructor para definir os dados iniciais.",
+            "Crie objetos com new NomeDaClasse()."
+          ]
+        },
+        "es": {
+          "names": [
+            "clase",
+            "clases"
+          ],
+          "short": "Clase: un molde para crear muchos objetos con la misma estructura.",
+          "example": "class Alumno { constructor(nombre) { this.nombre = nombre; } } → new Alumno(\"Ana\").",
+          "steps": [
+            "Declara la clase con class y un nombre.",
+            "Usa el constructor para definir los datos iniciales.",
+            "Crea objetos con new NombreDeLaClase()."
+          ]
         }
       },
       "reviewed": false
@@ -230,13 +536,33 @@
       "fuzzy": false,
       "canonical": "método",
       "variants": [],
-      "forms": ["métodos"],
+      "forms": [
+        "métodos"
+      ],
       "category": "conceitos",
       "explanations": {
         "pt": {
           "short": "Uma função que pertence a um objeto ou classe.",
           "example": "\"oi\".toUpperCase() → toUpperCase é um método de strings e devolve \"OI\".",
-          "steps": ["Pegue o objeto.", "Escreva um ponto e o nome do método.", "Abra e feche parênteses para chamá-lo (com argumentos, se houver)."]
+          "steps": [
+            "Pegue o objeto.",
+            "Escreva um ponto e o nome do método.",
+            "Abra e feche parênteses para chamá-lo (com argumentos, se houver)."
+          ]
+        },
+        "es": {
+          "names": [
+            "método",
+            "métodos",
+            "metodo"
+          ],
+          "short": "Método: una función que pertenece a un objeto o a una clase.",
+          "example": "\"hola\".toUpperCase() → toUpperCase es un método de los strings y devuelve \"HOLA\".",
+          "steps": [
+            "Toma el objeto.",
+            "Escribe un punto y el nombre del método.",
+            "Abre y cierra paréntesis para llamarlo (con argumentos, si hay)."
+          ]
         }
       },
       "reviewed": false
@@ -246,13 +572,34 @@
       "fuzzy": false,
       "canonical": "algoritmo",
       "variants": [],
-      "forms": ["algoritmos"],
+      "forms": [
+        "algoritmos"
+      ],
       "category": "conceitos",
       "explanations": {
         "pt": {
           "short": "Uma sequência de passos bem definidos para resolver um problema.",
           "example": "Achar o maior número de uma lista: olhar cada item e guardar o maior visto até agora.",
-          "steps": ["Entenda a entrada e a saída esperada.", "Divida o problema em passos pequenos.", "Coloque os passos em ordem.", "Teste com exemplos simples."]
+          "steps": [
+            "Entenda a entrada e a saída esperada.",
+            "Divida o problema em passos pequenos.",
+            "Coloque os passos em ordem.",
+            "Teste com exemplos simples."
+          ]
+        },
+        "es": {
+          "names": [
+            "algoritmo",
+            "algoritmos"
+          ],
+          "short": "Algoritmo: una secuencia de pasos bien definidos para resolver un problema.",
+          "example": "Encontrar el número mayor de una lista: mirar cada elemento y guardar el mayor visto hasta ahora.",
+          "steps": [
+            "Entiende la entrada y la salida esperada.",
+            "Divide el problema en pasos pequeños.",
+            "Pon los pasos en orden.",
+            "Prueba con ejemplos sencillos."
+          ]
         }
       },
       "reviewed": false
@@ -260,13 +607,33 @@
     {
       "id": "null",
       "canonical": "null",
-      "variants": ["nal", "nâl"],
+      "variants": [
+        "nal",
+        "nâl"
+      ],
       "category": "conceitos",
       "explanations": {
         "pt": {
           "short": "Um valor que significa \"nada\", colocado de propósito.",
           "example": "let usuarioLogado = null; → ainda não há usuário.",
-          "steps": ["Use null quando quiser dizer \"sem valor\" de forma intencional.", "Teste com valor === null.", "Não confunda com undefined, que é \"ainda não definido\"."]
+          "steps": [
+            "Use null quando quiser dizer \"sem valor\" de forma intencional.",
+            "Teste com valor === null.",
+            "Não confunda com undefined, que é \"ainda não definido\"."
+          ]
+        },
+        "es": {
+          "names": [
+            "null",
+            "nulo"
+          ],
+          "short": "null: un valor que significa \"nada\", puesto a propósito.",
+          "example": "let usuarioConectado = null; → todavía no hay usuario.",
+          "steps": [
+            "Usa null cuando quieras decir \"sin valor\" de forma intencional.",
+            "Compruébalo con valor === null.",
+            "No lo confundas con undefined, que es \"todavía no definido\"."
+          ]
         }
       },
       "reviewed": false
@@ -274,7 +641,11 @@
     {
       "id": "undefined",
       "canonical": "undefined",
-      "variants": ["andefaind", "ãndefaind", "andifaind"],
+      "variants": [
+        "andefaind",
+        "ãndefaind",
+        "andifaind"
+      ],
       "category": "conceitos",
       "figurative": true,
       "literalMeaning": "Em inglês, \"undefined\" quer dizer \"não definido\".",
@@ -282,7 +653,25 @@
         "pt": {
           "short": "O valor de algo que ainda não recebeu valor.",
           "example": "let x; console.log(x); → mostra undefined.",
-          "steps": ["Uma variável declarada sem valor vale undefined.", "Acessar uma propriedade que não existe também dá undefined.", "Teste com valor === undefined."]
+          "steps": [
+            "Uma variável declarada sem valor vale undefined.",
+            "Acessar uma propriedade que não existe também dá undefined.",
+            "Teste com valor === undefined."
+          ]
+        },
+        "es": {
+          "names": [
+            "undefined",
+            "indefinido"
+          ],
+          "short": "undefined: el valor de algo que todavía no recibió un valor.",
+          "example": "let x; console.log(x); → muestra undefined.",
+          "steps": [
+            "Una variable declarada sin valor vale undefined.",
+            "Acceder a una propiedad que no existe también da undefined.",
+            "Compruébalo con valor === undefined."
+          ],
+          "literal": "En inglés, \"undefined\" significa \"no definido\"."
         }
       },
       "reviewed": false
@@ -290,8 +679,15 @@
     {
       "id": "callback",
       "canonical": "callback",
-      "variants": ["call back", "col back", "colbéqui", "cól béque"],
-      "forms": ["callbacks"],
+      "variants": [
+        "call back",
+        "col back",
+        "colbéqui",
+        "cól béque"
+      ],
+      "forms": [
+        "callbacks"
+      ],
       "category": "conceitos",
       "figurative": true,
       "literalMeaning": "Em inglês, \"call back\" quer dizer \"ligar de volta\": a função é chamada depois.",
@@ -299,7 +695,25 @@
         "pt": {
           "short": "Uma função passada para outra função, para ser chamada depois.",
           "example": "botao.addEventListener(\"click\", () => alert(\"oi\")); → a seta é o callback.",
-          "steps": ["Escreva uma função.", "Passe essa função como argumento para outra.", "A outra função chama o callback na hora certa (por exemplo, num clique)."]
+          "steps": [
+            "Escreva uma função.",
+            "Passe essa função como argumento para outra.",
+            "A outra função chama o callback na hora certa (por exemplo, num clique)."
+          ]
+        },
+        "es": {
+          "names": [
+            "callback",
+            "callbacks"
+          ],
+          "short": "Callback: una función que se pasa a otra función para que la llame después.",
+          "example": "boton.addEventListener(\"click\", () => alert(\"hola\")); → la flecha es el callback.",
+          "steps": [
+            "Escribe una función.",
+            "Pásala como argumento a otra función.",
+            "La otra función llama al callback en el momento justo (por ejemplo, en un clic)."
+          ],
+          "literal": "En inglés, \"call back\" significa \"devolver la llamada\": la función se llama después."
         }
       },
       "reviewed": false
@@ -307,8 +721,13 @@
     {
       "id": "bug",
       "canonical": "bug",
-      "variants": ["bâg", "bugue"],
-      "forms": ["bugs"],
+      "variants": [
+        "bâg",
+        "bugue"
+      ],
+      "forms": [
+        "bugs"
+      ],
       "category": "conceitos",
       "figurative": true,
       "literalMeaning": "Em inglês, \"bug\" quer dizer \"inseto\".",
@@ -316,7 +735,29 @@
         "pt": {
           "short": "Um erro no programa que faz ele se comportar diferente do esperado.",
           "example": "Somar \"2\" + 2 e receber \"22\" em vez de 4 é um bug.",
-          "steps": ["Perceba o comportamento errado.", "Descubra como repetir o erro.", "Ache a causa no código.", "Corrija e teste de novo."]
+          "steps": [
+            "Perceba o comportamento errado.",
+            "Descubra como repetir o erro.",
+            "Ache a causa no código.",
+            "Corrija e teste de novo."
+          ]
+        },
+        "es": {
+          "names": [
+            "bug",
+            "bugs",
+            "error",
+            "errores"
+          ],
+          "short": "Bug: un error en el programa que hace que se comporte distinto de lo esperado.",
+          "example": "Sumar \"2\" + 2 y obtener \"22\" en lugar de 4 es un bug.",
+          "steps": [
+            "Nota el comportamiento incorrecto.",
+            "Descubre cómo repetir el error.",
+            "Encuentra la causa en el código.",
+            "Corrígelo y vuelve a probar."
+          ],
+          "literal": "En inglés, \"bug\" significa \"insecto\"."
         }
       },
       "reviewed": false
@@ -324,7 +765,11 @@
     {
       "id": "debug",
       "canonical": "debug",
-      "variants": ["dibâgui", "debâg", "dibag"],
+      "variants": [
+        "dibâgui",
+        "debâg",
+        "dibag"
+      ],
       "category": "ferramentas",
       "figurative": true,
       "literalMeaning": "Em inglês, \"debug\" quer dizer \"tirar os insetos\".",
@@ -332,7 +777,28 @@
         "pt": {
           "short": "Investigar o programa para achar e corrigir bugs.",
           "example": "Colocar console.log(total) no meio do código para ver o valor em cada passo.",
-          "steps": ["Repita o erro.", "Observe valores com console.log ou com o depurador.", "Compare o esperado com o que aconteceu.", "Corrija e confirme que o erro sumiu."]
+          "steps": [
+            "Repita o erro.",
+            "Observe valores com console.log ou com o depurador.",
+            "Compare o esperado com o que aconteceu.",
+            "Corrija e confirme que o erro sumiu."
+          ]
+        },
+        "es": {
+          "names": [
+            "debug",
+            "depurar",
+            "depuración"
+          ],
+          "short": "Depurar (debug): investigar el programa para encontrar y corregir bugs.",
+          "example": "Poner console.log(total) en medio del código para ver el valor en cada paso.",
+          "steps": [
+            "Repite el error.",
+            "Observa los valores con console.log o con el depurador.",
+            "Compara lo esperado con lo que pasó.",
+            "Corrige y confirma que el error desapareció."
+          ],
+          "literal": "En inglés, \"debug\" significa \"quitar los insectos\"."
         }
       },
       "reviewed": false
@@ -340,8 +806,14 @@
     {
       "id": "framework",
       "canonical": "framework",
-      "variants": ["frame work", "freimuork", "freime uork"],
-      "forms": ["frameworks"],
+      "variants": [
+        "frame work",
+        "freimuork",
+        "freime uork"
+      ],
+      "forms": [
+        "frameworks"
+      ],
       "category": "ferramentas",
       "figurative": true,
       "literalMeaning": "Em inglês, \"framework\" quer dizer \"estrutura\" ou \"armação\".",
@@ -349,7 +821,28 @@
         "pt": {
           "short": "Uma base pronta que define como organizar seu projeto e já resolve partes comuns.",
           "example": "Next.js é um framework: você segue a estrutura de pastas dele e ganha rotas prontas.",
-          "steps": ["Instale o framework.", "Siga a estrutura que ele propõe.", "Escreva só a parte específica do seu projeto.", "O framework chama o seu código na hora certa."]
+          "steps": [
+            "Instale o framework.",
+            "Siga a estrutura que ele propõe.",
+            "Escreva só a parte específica do seu projeto.",
+            "O framework chama o seu código na hora certa."
+          ]
+        },
+        "es": {
+          "names": [
+            "framework",
+            "frameworks",
+            "marco de trabajo"
+          ],
+          "short": "Framework: una base lista que define cómo organizar tu proyecto y ya resuelve partes comunes.",
+          "example": "Next.js es un framework: sigues su estructura de carpetas y obtienes rutas listas.",
+          "steps": [
+            "Instala el framework.",
+            "Sigue la estructura que propone.",
+            "Escribe solo la parte específica de tu proyecto.",
+            "El framework llama a tu código en el momento justo."
+          ],
+          "literal": "En inglés, \"framework\" significa \"estructura\" o \"armazón\"."
         }
       },
       "reviewed": false
@@ -359,13 +852,34 @@
       "fuzzy": false,
       "canonical": "biblioteca",
       "variants": [],
-      "forms": ["bibliotecas"],
+      "forms": [
+        "bibliotecas"
+      ],
       "category": "ferramentas",
       "explanations": {
         "pt": {
           "short": "Código pronto, escrito por outras pessoas, que você usa no seu projeto.",
           "example": "Usar uma biblioteca de datas para formatar \"02/11/2026\" sem escrever tudo do zero.",
-          "steps": ["Instale a biblioteca (por exemplo, com npm).", "Importe o que precisa.", "Chame as funções dela no seu código."]
+          "steps": [
+            "Instale a biblioteca (por exemplo, com npm).",
+            "Importe o que precisa.",
+            "Chame as funções dela no seu código."
+          ]
+        },
+        "es": {
+          "names": [
+            "biblioteca",
+            "bibliotecas",
+            "librería",
+            "librerías"
+          ],
+          "short": "Biblioteca: código listo, escrito por otras personas, que usas en tu proyecto.",
+          "example": "Usar una biblioteca de fechas para formatear \"02/11/2026\" sin escribirlo todo desde cero.",
+          "steps": [
+            "Instala la biblioteca (por ejemplo, con npm).",
+            "Importa lo que necesitas.",
+            "Llama a sus funciones en tu código."
+          ]
         }
       },
       "reviewed": false
@@ -373,29 +887,72 @@
     {
       "id": "git",
       "canonical": "git",
-      "variants": ["guit", "guiti", "gíti"],
+      "variants": [
+        "guit",
+        "guiti",
+        "gíti"
+      ],
       "category": "git",
       "explanations": {
         "pt": {
           "short": "Ferramenta que guarda o histórico das mudanças do código.",
           "example": "git log mostra a lista de mudanças salvas no projeto.",
-          "steps": ["Inicie com git init.", "Marque arquivos com git add.", "Salve uma versão com git commit.", "Veja o histórico com git log."]
+          "steps": [
+            "Inicie com git init.",
+            "Marque arquivos com git add.",
+            "Salve uma versão com git commit.",
+            "Veja o histórico com git log."
+          ]
         },
-        "en": { "short": "Git: a tool that keeps the history of code changes." },
-        "es": { "short": "Git: herramienta que guarda el historial de cambios del código." }
+        "en": {
+          "short": "Git: a tool that keeps the history of code changes."
+        },
+        "es": {
+          "names": [
+            "git"
+          ],
+          "short": "Git: herramienta que guarda el historial de cambios del código.",
+          "example": "git log muestra la lista de cambios guardados en el proyecto.",
+          "steps": [
+            "Empieza con git init.",
+            "Marca archivos con git add.",
+            "Guarda una versión con git commit.",
+            "Mira el historial con git log."
+          ]
+        }
       },
       "reviewed": false
     },
     {
       "id": "github",
       "canonical": "GitHub",
-      "variants": ["guit hub", "guiti hub", "guitirrâb"],
+      "variants": [
+        "guit hub",
+        "guiti hub",
+        "guitirrâb"
+      ],
       "category": "git",
       "explanations": {
         "pt": {
           "short": "Site que hospeda repositórios Git na internet para guardar e compartilhar código.",
           "example": "Você envia seu projeto com git push e ele aparece no GitHub.",
-          "steps": ["Crie uma conta e um repositório no site.", "Ligue o repositório local ao remoto.", "Envie suas mudanças com git push."]
+          "steps": [
+            "Crie uma conta e um repositório no site.",
+            "Ligue o repositório local ao remoto.",
+            "Envie suas mudanças com git push."
+          ]
+        },
+        "es": {
+          "names": [
+            "github"
+          ],
+          "short": "GitHub: sitio que aloja repositorios Git en internet para guardar y compartir código.",
+          "example": "Envías tu proyecto con git push y aparece en GitHub.",
+          "steps": [
+            "Crea una cuenta y un repositorio en el sitio.",
+            "Conecta el repositorio local con el remoto.",
+            "Envía tus cambios con git push."
+          ]
         }
       },
       "reviewed": false
@@ -403,8 +960,14 @@
     {
       "id": "commit",
       "canonical": "commit",
-      "variants": ["comiti", "comit", "comíti"],
-      "forms": ["commits"],
+      "variants": [
+        "comiti",
+        "comit",
+        "comíti"
+      ],
+      "forms": [
+        "commits"
+      ],
       "category": "git",
       "figurative": true,
       "literalMeaning": "Em inglês, \"commit\" quer dizer \"comprometer-se\" ou \"confirmar\".",
@@ -412,17 +975,43 @@
         "pt": {
           "short": "Um ponto salvo no histórico do Git, com uma mensagem explicando a mudança.",
           "example": "git commit -m \"corrige soma\" → salva as mudanças marcadas com essa mensagem.",
-          "steps": ["Altere os arquivos.", "Marque as mudanças com git add.", "Crie o commit com git commit -m \"mensagem\".", "O commit fica no histórico e pode ser revisto depois."]
+          "steps": [
+            "Altere os arquivos.",
+            "Marque as mudanças com git add.",
+            "Crie o commit com git commit -m \"mensagem\".",
+            "O commit fica no histórico e pode ser revisto depois."
+          ]
         },
-        "en": { "short": "Commit: a saved point in Git history, with a message describing the change." },
-        "es": { "short": "Commit: un punto guardado en el historial de Git, con un mensaje que explica el cambio." }
+        "en": {
+          "short": "Commit: a saved point in Git history, with a message describing the change."
+        },
+        "es": {
+          "names": [
+            "commit",
+            "commits",
+            "confirmación"
+          ],
+          "short": "Commit: un punto guardado en el historial de Git, con un mensaje que explica el cambio.",
+          "example": "git commit -m \"corrige suma\" → guarda los cambios marcados con ese mensaje.",
+          "steps": [
+            "Cambia los archivos.",
+            "Marca los cambios con git add.",
+            "Crea el commit con git commit -m \"mensaje\".",
+            "El commit queda en el historial y se puede revisar después."
+          ],
+          "literal": "En inglés, \"commit\" significa \"comprometerse\" o \"confirmar\"."
+        }
       },
       "reviewed": false
     },
     {
       "id": "push",
       "canonical": "push",
-      "variants": ["puxi", "pushi", "pâch"],
+      "variants": [
+        "puxi",
+        "pushi",
+        "pâch"
+      ],
       "category": "git",
       "figurative": true,
       "literalMeaning": "Em inglês, \"push\" quer dizer \"empurrar\".",
@@ -430,7 +1019,25 @@
         "pt": {
           "short": "Enviar seus commits do computador para o repositório remoto.",
           "example": "git push → seus commits aparecem no GitHub.",
-          "steps": ["Faça um ou mais commits.", "Rode git push.", "Confira no site que as mudanças chegaram."]
+          "steps": [
+            "Faça um ou mais commits.",
+            "Rode git push.",
+            "Confira no site que as mudanças chegaram."
+          ]
+        },
+        "es": {
+          "names": [
+            "push",
+            "empujar"
+          ],
+          "short": "Push: enviar tus commits de la computadora al repositorio remoto.",
+          "example": "git push → tus commits aparecen en GitHub.",
+          "steps": [
+            "Haz uno o más commits.",
+            "Ejecuta git push.",
+            "Comprueba en el sitio que los cambios llegaron."
+          ],
+          "literal": "En inglés, \"push\" significa \"empujar\"."
         }
       },
       "reviewed": false
@@ -438,8 +1045,16 @@
     {
       "id": "pull-request",
       "canonical": "pull request",
-      "variants": ["pul request", "pul rikuesti", "pou request", "pull rikuest", "pul requesti"],
-      "forms": ["pull requests"],
+      "variants": [
+        "pul request",
+        "pul rikuesti",
+        "pou request",
+        "pull rikuest",
+        "pul requesti"
+      ],
+      "forms": [
+        "pull requests"
+      ],
       "category": "git",
       "figurative": true,
       "literalMeaning": "Em inglês, \"pull request\" quer dizer \"pedido para puxar\": você pede que puxem suas mudanças.",
@@ -447,18 +1062,49 @@
         "pt": {
           "short": "Um pedido para juntar as mudanças de uma branch na principal, com revisão.",
           "example": "Você abre um pull request da branch \"login\" para a \"main\" e a colega revisa.",
-          "steps": ["Trabalhe numa branch separada.", "Envie a branch com git push.", "Abra o pull request no site.", "Alguém revisa, comenta e aprova.", "As mudanças são juntadas (merge)."]
+          "steps": [
+            "Trabalhe numa branch separada.",
+            "Envie a branch com git push.",
+            "Abra o pull request no site.",
+            "Alguém revisa, comenta e aprova.",
+            "As mudanças são juntadas (merge)."
+          ]
         },
-        "en": { "short": "Pull request: a request to merge changes from one branch into another, with review." },
-        "es": { "short": "Pull request: una solicitud para unir los cambios de una rama en otra, con revisión." }
+        "en": {
+          "short": "Pull request: a request to merge changes from one branch into another, with review."
+        },
+        "es": {
+          "names": [
+            "pull request",
+            "solicitud de extracción",
+            "solicitud de cambios"
+          ],
+          "short": "Pull request: una solicitud para unir los cambios de una rama en la principal, con revisión.",
+          "example": "Abres un pull request de la rama \"login\" a \"main\" y una compañera lo revisa.",
+          "steps": [
+            "Trabaja en una rama separada.",
+            "Envía la rama con git push.",
+            "Abre el pull request en el sitio.",
+            "Alguien revisa, comenta y aprueba.",
+            "Los cambios se unen (merge)."
+          ],
+          "literal": "En inglés, \"pull request\" significa \"pedido para jalar\": pides que tomen tus cambios."
+        }
       },
       "reviewed": false
     },
     {
       "id": "branch",
       "canonical": "branch",
-      "variants": ["brenchi", "branchi", "brench", "brânch"],
-      "forms": ["branches"],
+      "variants": [
+        "brenchi",
+        "branchi",
+        "brench",
+        "brânch"
+      ],
+      "forms": [
+        "branches"
+      ],
       "category": "git",
       "figurative": true,
       "literalMeaning": "Em inglês, \"branch\" quer dizer \"galho\" de árvore.",
@@ -466,17 +1112,41 @@
         "pt": {
           "short": "Uma linha paralela de trabalho no Git, separada da principal.",
           "example": "git switch -c login → cria a branch \"login\" para mexer sem afetar a main.",
-          "steps": ["Crie a branch a partir da principal.", "Faça seus commits nela.", "Quando estiver pronto, junte com a principal (merge)."]
+          "steps": [
+            "Crie a branch a partir da principal.",
+            "Faça seus commits nela.",
+            "Quando estiver pronto, junte com a principal (merge)."
+          ]
         },
-        "en": { "short": "Branch: a parallel line of work in Git, separate from the main one." },
-        "es": { "short": "Rama (branch): una línea de trabajo paralela en Git, separada de la principal." }
+        "en": {
+          "short": "Branch: a parallel line of work in Git, separate from the main one."
+        },
+        "es": {
+          "names": [
+            "rama",
+            "ramas",
+            "branch"
+          ],
+          "short": "Rama (branch): una línea de trabajo paralela en Git, separada de la principal.",
+          "example": "git switch -c login → crea la rama \"login\" para trabajar sin afectar main.",
+          "steps": [
+            "Crea la rama a partir de la principal.",
+            "Haz tus commits en ella.",
+            "Cuando esté lista, únela con la principal (merge)."
+          ],
+          "literal": "En inglés, \"branch\" significa \"rama\" de árbol."
+        }
       },
       "reviewed": false
     },
     {
       "id": "merge",
       "canonical": "merge",
-      "variants": ["merji", "mergi", "mérgi"],
+      "variants": [
+        "merji",
+        "mergi",
+        "mérgi"
+      ],
       "category": "git",
       "figurative": true,
       "literalMeaning": "Em inglês, \"merge\" quer dizer \"fundir\" ou \"juntar\".",
@@ -484,7 +1154,27 @@
         "pt": {
           "short": "Juntar as mudanças de uma branch em outra.",
           "example": "git merge login → traz os commits da branch login para a branch atual.",
-          "steps": ["Vá para a branch que vai receber as mudanças.", "Rode git merge com o nome da outra branch.", "Se houver conflito, escolha o que fica e faça commit."]
+          "steps": [
+            "Vá para a branch que vai receber as mudanças.",
+            "Rode git merge com o nome da outra branch.",
+            "Se houver conflito, escolha o que fica e faça commit."
+          ]
+        },
+        "es": {
+          "names": [
+            "merge",
+            "fusión",
+            "fusionar",
+            "unir"
+          ],
+          "short": "Merge: unir los cambios de una rama en otra.",
+          "example": "git merge login → trae los commits de la rama login a la rama actual.",
+          "steps": [
+            "Ve a la rama que va a recibir los cambios.",
+            "Ejecuta git merge con el nombre de la otra rama.",
+            "Si hay conflicto, elige qué se queda y haz commit."
+          ],
+          "literal": "En inglés, \"merge\" significa \"fusionar\" o \"unir\"."
         }
       },
       "reviewed": false
@@ -493,14 +1183,35 @@
       "id": "repositorio",
       "fuzzy": false,
       "canonical": "repositório",
-      "variants": ["repo"],
-      "forms": ["repositórios"],
+      "variants": [
+        "repo"
+      ],
+      "forms": [
+        "repositórios"
+      ],
       "category": "git",
       "explanations": {
         "pt": {
           "short": "A pasta do projeto acompanhada pelo Git, com todo o histórico.",
           "example": "git init transforma a pasta atual em um repositório.",
-          "steps": ["Crie com git init (ou copie um existente com git clone).", "Trabalhe nos arquivos.", "O Git guarda o histórico dentro do repositório."]
+          "steps": [
+            "Crie com git init (ou copie um existente com git clone).",
+            "Trabalhe nos arquivos.",
+            "O Git guarda o histórico dentro do repositório."
+          ]
+        },
+        "es": {
+          "names": [
+            "repositorio",
+            "repositorios"
+          ],
+          "short": "Repositorio: la carpeta del proyecto que Git sigue, con todo su historial.",
+          "example": "git init convierte la carpeta actual en un repositorio.",
+          "steps": [
+            "Créalo con git init (o copia uno existente con git clone).",
+            "Trabaja en los archivos.",
+            "Git guarda el historial dentro del repositorio."
+          ]
         }
       },
       "reviewed": false
@@ -514,7 +1225,23 @@
         "pt": {
           "short": "A linguagem que define a estrutura e o conteúdo de uma página web.",
           "example": "<h1>Olá</h1> cria um título na página.",
-          "steps": ["Escreva o conteúdo dentro de tags, como <p> e </p>.", "Organize a página em partes (cabeçalho, corpo, listas).", "O navegador lê o HTML e mostra a página."]
+          "steps": [
+            "Escreva o conteúdo dentro de tags, como <p> e </p>.",
+            "Organize a página em partes (cabeçalho, corpo, listas).",
+            "O navegador lê o HTML e mostra a página."
+          ]
+        },
+        "es": {
+          "names": [
+            "html"
+          ],
+          "short": "HTML: el lenguaje que define la estructura y el contenido de una página web.",
+          "example": "<h1>Hola</h1> crea un título en la página.",
+          "steps": [
+            "Escribe el contenido dentro de etiquetas, como <p> y </p>.",
+            "Organiza la página en partes (encabezado, cuerpo, listas).",
+            "El navegador lee el HTML y muestra la página."
+          ]
         }
       },
       "reviewed": false
@@ -522,13 +1249,32 @@
     {
       "id": "css",
       "canonical": "CSS",
-      "variants": ["c s s", "cê esse esse"],
+      "variants": [
+        "c s s",
+        "cê esse esse"
+      ],
       "category": "web",
       "explanations": {
         "pt": {
           "short": "A linguagem que define a aparência da página: cores, tamanhos e posições.",
           "example": "h1 { color: blue; } → todos os títulos h1 ficam azuis.",
-          "steps": ["Escolha o elemento com um seletor.", "Abra chaves.", "Escreva propriedade: valor; para cada estilo."]
+          "steps": [
+            "Escolha o elemento com um seletor.",
+            "Abra chaves.",
+            "Escreva propriedade: valor; para cada estilo."
+          ]
+        },
+        "es": {
+          "names": [
+            "css"
+          ],
+          "short": "CSS: el lenguaje que define la apariencia de la página: colores, tamaños y posiciones.",
+          "example": "h1 { color: blue; } → todos los títulos h1 quedan azules.",
+          "steps": [
+            "Elige el elemento con un selector.",
+            "Abre llaves.",
+            "Escribe propiedad: valor; para cada estilo."
+          ]
         }
       },
       "reviewed": false
@@ -536,13 +1282,33 @@
     {
       "id": "javascript",
       "canonical": "JavaScript",
-      "variants": ["java script", "javascripti", "java scripti"],
+      "variants": [
+        "java script",
+        "javascripti",
+        "java scripti"
+      ],
       "category": "web",
       "explanations": {
         "pt": {
           "short": "A linguagem de programação que roda no navegador e deixa a página interativa.",
           "example": "alert(\"oi\") mostra uma mensagem na tela.",
-          "steps": ["Escreva o código num arquivo .js ou numa tag <script>.", "O navegador executa o código.", "O código pode reagir a cliques e mudar a página."]
+          "steps": [
+            "Escreva o código num arquivo .js ou numa tag <script>.",
+            "O navegador executa o código.",
+            "O código pode reagir a cliques e mudar a página."
+          ]
+        },
+        "es": {
+          "names": [
+            "javascript"
+          ],
+          "short": "JavaScript: el lenguaje de programación que corre en el navegador y hace la página interactiva.",
+          "example": "alert(\"hola\") muestra un mensaje en la pantalla.",
+          "steps": [
+            "Escribe el código en un archivo .js o en una etiqueta <script>.",
+            "El navegador ejecuta el código.",
+            "El código puede reaccionar a clics y cambiar la página."
+          ]
         }
       },
       "reviewed": false
@@ -550,46 +1316,115 @@
     {
       "id": "api",
       "canonical": "API",
-      "variants": ["a p i", "eipiai", "ei pi ai"],
-      "forms": ["APIs"],
+      "variants": [
+        "a p i",
+        "eipiai",
+        "ei pi ai"
+      ],
+      "forms": [
+        "APIs"
+      ],
       "category": "web",
       "explanations": {
         "pt": {
           "short": "Um jeito combinado de um programa pedir dados ou serviços a outro.",
           "example": "fetch(\"https://api.exemplo.com/clima\") pede a previsão do tempo a uma API.",
-          "steps": ["Leia a documentação da API.", "Monte o pedido no endereço certo.", "Envie o pedido.", "Use a resposta (geralmente em JSON)."]
+          "steps": [
+            "Leia a documentação da API.",
+            "Monte o pedido no endereço certo.",
+            "Envie o pedido.",
+            "Use a resposta (geralmente em JSON)."
+          ]
         },
-        "en": { "short": "API: an agreed way for one program to ask another for data or services." },
-        "es": { "short": "API: una forma acordada para que un programa pida datos o servicios a otro." }
+        "en": {
+          "short": "API: an agreed way for one program to ask another for data or services."
+        },
+        "es": {
+          "names": [
+            "api",
+            "apis"
+          ],
+          "short": "API: una forma acordada para que un programa pida datos o servicios a otro.",
+          "example": "fetch(\"https://api.ejemplo.com/clima\") pide el pronóstico del tiempo a una API.",
+          "steps": [
+            "Lee la documentación de la API.",
+            "Arma el pedido en la dirección correcta.",
+            "Envía el pedido.",
+            "Usa la respuesta (casi siempre en JSON)."
+          ]
+        }
       },
       "reviewed": false
     },
     {
       "id": "json",
       "canonical": "JSON",
-      "variants": ["jeisom", "jason", "djeison", "jéison"],
+      "variants": [
+        "jeisom",
+        "jason",
+        "djeison",
+        "jéison"
+      ],
       "category": "web",
       "explanations": {
         "pt": {
           "short": "Um formato de texto para guardar e trocar dados, parecido com objetos JavaScript.",
           "example": "{ \"nome\": \"Ana\", \"idade\": 17 }",
-          "steps": ["Use chaves para objetos e colchetes para listas.", "Nomes sempre entre aspas duplas.", "Converta com JSON.parse (texto → objeto) e JSON.stringify (objeto → texto)."]
+          "steps": [
+            "Use chaves para objetos e colchetes para listas.",
+            "Nomes sempre entre aspas duplas.",
+            "Converta com JSON.parse (texto → objeto) e JSON.stringify (objeto → texto)."
+          ]
         },
-        "en": { "short": "JSON: a text format for storing and exchanging data, similar to JavaScript objects." },
-        "es": { "short": "JSON: un formato de texto para guardar e intercambiar datos, parecido a objetos de JavaScript." }
+        "en": {
+          "short": "JSON: a text format for storing and exchanging data, similar to JavaScript objects."
+        },
+        "es": {
+          "names": [
+            "json"
+          ],
+          "short": "JSON: un formato de texto para guardar e intercambiar datos, parecido a los objetos de JavaScript.",
+          "example": "{ \"nombre\": \"Ana\", \"edad\": 17 }",
+          "steps": [
+            "Usa llaves para objetos y corchetes para listas.",
+            "Los nombres siempre van entre comillas dobles.",
+            "Convierte con JSON.parse (texto → objeto) y JSON.stringify (objeto → texto)."
+          ]
+        }
       },
       "reviewed": false
     },
     {
       "id": "react",
       "canonical": "React",
-      "variants": ["riéct", "riact", "rieact", "riékti"],
+      "variants": [
+        "riéct",
+        "riact",
+        "rieact",
+        "riékti"
+      ],
       "category": "web",
       "explanations": {
         "pt": {
           "short": "Uma biblioteca JavaScript para montar interfaces a partir de componentes.",
           "example": "function Ola() { return <h1>Olá</h1>; } é um componente React.",
-          "steps": ["Divida a tela em componentes.", "Cada componente é uma função que devolve o que mostrar.", "Quando os dados mudam, o React atualiza a tela."]
+          "steps": [
+            "Divida a tela em componentes.",
+            "Cada componente é uma função que devolve o que mostrar.",
+            "Quando os dados mudam, o React atualiza a tela."
+          ]
+        },
+        "es": {
+          "names": [
+            "react"
+          ],
+          "short": "React: una biblioteca de JavaScript para construir interfaces a partir de componentes.",
+          "example": "function Hola() { return <h1>Hola</h1>; } es un componente de React.",
+          "steps": [
+            "Divide la pantalla en componentes.",
+            "Cada componente es una función que devuelve lo que se muestra.",
+            "Cuando los datos cambian, React actualiza la pantalla."
+          ]
         }
       },
       "reviewed": false
@@ -597,29 +1432,74 @@
     {
       "id": "use-state",
       "canonical": "useState",
-      "variants": ["use state", "iuse state", "iuz steite", "iuse steite"],
+      "variants": [
+        "use state",
+        "iuse state",
+        "iuz steite",
+        "iuse steite"
+      ],
       "category": "web",
       "explanations": {
         "pt": {
           "short": "Um recurso do React para um componente lembrar um valor que pode mudar.",
           "example": "const [contador, setContador] = useState(0); → setContador(1) atualiza a tela.",
-          "steps": ["Chame useState com o valor inicial.", "Receba o valor atual e a função de troca.", "Chame a função de troca para mudar o valor.", "O React redesenha o componente com o novo valor."]
+          "steps": [
+            "Chame useState com o valor inicial.",
+            "Receba o valor atual e a função de troca.",
+            "Chame a função de troca para mudar o valor.",
+            "O React redesenha o componente com o novo valor."
+          ]
         },
-        "en": { "short": "useState: a React feature that lets a component remember a value that can change." },
-        "es": { "short": "useState: recurso de React para que un componente recuerde un valor que puede cambiar." }
+        "en": {
+          "short": "useState: a React feature that lets a component remember a value that can change."
+        },
+        "es": {
+          "names": [
+            "usestate"
+          ],
+          "short": "useState: recurso de React para que un componente recuerde un valor que puede cambiar.",
+          "example": "const [contador, setContador] = useState(0); → setContador(1) actualiza la pantalla.",
+          "steps": [
+            "Llama a useState con el valor inicial.",
+            "Recibe el valor actual y la función para cambiarlo.",
+            "Llama a esa función para cambiar el valor.",
+            "React vuelve a dibujar el componente con el nuevo valor."
+          ]
+        }
       },
       "reviewed": false
     },
     {
       "id": "use-effect",
       "canonical": "useEffect",
-      "variants": ["use effect", "iuz efect", "iuse effect", "use efect"],
+      "variants": [
+        "use effect",
+        "iuz efect",
+        "iuse effect",
+        "use efect"
+      ],
       "category": "web",
       "explanations": {
         "pt": {
           "short": "Um recurso do React para rodar código depois que o componente aparece ou muda.",
           "example": "useEffect(() => { document.title = \"Oi\"; }, []); → muda o título uma vez.",
-          "steps": ["Passe uma função para useEffect.", "Diga em uma lista de quais valores ela depende.", "Se precisar, devolva uma função de limpeza."]
+          "steps": [
+            "Passe uma função para useEffect.",
+            "Diga em uma lista de quais valores ela depende.",
+            "Se precisar, devolva uma função de limpeza."
+          ]
+        },
+        "es": {
+          "names": [
+            "useeffect"
+          ],
+          "short": "useEffect: recurso de React para ejecutar código después de que el componente aparece o cambia.",
+          "example": "useEffect(() => { document.title = \"Hola\"; }, []); → cambia el título una vez.",
+          "steps": [
+            "Pasa una función a useEffect.",
+            "Indica en una lista de qué valores depende.",
+            "Si hace falta, devuelve una función de limpieza."
+          ]
         }
       },
       "reviewed": false
@@ -627,7 +1507,12 @@
     {
       "id": "deploy",
       "canonical": "deploy",
-      "variants": ["diplói", "deplói", "diploi", "deploi"],
+      "variants": [
+        "diplói",
+        "deplói",
+        "diploi",
+        "deploi"
+      ],
       "category": "ferramentas",
       "figurative": true,
       "literalMeaning": "Em inglês, \"deploy\" quer dizer \"posicionar\" ou \"pôr em ação\".",
@@ -635,7 +1520,27 @@
         "pt": {
           "short": "Publicar o sistema num servidor para outras pessoas usarem.",
           "example": "Fazer o deploy do site na Vercel e receber um link público.",
-          "steps": ["Gere a versão final do projeto (build).", "Envie para o servidor ou serviço de hospedagem.", "Teste o link publicado."]
+          "steps": [
+            "Gere a versão final do projeto (build).",
+            "Envie para o servidor ou serviço de hospedagem.",
+            "Teste o link publicado."
+          ]
+        },
+        "es": {
+          "names": [
+            "deploy",
+            "despliegue",
+            "desplegar",
+            "publicar"
+          ],
+          "short": "Despliegue (deploy): publicar el sistema en un servidor para que otras personas lo usen.",
+          "example": "Hacer el deploy del sitio en Vercel y recibir un enlace público.",
+          "steps": [
+            "Genera la versión final del proyecto (build).",
+            "Envíala al servidor o servicio de alojamiento.",
+            "Prueba el enlace publicado."
+          ],
+          "literal": "En inglés, \"deploy\" significa \"desplegar\" o \"poner en acción\"."
         }
       },
       "reviewed": false
@@ -643,13 +1548,33 @@
     {
       "id": "console-log",
       "canonical": "console.log",
-      "variants": ["console log", "consoli log", "cônsole log"],
+      "variants": [
+        "console log",
+        "consoli log",
+        "cônsole log"
+      ],
       "category": "ferramentas",
       "explanations": {
         "pt": {
           "short": "Comando que mostra um valor no console, muito usado para entender o código.",
           "example": "console.log(\"total:\", total); → aparece no console do navegador.",
-          "steps": ["Escreva console.log( com o que quer ver.", "Rode o programa.", "Abra o console (F12 no navegador) e veja a saída."]
+          "steps": [
+            "Escreva console.log( com o que quer ver.",
+            "Rode o programa.",
+            "Abra o console (F12 no navegador) e veja a saída."
+          ]
+        },
+        "es": {
+          "names": [
+            "console.log"
+          ],
+          "short": "console.log: comando que muestra un valor en la consola; se usa mucho para entender el código.",
+          "example": "console.log(\"total:\", total); → aparece en la consola del navegador.",
+          "steps": [
+            "Escribe console.log( con lo que quieres ver.",
+            "Ejecuta el programa.",
+            "Abre la consola (F12 en el navegador) y mira la salida."
+          ]
         }
       },
       "reviewed": false

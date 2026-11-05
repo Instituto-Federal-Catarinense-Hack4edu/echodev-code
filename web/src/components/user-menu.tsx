@@ -7,9 +7,10 @@ import type { User } from "@supabase/supabase-js";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { hasSupabaseEnv } from "@/lib/env";
 import { getSupabase } from "@/lib/supabase/client";
-import { t } from "@/lib/i18n/pt-BR";
+import { useT } from "@/lib/i18n/context";
 
 export function UserMenu() {
+  const t = useT();
   const router = useRouter();
   const [user, setUser] = useState<User | null | undefined>(undefined);
   const [isTeacher, setIsTeacher] = useState(false);

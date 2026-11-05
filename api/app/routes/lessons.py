@@ -69,7 +69,12 @@ async def _utterances(rest: UserRest, lesson_id: str) -> list[dict[str, Any]]:
 async def _materials(rest: UserRest, lesson_id: str) -> list[dict[str, Any]]:
     return await rest.select(
         "lesson_materials",
-        {"lesson_id": f"eq.{lesson_id}", "select": "id,kind,status,content", "order": "kind.desc"},
+        {
+            "lesson_id": f"eq.{lesson_id}",
+            "kind": "in.(resumo,quiz)",
+            "select": "id,kind,status,content",
+            "order": "kind.desc",
+        },
     )
 
 

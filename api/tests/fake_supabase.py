@@ -84,6 +84,9 @@ class FakeSupabase:
         for key, value in params.multi_items():
             if value.startswith("eq."):
                 rows = [r for r in rows if str(r.get(key)) == value[3:]]
+            elif value.startswith("in.(") and value.endswith(")"):
+                allowed = set(value[4:-1].split(","))
+                rows = [r for r in rows if str(r.get(key)) in allowed]
         if params.get("order") == "seq.asc":
             rows = sorted(rows, key=lambda r: r["seq"])
         return rows

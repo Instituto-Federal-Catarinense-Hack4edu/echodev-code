@@ -3,11 +3,12 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { QuizItem } from "@/lib/api/types";
-import { t } from "@/lib/i18n/pt-BR";
+import { useT } from "@/lib/i18n/context";
 import { cn } from "@/lib/utils";
 
 /** One question at a time; shows right/wrong and the explanation. Answers are never saved. */
 export function QuizPlayer({ items }: { items: QuizItem[] }) {
+  const t = useT();
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
   const [score, setScore] = useState(0);

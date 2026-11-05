@@ -4,9 +4,10 @@ import { useState } from "react";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { downloadSummaryPdf, type SummaryPdfData } from "@/lib/pdf/summary-pdf";
-import { t } from "@/lib/i18n/pt-BR";
+import { useT } from "@/lib/i18n/context";
 
 export function PdfButton({ data, label }: { data: SummaryPdfData; label: string }) {
+  const t = useT();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
   return (

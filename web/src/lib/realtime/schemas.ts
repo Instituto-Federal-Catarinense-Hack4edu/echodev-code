@@ -12,6 +12,8 @@ export const UtteranceMessageSchema = z
   .object({
     seq: z.number().int().positive(),
     text: z.string().max(5000),
+    /** Spanish translation made in the teacher's browser, when enabled. */
+    es: z.string().max(5000).optional(),
     terms: z.array(TermSpanSchema),
     wpm: z.number().int().nonnegative(),
     sentAt: z.number().int().nonnegative(),

@@ -4,9 +4,10 @@ import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { roleHome, type Role } from "@/lib/roles";
 import { useProfile } from "@/lib/supabase/use-profile";
-import { t } from "@/lib/i18n/pt-BR";
+import { useT } from "@/lib/i18n/context";
 
 export function RoleGate({ role, children }: { role: Role; children: React.ReactNode }) {
+  const t = useT();
   const { user, profile, loading } = useProfile();
 
   if (loading) return <p className="p-6 text-muted-foreground">{t.common.loading}</p>;

@@ -6,7 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { getSupabase } from "@/lib/supabase/client";
 import { useProfile } from "@/lib/supabase/use-profile";
-import { t } from "@/lib/i18n/pt-BR";
+import { useT } from "@/lib/i18n/context";
+import { useProfileLang } from "@/lib/i18n/use-profile-lang";
+import { LanguageSelect } from "@/components/language-select";
 import { JoinForm } from "@/app/join-form";
 
 interface JoinedLesson {
@@ -18,7 +20,9 @@ interface JoinedLesson {
 }
 
 export function StudentHome() {
-  const { user, loading } = useProfile();
+  const t = useT();
+  const { user, profile, setProfile, loading } = useProfile();
+  const [lang, changeLang] = useProfileLang(profile, setProfile);
   const [lessons, setLessons] = useState<JoinedLesson[] | null>(null);
 
   useEffect(() => {
@@ -43,7 +47,10 @@ export function StudentHome() {
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 space-y-8 p-6">
-      <h1 className="text-2xl font-bold">{t.student_area.title}</h1>
+      <div className="flex flex-wrap items-center gap-3">
+        <h1 className="mr-auto text-2xl font-bold">{t.student_area.title}</h1>
+        <LanguageSelect value={lang} onChange={changeLang} />
+      </div>
       <section className="rounded-xl border p-4">
         <JoinForm />
       </section>

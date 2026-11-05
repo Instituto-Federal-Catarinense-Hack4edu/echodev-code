@@ -23,6 +23,21 @@ export interface TeacherStreamOptions {
   currentMaxSeq?: () => Promise<number>;
   /** Highest seq already stored for this lesson (reload safety). */
   initialSeq?: number;
+  /** Translates each sentence to Spanish; a failure only drops the translation. */
+  translate?: ((text: string) => Promise<string>) | null;
+}
+
+async function translateText(
+  translate: ((text: string) => Promise<string>) | null,
+  text: string,
+): Promise<string | undefined> {
+  if (!translate || !text.trim()) return undefined;
+  try {
+    const es = (await translate(text)).trim();
+    return es ? censor(es).text.slice(0, 5000) : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 export function useTeacherStream(opts: TeacherStreamOptions) {
@@ -42,12 +57,14 @@ export function useTeacherStream(opts: TeacherStreamOptions) {
   const persistRef = useRef(persist);
   const maxSeqRef = useRef(opts.currentMaxSeq);
   const queueRef = useRef<Promise<void>>(Promise.resolve());
+  const translateRef = useRef(opts.translate ?? null);
 
   useEffect(() => {
     transportRef.current = transport;
     persistRef.current = persist;
     maxSeqRef.current = opts.currentMaxSeq;
-  }, [transport, persist, opts.currentMaxSeq]);
+    translateRef.current = opts.translate ?? null;
+  }, [transport, persist, opts.currentMaxSeq, opts.translate]);
 
   useEffect(() => {
     if (initialSeq > seqRef.current) seqRef.current = initialSeq;
@@ -72,9 +89,11 @@ export function useTeacherStream(opts: TeacherStreamOptions) {
     // Swear words are masked before anything else, so they never leave this browser.
     const { text, terms } = matcherRef.current.match(censor(raw).text);
     const now = Date.now();
+    const es = await translateText(translateRef.current, text);
     let msg: UtteranceMessage = {
       seq: seqRef.current + 1,
       text,
+      ...(es ? { es } : {}),
       terms,
       wpm: meterRef.current(text, now),
       sentAt: now,

@@ -118,3 +118,11 @@ Riscos conhecidos que ficaram (sem mudança no banco, para não exigir SQL novo)
 - **Termo clicável também no console do professor**: abre a mesma ficha que o aluno vê (sem os botões de avaliação, que são só do aluno).
 - **Painel da aula** (`/professor/aulas/[id]`): ao encerrar, o professor cai nele. Mostra estudantes, duração, frases e ritmo médio, o estado do resumo e do quiz, o PDF do professor, a prévia do quiz ("Conferir quiz") e o relatório de ritmo e termos. A página `/relatorio` foi absorvida pelo painel.
 - Comentários que só repetiam o código foram removidos; ficaram os que explicam um porquê não óbvio.
+
+## Espanhol para alunos hispanofalantes (05/11/2026)
+- **Quem**: o professor fala português; o aluno escolhe "Español" e recebe a legenda traduzida, as telas do aluno, as explicações dos 40 termos (curta, exemplo e passo a passo), o resumo, o quiz e o PDF em espanhol.
+- **Tradução ao vivo no navegador do professor** com a Translator API do Chrome (138+, só computador). Mantém a regra "ao vivo não passa por Python nem IA externa": nada sai do computador para traduzir. O celular do aluno não tem essa API, por isso a frase já vai traduzida (`utterances.text_es`, apagada junto com a frase em 24 h). Se o tradutor não existir ou não responder em 5 s, o painel avisa e a aula segue só em português.
+- **Termos na frase traduzida**: procurados pelo nome em espanhol (`explanations.es.names`), pelo termo canônico e pelas formas; o que não for achado aparece como botão "Términos:" ao lado da frase.
+- **Resumo e quiz em espanhol**: na página de revisão, "Traduzir resumo e quiz para espanhol" usa o mesmo tradutor do Chrome e cria `resumo_es` e `quiz_es` como rascunho; o professor revisa e aprova como a versão em português. Código e opções que parecem código não são traduzidos. Funciona com o provedor `mock`, sem chave de IA. A API ignora as versões em espanhol ao gerar de novo.
+- **Textos da interface**: exceção à regra "só em `pt-BR.ts`": o espanhol fica em `lib/i18n/es.ts`, que só sobrescreve chaves (o que faltar cai no português). Só telas do aluno usam `useT()`; telas do professor continuam em português. Entrar, Minha conta e Redefinir senha ainda estão só em português.
+- Inglês continua só nas explicações curtas dos termos (as telas ficam em português).

@@ -5,17 +5,22 @@ import { Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CaptionText } from "@/components/caption-text";
 import type { UtteranceMessage } from "@/lib/realtime/schemas";
-import { t } from "@/lib/i18n/pt-BR";
+import { getTerm } from "@/lib/terms/pack";
+import type { Lang } from "@/lib/terms/schemas";
+import { spansInTranslation } from "@/lib/terms/translated-spans";
+import { useT } from "@/lib/i18n/context";
 
 interface Props {
   items: readonly UtteranceMessage[];
   onTermClick: (termId: string) => void;
+  lang?: Lang;
 }
 
 const SIZES = [18, 22, 26, 32, 40];
 const FONT_KEY = "echodev:font-size";
 
-export function LiveCaption({ items, onTermClick }: Props) {
+export function LiveCaption({ items, onTermClick, lang = "pt" }: Props) {
+  const t = useT();
   const scroller = useRef<HTMLDivElement>(null);
   const [follow, setFollow] = useState(true);
   const [seenCount, setSeenCount] = useState(0);
@@ -64,6 +69,8 @@ export function LiveCaption({ items, onTermClick }: Props) {
   };
 
   const unseen = Math.max(0, items.length - seenCount);
+  const wantsSpanish = lang === "es";
+  const untranslated = wantsSpanish && items.length > 0 && !items.at(-1)?.es;
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
@@ -76,6 +83,11 @@ export function LiveCaption({ items, onTermClick }: Props) {
           <Plus />
         </Button>
       </div>
+      {untranslated && (
+        <p role="status" className="border-b bg-muted px-4 py-2 text-sm">
+          {t.student.noTranslation}
+        </p>
+      )}
       <div
         ref={scroller}
         onScroll={onScroll}
@@ -87,11 +99,15 @@ export function LiveCaption({ items, onTermClick }: Props) {
         {items.length === 0 ? (
           <p className="text-muted-foreground">{t.student.waiting}</p>
         ) : (
-          items.map((m) => (
-            <p key={m.seq} className="mb-3">
-              <CaptionText text={m.text} terms={m.terms} onTermClick={onTermClick} />
-            </p>
-          ))
+          items.map((m) =>
+            wantsSpanish && m.es ? (
+              <TranslatedLine key={m.seq} message={m} text={m.es} onTermClick={onTermClick} />
+            ) : (
+              <p key={m.seq} className="mb-3">
+                <CaptionText text={m.text} terms={m.terms} onTermClick={onTermClick} />
+              </p>
+            ),
+          )
         )}
       </div>
       {!follow && (
@@ -106,5 +122,37 @@ export function LiveCaption({ items, onTermClick }: Props) {
         </Button>
       )}
     </div>
+  );
+}
+
+function TranslatedLine({
+  message,
+  text,
+  onTermClick,
+}: {
+  message: UtteranceMessage;
+  text: string;
+  onTermClick: (termId: string) => void;
+}) {
+  const t = useT();
+  const { spans, missing } = spansInTranslation(
+    text,
+    message.terms.map((s) => s.termId),
+    "es",
+  );
+  return (
+    <p className="mb-3" lang="es">
+      <CaptionText text={text} terms={spans} onTermClick={onTermClick} />
+      {missing.length > 0 && (
+        <span className="ml-2 inline-flex flex-wrap items-center gap-1 align-middle text-[0.7em]">
+          <span className="text-muted-foreground">{t.student.termsInSentence}</span>
+          {missing.map((id) => (
+            <button key={id} type="button" className="term-highlight" onClick={() => onTermClick(id)}>
+              {getTerm(id)?.canonical ?? id}
+            </button>
+          ))}
+        </span>
+      )}
+    </p>
   );
 }
