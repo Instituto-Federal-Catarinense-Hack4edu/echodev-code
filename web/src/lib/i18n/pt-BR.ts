@@ -238,7 +238,12 @@ export const t = {
     title: "Entrar no EchoDev",
     tabLogin: "Entrar",
     tabSignup: "Criar conta",
-    signupIntro: "Crie sua conta com e-mail e senha. Professores: use o e-mail cadastrado pela coordenação.",
+    signupIntro: "Crie sua conta com e-mail e senha.",
+    roleLabel: "Você é",
+    roleStudent: "Aluno",
+    roleTeacher: "Professor",
+    teacherHint:
+      "Use o e-mail cadastrado pela coordenação. Se ele não estiver na lista de professores, a conta não abre como professor.",
     email: "E-mail",
     password: "Senha",
     confirmPassword: "Repita a senha",
@@ -262,8 +267,7 @@ export const t = {
     continue: "Continuar",
     google: "Entrar com Google",
     or: "ou",
-    teacherNote:
-      "Professores entram com a mesma tela; a área do professor só abre para e-mails cadastrados pela coordenação.",
+    teacherNote: "A área do professor só abre para e-mails cadastrados pela coordenação.",
     rateLimited: "Muitas tentativas em pouco tempo. Espere alguns minutos e tente de novo.",
     callbackError: "O link expirou ou já foi usado. Peça um novo.",
     signOut: "Sair",
@@ -279,6 +283,8 @@ export const t = {
       signupDisabled: "A criação de contas está desativada no momento.",
       shortPassword: (n: number) => `A senha precisa ter pelo menos ${n} caracteres.`,
       passwordMismatch: "As senhas não são iguais.",
+      notTeacher:
+        "Este e-mail não está autorizado como professor. Peça para a coordenação incluir seu e-mail na lista de professores, ou entre como aluno.",
       generic: "Não foi possível concluir. Confira os dados e tente de novo.",
     },
   },

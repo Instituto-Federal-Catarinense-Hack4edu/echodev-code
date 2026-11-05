@@ -98,6 +98,12 @@ class DeleteMeResponse(BaseModel):
     deleted: bool
 
 
+class ProfileRequest(BaseModel):
+    # What the person chose on the sign-in screen. "professor" is refused (no profile is
+    # created) when the e-mail is not on the allowlist, instead of silently becoming a student.
+    intent: Literal["professor", "estudante"] | None = None
+
+
 class ProfileOut(BaseModel):
     user_id: str
     role: Literal["professor", "estudante"]

@@ -4,8 +4,16 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { User } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import { apiFetch } from "@/lib/api/client";
+import { ApiError, apiFetch } from "@/lib/api/client";
+import type { Role } from "@/lib/roles";
 import { currentUser, getDb } from "./client";
+
+/** The person chose "Professor" but the e-mail is not on the teacher allowlist. */
+export class NotTeacherError extends Error {
+  constructor() {
+    super("not_teacher");
+  }
+}
 
 export interface Profile {
   user_id: string;
@@ -27,20 +35,26 @@ export const toAppUser = (u: User): AppUser => ({ id: u.uid, email: u.email });
 /**
  * Reads the caller's profile; on the first login asks the API to create it (the role comes
  * from the teacher allowlist, which the browser cannot read). Null if it cannot be created.
+ * With intent "professor", throws NotTeacherError when the e-mail is not a teacher's.
  */
-export async function loadProfile(uid: string): Promise<Profile | null> {
+export async function loadProfile(uid: string, intent?: Role): Promise<Profile | null> {
   const ref = doc(getDb(), "profiles", uid);
   let snap = await getDoc(ref);
   if (!snap.exists()) {
     try {
-      await apiFetch("/me/profile", { method: "POST" });
-    } catch {
+      await apiFetch("/me/profile", {
+        method: "POST",
+        ...(intent ? { body: JSON.stringify({ intent }) } : {}),
+      });
+    } catch (e) {
+      if (e instanceof ApiError && e.message === "not_teacher") throw new NotTeacherError();
       return null;
     }
     snap = await getDoc(ref);
   }
   if (!snap.exists()) return null;
   const d = snap.data();
+  if (intent === "professor" && d.role !== "professor") throw new NotTeacherError();
   return {
     user_id: uid,
     role: d.role,

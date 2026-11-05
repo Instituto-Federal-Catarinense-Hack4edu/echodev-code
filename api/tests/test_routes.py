@@ -297,6 +297,35 @@ def test_profile_default_role_is_student(client, fake):
     assert res.json()["role"] == "estudante"
 
 
+def test_profile_teacher_intent_refused_outside_allowlist(client, fake):
+    res = client.post(
+        "/me/profile", headers={"Authorization": "Bearer new-token"}, json={"intent": "professor"}
+    )
+    assert res.status_code == 403
+    assert res.json()["detail"] == "not_teacher"
+    assert "newbie" not in fake.profiles  # not locked as a student
+    fake.allowlist.add("novo@escola.test")
+    later = client.post(
+        "/me/profile", headers={"Authorization": "Bearer new-token"}, json={"intent": "professor"}
+    )
+    assert later.status_code == 200 and later.json()["role"] == "professor"
+
+
+def test_profile_allowlist_wins_over_student_intent(client, fake):
+    fake.allowlist.add("novo@escola.test")
+    res = client.post(
+        "/me/profile", headers={"Authorization": "Bearer new-token"}, json={"intent": "estudante"}
+    )
+    assert res.json()["role"] == "professor"
+
+
+def test_profile_student_intent_creates_student(client, fake):
+    res = client.post(
+        "/me/profile", headers={"Authorization": "Bearer new-token"}, json={"intent": "estudante"}
+    )
+    assert res.status_code == 200 and res.json()["role"] == "estudante"
+
+
 def test_profile_requires_verified_email(client, fake):
     fake.allowlist.add("x@escola.test")
     res = client.post("/me/profile", headers={"Authorization": "Bearer unverified-token"})

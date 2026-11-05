@@ -141,7 +141,9 @@ export interface paths {
         /**
          * Ensure Profile
          * @description Idempotent. The role comes from the teacher allowlist, only for a verified e-mail
-         *     (otherwise anyone could sign up with a teacher's address).
+         *     (otherwise anyone could sign up with a teacher's address). A "professor" intent from an
+         *     e-mail outside the allowlist is refused without creating a profile, so the account is not
+         *     locked as a student and becomes a teacher once the e-mail is added.
          */
         post: operations["ensure_profile_me_profile_post"];
         delete?: never;
@@ -280,6 +282,11 @@ export interface components {
             lang_pref: "pt" | "en" | "es";
             /** Created */
             created: boolean;
+        };
+        /** ProfileRequest */
+        ProfileRequest: {
+            /** Intent */
+            intent?: ("professor" | "estudante") | null;
         };
         /** PurgeResponse */
         PurgeResponse: {
@@ -574,7 +581,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ProfileRequest"] | null;
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -583,6 +594,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProfileOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

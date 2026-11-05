@@ -10,7 +10,7 @@ from app.auth import CurrentUser, get_current_user
 from app.config import Settings, get_settings
 from app.deps import get_store
 from app.firebase import delete_auth_user
-from app.schemas import DeleteMeResponse, ProfileOut
+from app.schemas import DeleteMeResponse, ProfileOut, ProfileRequest
 from app.store import Store
 
 router = APIRouter(prefix="/me", tags=["me"])
@@ -24,18 +24,25 @@ def get_user_deleter(settings: Settings = Depends(get_settings)) -> UserDeleter:
 
 @router.post("/profile", response_model=ProfileOut)
 async def ensure_profile(
+    body: ProfileRequest | None = None,
     user: CurrentUser = Depends(get_current_user),
     store: Store = Depends(get_store),
 ) -> ProfileOut:
     """Idempotent. The role comes from the teacher allowlist, only for a verified e-mail
-    (otherwise anyone could sign up with a teacher's address)."""
+    (otherwise anyone could sign up with a teacher's address). A "professor" intent from an
+    e-mail outside the allowlist is refused without creating a profile, so the account is not
+    locked as a student and becomes a teacher once the e-mail is added."""
+    intent = body.intent if body else None
     profile = await store.get_profile(user.id)
     created = False
     if not profile:
         if not user.email_verified:
             raise HTTPException(status.HTTP_403_FORBIDDEN, "email_not_verified")
+        is_teacher = await store.is_teacher_email(user.email)
+        if intent == "professor" and not is_teacher:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "not_teacher")
         new = {
-            "role": "professor" if await store.is_teacher_email(user.email) else "estudante",
+            "role": "professor" if is_teacher else "estudante",
             "pseudonym_id": str(uuid4()),
             "depth_pref": "curta",
             "lang_pref": "pt",

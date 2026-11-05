@@ -150,3 +150,7 @@ Riscos conhecidos que ficaram (sem mudança no banco, para não exigir SQL novo)
 - **Sem `proxy.ts` nem `/auth/callback`**: o Firebase guarda a sessão no navegador, então a proteção das páginas fica no `useProfile`/`RoleGate` (redireciona para `/entrar?next=`). O link de redefinir senha usa a página do Firebase, ou `/redefinir-senha` se a URL de ação for personalizada.
 - **Sem Analytics**: o trecho sugerido pelo console (`getAnalytics`) não foi usado, por privacidade (alunos menores, consentimento por finalidade).
 
+## Escolha de papel no login (05/11/2026)
+- **Professor fora da lista é recusado, não vira aluno.** A tela de entrar e de criar conta tem a escolha "Aluno / Professor" (o valor inicial vem do botão de onde a pessoa veio). Com "Professor", `POST /me/profile` recebe `intent: "professor"` e, se o e-mail não está na `teacherAllowlist`, responde 403 `not_teacher` **sem criar perfil**; o site sai da sessão e explica. Antes, a conta virava aluno em silêncio e ficava presa assim (o papel é gravado uma vez). Agora, quando a coordenação inclui o e-mail, basta entrar de novo.
+- **A lista continua mandando**: e-mail autorizado sempre vira professor, mesmo escolhendo "Aluno". Conta que já existe como aluno e escolhe "Professor" também é recusada (conferido no navegador, pelo perfil).
+- **A checagem só acontece depois de confirmar o e-mail**, nunca antes do cadastro: consultar a lista antes deixaria qualquer pessoa descobrir quais e-mails são de professor.

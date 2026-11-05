@@ -93,6 +93,9 @@
 - `npm run check` verde. Verificado no emulador: as regras (15 grupos) e a criação dos 9 usuários de teste. **O fluxo completo no navegador (criar aula, aluno entrar, legenda, encerrar, aprovar, quiz) ficou para o teste manual da equipe.**
 - **Ação manual**: seguir `docs/SETUP_MANUAL.md` (ativar e-mail/senha, criar o Firestore, gerar a chave da conta de serviço, `firebase login`, `npm run deploy:rules`).
 
+## Escolha de papel no login (05/11/2026)
+- Tela de entrar/criar conta com "Aluno / Professor". Escolher "Professor" com e-mail fora da `teacherAllowlist` mostra "Este e-mail não está autorizado como professor" e sai da sessão, sem criar perfil de aluno. `POST /me/profile` aceita `intent` (opcional); 3 testes novos (60 no `pytest`). `npm run check` verde. **Não testado no navegador ainda.**
+
 ## Pendências para a equipe
 - **Revisão humana do conteúdo** dos 40 termos (explicações e traduções) antes da demo. Nada na interface diz "verificado".
 - Variações fonéticas são hipóteses: validar no Teste A (`docs/TESTE_MANUAL.md`).

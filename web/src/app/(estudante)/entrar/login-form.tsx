@@ -21,9 +21,9 @@ import { Label } from "@/components/ui/label";
 import { authErrorMessage, EMAIL_NOT_VERIFIED, MIN_PASSWORD, passwordProblem } from "@/lib/auth-errors";
 import { hasFirebaseEnv, publicEnv } from "@/lib/env";
 import { currentUser, getFirebaseAuth } from "@/lib/firebase/client";
-import { loadProfile, toAppUser, type AppUser } from "@/lib/firebase/use-profile";
+import { loadProfile, NotTeacherError, toAppUser, type AppUser } from "@/lib/firebase/use-profile";
 import { t } from "@/lib/i18n/pt-BR";
-import { destinationFor, type Role } from "@/lib/roles";
+import { areaOf, destinationFor, roleHome, type Role } from "@/lib/roles";
 import { safeNext } from "@/lib/safe-next";
 import { cn } from "@/lib/utils";
 
@@ -34,6 +34,7 @@ export function LoginForm() {
   const router = useRouter();
   const [next, setNext] = useState("/");
   const [mode, setMode] = useState<Mode>("login");
+  const [role, setRole] = useState<Role>("estudante");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -45,8 +46,11 @@ export function LoginForm() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const target = safeNext(params.get("next"));
     // eslint-disable-next-line react-hooks/set-state-in-effect -- URL is browser-only
-    setNext(safeNext(params.get("next")));
+    setNext(target);
+    // The button the person came from ("Sou professor" on the home page) picks the role.
+    setRole(areaOf(target) ?? "estudante");
     if (params.get("erro") === "link") setNotice({ kind: "error", text: t.auth.callbackError });
     if (params.get("modo") === "criar") setMode("signup");
     if (configured)
@@ -55,6 +59,9 @@ export function LoginForm() {
 
   if (!configured || !env)
     return <Notice tone="warning">{t.auth.notConfigured}</Notice>;
+
+  /** Where to go after signing in with the chosen role (keeps `next` when it matches). */
+  const roleNext = areaOf(next) === role ? next : roleHome(role);
 
   /** Where the links in Firebase e-mails send the user back to. */
   const backToLogin = (to: string) => ({
@@ -88,10 +95,11 @@ export function LoginForm() {
           await firebaseSignOut(auth);
           throw { code: EMAIL_NOT_VERIFIED };
         }
-        await goToArea(user.uid);
+        await goToArea(user.uid, role);
       } else if (mode === "signup") {
         const { user } = await createUserWithEmailAndPassword(auth, mail, password);
-        await sendEmailVerification(user, backToLogin(next));
+        // The confirmation link returns to the login with the same role selected.
+        await sendEmailVerification(user, backToLogin(roleNext));
         await firebaseSignOut(auth);
         setNotice({ kind: "ok", text: t.auth.confirmSent(mail) });
       } else {
@@ -99,6 +107,10 @@ export function LoginForm() {
         setNotice({ kind: "ok", text: t.auth.resetSent(mail) });
       }
     } catch (err) {
+      if (err instanceof NotTeacherError) {
+        await refuseTeacher();
+        return;
+      }
       // Reset never says whether the address exists.
       if (mode === "reset" && (err as { code?: string }).code === "auth/user-not-found")
         setNotice({ kind: "ok", text: t.auth.resetSent(mail) });
@@ -108,15 +120,25 @@ export function LoginForm() {
     }
   }
 
-  async function roleOf(userId: string | undefined): Promise<Role> {
+  /** Throws NotTeacherError when `intent` is "professor" and the account is not a teacher's. */
+  async function roleOf(userId: string | undefined, intent?: Role): Promise<Role> {
     if (!userId) return "estudante";
-    const p = await loadProfile(userId).catch(() => null);
+    const p = await loadProfile(userId, intent).catch((e: unknown) => {
+      if (e instanceof NotTeacherError) throw e;
+      return null;
+    });
     return p?.role === "professor" ? "professor" : "estudante";
   }
 
-  async function goToArea(userId: string | undefined) {
-    router.replace(destinationFor(await roleOf(userId), next));
+  /** With `intent` (the role chosen on this screen) a non-teacher choosing "Professor" is refused. */
+  async function goToArea(userId: string | undefined, intent?: Role) {
+    router.replace(destinationFor(await roleOf(userId, intent), intent ? roleNext : next));
     router.refresh();
+  }
+
+  async function refuseTeacher() {
+    await firebaseSignOut(getFirebaseAuth());
+    setNotice({ kind: "error", text: t.auth.errors.notTeacher });
   }
 
   async function signOut() {
@@ -129,8 +151,12 @@ export function LoginForm() {
     setNotice(null);
     try {
       const { user } = await signInWithPopup(getFirebaseAuth(), new GoogleAuthProvider());
-      await goToArea(user.uid);
+      await goToArea(user.uid, role);
     } catch (err) {
+      if (err instanceof NotTeacherError) {
+        await refuseTeacher();
+        return;
+      }
       if ((err as { code?: string }).code !== "auth/popup-closed-by-user")
         setNotice({ kind: "error", text: authErrorMessage(err as { code?: string }) });
     }
@@ -193,6 +219,35 @@ export function LoginForm() {
           </div>
         )}
         {mode === "signup" && <p className="text-sm text-muted-foreground">{t.auth.signupIntro}</p>}
+
+        {mode !== "reset" && (
+          <fieldset className="space-y-1.5">
+            <legend className="mb-1.5 text-sm font-medium">{t.auth.roleLabel}</legend>
+            <div role="radiogroup" aria-label={t.auth.roleLabel} className="grid grid-cols-2 gap-2">
+              {(["estudante", "professor"] as const).map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  role="radio"
+                  aria-checked={role === r}
+                  onClick={() => {
+                    setRole(r);
+                    setNotice(null);
+                  }}
+                  className={cn(
+                    "min-h-11 rounded-lg border text-sm font-semibold transition-all",
+                    role === r
+                      ? "border-primary bg-primary/10 text-foreground ring-1 ring-primary"
+                      : "border-border text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {r === "professor" ? t.auth.roleTeacher : t.auth.roleStudent}
+                </button>
+              ))}
+            </div>
+            {role === "professor" && <p className="text-xs text-muted-foreground">{t.auth.teacherHint}</p>}
+          </fieldset>
+        )}
 
         <div className="space-y-1.5">
           <Label htmlFor="email">{t.auth.email}</Label>
