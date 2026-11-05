@@ -49,16 +49,11 @@ export const t = {
     home: "EchoDev: página inicial",
   },
   home: {
-    demoTeacher: "Demonstração: professor",
-    demoStudent: "Demonstração: estudante",
-    demoHint:
-      "Modo demonstração offline: abra as duas páginas em abas do mesmo navegador. Nada é enviado para a internet.",
     teacherArea: "Área do professor",
     teacherHint: "Crie aulas, projete o QR code, revise o resumo e o quiz e veja o relatório. Exige conta de professor.",
     teacherLogin: "Entrar como professor",
     createAccount: "Criar conta",
     studentHint: "Estudante: digite o código que o professor mostrou (ou leia o QR code). Você entra com sua conta.",
-    demoTitle: "Demonstração offline (sem login)",
     joinTitle: "Entrar em uma aula",
     joinPlaceholder: "Código de 6 caracteres",
     joinButton: "Entrar",
@@ -93,8 +88,6 @@ export const t = {
       expiry: "Transcrição apagada em 24 horas",
       aggregate: "Professor só vê números agregados",
     },
-    demoTeacherHint: "Fale ou use o roteiro pronto e veja as frases saindo.",
-    demoStudentHint: "Abra em outra aba e receba a legenda ao vivo.",
   },
   common: {
     loading: "Carregando…",
@@ -118,7 +111,7 @@ export const t = {
   },
   teacher: {
     liveTitle: "Aula ao vivo",
-    demoTitle: "Demonstração do professor",
+    demoTitle: "Painel do professor",
     start: "Iniciar transcrição",
     startingButton: "Iniciando…",
     pause: "Pausar",
@@ -184,12 +177,6 @@ export const t = {
     transcription: "Transcrição",
     listening: "Ouvindo",
     tapTermHint: "Clique em um termo destacado para ver a explicação que o estudante recebe.",
-    demoSteps: {
-      title: "Como testar em 3 passos",
-      open: "Abra a tela do estudante em outra aba (botão acima).",
-      start: "Clique em \"Usar aula de demonstração\" ou fale no microfone.",
-      tap: "Na tela do estudante, toque nos termos destacados.",
-    },
     translation: {
       title: "Tradução para espanhol",
       hint: "Quem escolher espanhol recebe cada frase traduzida. A tradução roda neste Chrome, sem mandar a fala para outro servidor.",
@@ -219,7 +206,7 @@ export const t = {
     error: "Não foi possível acessar o microfone.",
   },
   student: {
-    demoTitle: "Demonstração do estudante",
+    demoTitle: "Legenda ao vivo",
     waiting: "Aguardando o professor começar a falar…",
     backToLive: (n: number) => (n > 0 ? `Voltar ao vivo (${n} novas)` : "Voltar ao vivo"),
     fontSize: "Tamanho da letra",
@@ -288,7 +275,7 @@ export const t = {
     signOut: "Sair",
     signedInAs: (email: string) => `Conectado como ${email}`,
     signIn: "Entrar",
-    notConfigured: "O Supabase ainda não foi configurado (web/.env.local). Use o modo demonstração.",
+    notConfigured: "O login ainda não foi configurado neste servidor (web/.env.local).",
     errors: {
       invalidCredentials: "E-mail ou senha incorretos.",
       emailNotConfirmed: "Confirme seu e-mail antes de entrar: abra o link que enviamos na criação da conta.",

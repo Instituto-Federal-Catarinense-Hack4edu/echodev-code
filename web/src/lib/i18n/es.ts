@@ -48,7 +48,7 @@ export const es: MessageOverrides = {
     footer: "El audio nunca se graba · Transcripción borrada en 24 h · El profesor solo ve números agregados",
   },
   student: {
-    demoTitle: "Demostración del estudiante",
+    demoTitle: "Subtítulos en vivo",
     waiting: "Esperando a que el profesor empiece a hablar…",
     backToLive: (n: number) => (n > 0 ? `Volver al vivo (${n} nuevas)` : "Volver al vivo"),
     fontSize: "Tamaño de letra",

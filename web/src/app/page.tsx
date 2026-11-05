@@ -1,13 +1,11 @@
 import Link from "next/link";
 import {
-  ArrowRight,
   BookOpenText,
   Captions,
   ClipboardCheck,
   EyeOff,
   MicOff,
   Presentation,
-  Smartphone,
   Timer,
   type LucideIcon,
 } from "lucide-react";
@@ -95,7 +93,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="mx-auto w-full max-w-6xl px-4 pt-2 pb-12">
+        <section className="mx-auto w-full max-w-6xl px-4 pt-2 pb-16">
           <ul className="grid gap-4 md:grid-cols-3">
             {FEATURES.map(({ icon: Icon, key }) => (
               <li key={key} className="surface space-y-3 p-6 transition-shadow hover:shadow-[var(--shadow-lift)]">
@@ -109,40 +107,9 @@ export default function Home() {
           </ul>
         </section>
 
-        <section className="mx-auto w-full max-w-6xl px-4 pb-16" aria-labelledby="demo-h">
-          <div className="surface bg-dots overflow-hidden p-6 sm:p-8">
-            <div className="max-w-2xl space-y-2">
-              <h2 id="demo-h" className="text-2xl font-bold tracking-tight">
-                {t.home.demoTitle}
-              </h2>
-              <p className="text-muted-foreground">{t.home.demoHint}</p>
-            </div>
-            <nav className="mt-6 grid gap-3 sm:grid-cols-2">
-              <DemoLink href="/demo/professor" icon={Presentation} title={t.home.demoTeacher} hint={t.home.demoTeacherHint} />
-              <DemoLink href="/demo/estudante" icon={Smartphone} title={t.home.demoStudent} hint={t.home.demoStudentHint} />
-            </nav>
-          </div>
-        </section>
       </main>
       <SiteFooter />
     </>
   );
 }
 
-function DemoLink({ href, icon: Icon, title, hint }: { href: string; icon: LucideIcon; title: string; hint: string }) {
-  return (
-    <Link
-      href={href}
-      className="group flex items-center gap-4 rounded-2xl border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[var(--shadow-lift)]"
-    >
-      <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary-soft-foreground">
-        <Icon aria-hidden className="size-6" />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block font-semibold">{title}</span>
-        <span className="block text-sm text-muted-foreground">{hint}</span>
-      </span>
-      <ArrowRight aria-hidden className="size-5 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
-    </Link>
-  );
-}

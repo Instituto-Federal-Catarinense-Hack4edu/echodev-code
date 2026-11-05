@@ -80,6 +80,7 @@
 - Modo escuro (segue o sistema, com botão de sol/lua), botões e campos maiores, avisos coloridos com ícone, estados de carregamento e vazio.
 - Novos recursos de UX: mostrar senha, copiar código/link, filtro de aulas por status, contadores de caracteres, contagem do teste de microfone, guia de 3 passos na demonstração.
 - Corrigido: a legenda abria no menor tamanho de letra na primeira visita.
+- Tiradas da interface as menções à "demonstração offline" (seção da página inicial, atalhos no login, textos "sem login"). As páginas `/demo/professor` (agora "Painel do professor") e `/demo/estudante` ("Legenda ao vivo") continuam abrindo pelo endereço; o botão "Usar aula de demonstração" do console continua, por ser um recurso.
 - Verificado no navegador (claro e escuro, computador e celular): demonstração professor → estudante, abrir termo, quiz, relatório e editores com dados de exemplo. Telas com Supabase não foram abertas com dados reais (sem `.env` nesta máquina).
 
 ## Pendências para a equipe

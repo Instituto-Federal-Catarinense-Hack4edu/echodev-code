@@ -4,10 +4,10 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
-import { ArrowLeft, ArrowRight, KeyRound, LogOut, Mail, Presentation, Smartphone, UserRoundCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, KeyRound, LogOut, Mail, UserRoundCheck } from "lucide-react";
 import { PasswordInput } from "@/components/password-input";
 import { Notice, Spinner } from "@/components/states";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authErrorMessage, MIN_PASSWORD, passwordProblem } from "@/lib/auth-errors";
@@ -44,21 +44,7 @@ export function LoginForm() {
   }, [configured]);
 
   if (!configured || !env)
-    return (
-      <div className="space-y-4">
-        <Notice tone="warning">{t.auth.notConfigured}</Notice>
-        <div className="flex flex-wrap gap-2">
-          <Link href="/demo/professor" className={buttonVariants({ variant: "outline" })}>
-            <Presentation aria-hidden />
-            {t.home.demoTeacher}
-          </Link>
-          <Link href="/demo/estudante" className={buttonVariants({ variant: "outline" })}>
-            <Smartphone aria-hidden />
-            {t.home.demoStudent}
-          </Link>
-        </div>
-      </div>
-    );
+    return <Notice tone="warning">{t.auth.notConfigured}</Notice>;
 
   const callbackUrl = (to: string) => `${window.location.origin}/auth/callback?next=${encodeURIComponent(to)}`;
 
