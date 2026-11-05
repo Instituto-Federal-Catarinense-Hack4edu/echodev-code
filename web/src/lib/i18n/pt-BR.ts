@@ -82,12 +82,6 @@ export const t = {
         body: "Gerados por IA ao fim da aula e liberados só depois que o professor revisa e aprova.",
       },
     },
-    privacyTitle: "Privacidade desde o início",
-    privacy: {
-      audio: "Áudio nunca é gravado",
-      expiry: "Transcrição apagada em 24 horas",
-      aggregate: "Professor só vê números agregados",
-    },
   },
   common: {
     loading: "Carregando…",
@@ -107,7 +101,6 @@ export const t = {
     notFoundTitle: "Página não encontrada",
     notFoundBody: "O endereço pode ter mudado ou a aula não existe mais. Confira o link ou volte ao início.",
     goHome: "Ir para a página inicial",
-    footer: "Áudio nunca é gravado · Transcrição apagada em 24 h · Professor só vê números agregados",
   },
   teacher: {
     liveTitle: "Aula ao vivo",

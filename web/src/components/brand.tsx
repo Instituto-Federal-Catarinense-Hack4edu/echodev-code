@@ -1,7 +1,6 @@
 import Image from "next/image";
 import { Suspense } from "react";
 import Link from "next/link";
-import { ShieldCheck } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "@/components/user-menu";
 import { t } from "@/lib/i18n/pt-BR";
@@ -65,10 +64,6 @@ export function SiteFooter({ className }: { className?: string }) {
         <span className="inline-flex items-center gap-2 font-medium text-foreground">
           <BrandMark className="size-5" />
           {t.app.name}
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <ShieldCheck aria-hidden className="size-4 text-success" />
-          {t.common.footer}
         </span>
       </div>
     </footer>

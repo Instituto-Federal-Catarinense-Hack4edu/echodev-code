@@ -3,10 +3,7 @@ import {
   BookOpenText,
   Captions,
   ClipboardCheck,
-  EyeOff,
-  MicOff,
   Presentation,
-  Timer,
   type LucideIcon,
 } from "lucide-react";
 import { BrandMark, SiteFooter, SiteHeader } from "@/components/brand";
@@ -20,12 +17,6 @@ const FEATURES: { icon: LucideIcon; key: keyof typeof t.home.features }[] = [
   { icon: Captions, key: "captions" },
   { icon: BookOpenText, key: "terms" },
   { icon: ClipboardCheck, key: "materials" },
-];
-
-const PRIVACY: { icon: LucideIcon; text: string }[] = [
-  { icon: MicOff, text: t.home.privacy.audio },
-  { icon: Timer, text: t.home.privacy.expiry },
-  { icon: EyeOff, text: t.home.privacy.aggregate },
 ];
 
 export default function Home() {
@@ -76,19 +67,8 @@ export default function Home() {
               </section>
             </div>
 
-            <div className="space-y-4 lg:sticky lg:top-24">
+            <div className="lg:sticky lg:top-24">
               <HomePreview />
-              <ul aria-label={t.home.privacyTitle} className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
-                {PRIVACY.map(({ icon: Icon, text }) => (
-                  <li
-                    key={text}
-                    className="flex items-center gap-2 rounded-xl border bg-card/70 px-3 py-2.5 text-sm font-medium"
-                  >
-                    <Icon aria-hidden className="size-4 shrink-0 text-success" />
-                    {text}
-                  </li>
-                ))}
-              </ul>
             </div>
           </div>
         </section>

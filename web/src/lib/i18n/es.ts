@@ -45,7 +45,6 @@ export const es: MessageOverrides = {
     notFoundTitle: "Página no encontrada",
     notFoundBody: "La dirección puede haber cambiado o la clase ya no existe. Revisa el enlace o vuelve al inicio.",
     goHome: "Ir a la página de inicio",
-    footer: "El audio nunca se graba · Transcripción borrada en 24 h · El profesor solo ve números agregados",
   },
   student: {
     demoTitle: "Subtítulos en vivo",
