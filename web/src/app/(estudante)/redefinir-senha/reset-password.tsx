@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { ArrowRight } from "lucide-react";
+import { PasswordInput } from "@/components/password-input";
+import { LoadingState, Notice, Spinner } from "@/components/states";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { authErrorMessage, MIN_PASSWORD, passwordProblem } from "@/lib/auth-errors";
 import { t } from "@/lib/i18n/pt-BR";
@@ -36,61 +38,59 @@ export function ResetPassword() {
     setDone(true);
   }
 
-  if (hasSession === null) return <p className="text-muted-foreground">{t.common.loading}</p>;
+  if (hasSession === null) return <LoadingState text={t.common.loading} />;
   if (!hasSession)
     return (
-      <p>
-        {t.auth.resetExpired}{" "}
-        <Link className="underline underline-offset-4" href="/entrar">
+      <div className="space-y-4">
+        <Notice tone="warning">{t.auth.resetExpired}</Notice>
+        <Link className={buttonVariants({ variant: "outline" })} href="/entrar">
           {t.auth.backToLogin}
         </Link>
-      </p>
+      </div>
     );
   if (done)
     return (
-      <div className="space-y-3">
-        <p role="status">{t.auth.passwordChanged}</p>
-        <Link className="underline underline-offset-4" href="/professor">
+      <div className="space-y-4">
+        <Notice tone="success">{t.auth.passwordChanged}</Notice>
+        <Link className={buttonVariants()} href="/professor">
           {t.auth.continue}
+          <ArrowRight aria-hidden />
         </Link>
       </div>
     );
 
   return (
-    <form onSubmit={submit} className="space-y-3">
-      <div className="space-y-1">
+    <form onSubmit={submit} className="space-y-4">
+      <div className="space-y-1.5">
         <Label htmlFor="new-password">{t.auth.newPassword}</Label>
-        <Input
+        <PasswordInput
           id="new-password"
-          type="password"
           autoComplete="new-password"
           required
           minLength={MIN_PASSWORD}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="h-11"
+          aria-describedby="new-password-rule"
         />
+        <p id="new-password-rule" className="text-xs text-muted-foreground">
+          {t.auth.errors.shortPassword(MIN_PASSWORD)}
+        </p>
       </div>
-      <div className="space-y-1">
+      <div className="space-y-1.5">
         <Label htmlFor="new-confirm">{t.auth.confirmPassword}</Label>
-        <Input
+        <PasswordInput
           id="new-confirm"
-          type="password"
           autoComplete="new-password"
           required
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
-          className="h-11"
         />
       </div>
-      <Button type="submit" className="w-full" disabled={busy}>
+      <Button type="submit" size="lg" className="w-full" disabled={busy}>
+        {busy && <Spinner className="text-current" />}
         {busy ? t.auth.sending : t.auth.savePassword}
       </Button>
-      {error && (
-        <p role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
-      )}
+      {error && <Notice tone="error">{error}</Notice>}
     </form>
   );
 }

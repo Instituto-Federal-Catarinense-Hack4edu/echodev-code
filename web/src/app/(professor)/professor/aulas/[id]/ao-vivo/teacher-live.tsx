@@ -4,9 +4,13 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { ArrowLeft, LayoutDashboard, QrCode, Square, Users } from "lucide-react";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { CopyButton } from "@/components/copy-button";
+import { NotFoundCard } from "@/components/not-found-card";
+import { LoadingState, Notice, Spinner } from "@/components/states";
+import { StatusPill } from "@/components/status-pill";
 import { TeacherConsole } from "@/components/teacher-console";
 import { TermCorrection, loadCorrections, type Corrections } from "@/components/term-correction";
 import { ApiError, apiFetch, wakeApi } from "@/lib/api/client";
@@ -154,33 +158,57 @@ export function TeacherLive() {
   // "localhost" only works on this computer: a phone scanning the QR would get nothing.
   const isLocalOrigin = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:|\/|$)/.test(joinUrl);
 
-  if (notFound) return <p className="p-6">{t.lessons.notFound}</p>;
-  if (!lesson || initialSeq === null) return <p className="p-6 text-muted-foreground">{t.common.loading}</p>;
+  if (notFound) return <NotFoundCard />;
+  if (!lesson || initialSeq === null) return <LoadingState text={t.common.loading} />;
 
   return (
-    <main className="mx-auto w-full max-w-6xl space-y-4 p-4">
-      <header className="flex flex-wrap items-center gap-3">
-        <h1 className="mr-auto text-2xl font-bold">{lesson.title}</h1>
-        <span className="font-mono text-2xl tracking-widest" aria-label={t.lessons.code}>
-          {lesson.code}
-        </span>
-        <Badge variant="secondary">{t.teacher.studentsConnected(members)}</Badge>
-        <Button variant="outline" onClick={() => setQrOpen(true)}>
-          {t.lessons.showQr}
-        </Button>
-        {lesson.status !== "encerrada" ? (
-          <Button variant="destructive" onClick={endLesson} disabled={ending}>
-            {ending ? t.lessons.ending : t.teacher.end}
-          </Button>
-        ) : (
-          <Link className="underline underline-offset-4" href={`/professor/aulas/${lesson.id}`}>
-            {t.dashboard.open}
+    <main className="mx-auto w-full max-w-6xl space-y-5 px-4 py-6">
+      <header className="surface flex flex-wrap items-center gap-x-4 gap-y-3 p-4 sm:p-5">
+        <div className="mr-auto min-w-0 space-y-1.5">
+          <Link
+            href="/professor"
+            className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft aria-hidden className="size-4" />
+            {t.lessons.title}
           </Link>
-        )}
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-xl font-bold tracking-tight sm:text-2xl">{lesson.title}</h1>
+            <StatusPill tone={lesson.status === "ao_vivo" ? "live" : lesson.status === "encerrada" ? "idle" : "busy"}>
+              {t.lessons.status[lesson.status]}
+            </StatusPill>
+          </div>
+        </div>
+        <div className="flex items-center gap-1 rounded-2xl border bg-muted/60 py-1 pr-1 pl-4">
+          <span className="sr-only">{t.lessons.code}</span>
+          <span className="font-mono text-2xl font-bold tracking-[0.2em]">{lesson.code}</span>
+          <CopyButton value={lesson.code} label={t.common.copyCode(lesson.code)} />
+        </div>
+        <span className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-secondary px-3 text-sm font-semibold">
+          <Users aria-hidden className="size-4 text-muted-foreground" />
+          <span aria-live="polite">{t.teacher.studentsConnected(members)}</span>
+        </span>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => setQrOpen(true)}>
+            <QrCode aria-hidden />
+            {t.lessons.showQr}
+          </Button>
+          {lesson.status !== "encerrada" ? (
+            <Button variant="destructive" onClick={endLesson} disabled={ending}>
+              {ending ? <Spinner className="text-current" /> : <Square aria-hidden />}
+              {ending ? t.lessons.ending : t.teacher.end}
+            </Button>
+          ) : (
+            <Link className={buttonVariants()} href={`/professor/aulas/${lesson.id}`}>
+              <LayoutDashboard aria-hidden />
+              {t.dashboard.open}
+            </Link>
+          )}
+        </div>
       </header>
-      {endError && <p className="text-destructive">{endError}</p>}
+      {endError && <Notice tone="error">{endError}</Notice>}
       {lesson.status === "encerrada" ? (
-        <p>{t.lessons.ended}</p>
+        <Notice tone="success">{t.lessons.ended}</Notice>
       ) : (
         <>
           <TeacherConsole
@@ -198,14 +226,14 @@ export function TeacherLive() {
       )}
 
       <Dialog open={qrOpen} onOpenChange={setQrOpen}>
-        <DialogContent className="max-w-[min(95vw,48rem)] items-center p-8 text-center">
-          <DialogTitle className="text-3xl">{lesson.title}</DialogTitle>
-          <div className="mx-auto w-full max-w-[min(70vh,32rem)] bg-white p-4">
+        <DialogContent className="max-h-[95dvh] max-w-[min(95vw,48rem)] items-center gap-5 overflow-y-auto rounded-3xl p-8 text-center sm:max-w-[min(95vw,48rem)]">
+          <DialogTitle className="text-3xl leading-tight font-bold">{lesson.title}</DialogTitle>
+          <div className="mx-auto w-full max-w-[min(60vh,30rem)] rounded-3xl bg-white p-5 shadow-[var(--shadow-lift)] ring-1 ring-black/5">
             <QRCodeSVG value={joinUrl} size={512} className="h-auto w-full" level="M" />
           </div>
-          <p className="font-mono text-6xl font-bold tracking-[0.3em]">{lesson.code}</p>
-          <p className="text-lg">{t.lessons.qrHint(joinUrl.replace(/\/aula\/.*/, ""))}</p>
-          {isLocalOrigin && <p className="text-base font-medium text-amber-700">{t.lessons.qrLocalWarning}</p>}
+          <p className="font-mono text-6xl font-bold tracking-[0.3em] text-primary">{lesson.code}</p>
+          <p className="text-lg text-muted-foreground">{t.lessons.qrHint(joinUrl.replace(/\/aula\/.*/, ""))}</p>
+          {isLocalOrigin && <Notice tone="warning" className="text-left text-base">{t.lessons.qrLocalWarning}</Notice>}
         </DialogContent>
       </Dialog>
     </main>

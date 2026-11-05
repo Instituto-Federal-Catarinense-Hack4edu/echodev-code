@@ -75,6 +75,13 @@
 - **Ação manual**: colar `supabase/migrations/20261105000100_spanish.sql` no SQL Editor do Supabase (depois da migração de papéis). Sem ela, as frases continuam sendo salvas só em português.
 - Para traduzir, o professor usa o Google Chrome 138+ no computador e clica em "Ativar tradução para espanhol" (o Chrome baixa o pacote de idioma uma vez).
 
+## Redesenho de UI/UX (05/11/2026)
+- Todas as telas redesenhadas sem mudar funcionalidades: página inicial (com prévia interativa de termo), login, demonstrações, console do professor, legenda do aluno, explicação do termo, minhas aulas, nova aula, aula ao vivo, painel, relatório (gráfico de ritmo), revisão do resumo e quiz, quiz, área do aluno, consentimentos, minha conta e 404.
+- Modo escuro (segue o sistema, com botão de sol/lua), botões e campos maiores, avisos coloridos com ícone, estados de carregamento e vazio.
+- Novos recursos de UX: mostrar senha, copiar código/link, filtro de aulas por status, contadores de caracteres, contagem do teste de microfone, guia de 3 passos na demonstração.
+- Corrigido: a legenda abria no menor tamanho de letra na primeira visita.
+- Verificado no navegador (claro e escuro, computador e celular): demonstração professor → estudante, abrir termo, quiz, relatório e editores com dados de exemplo. Telas com Supabase não foram abertas com dados reais (sem `.env` nesta máquina).
+
 ## Pendências para a equipe
 - **Revisão humana do conteúdo** dos 40 termos (explicações e traduções) antes da demo. Nada na interface diz "verificado".
 - Variações fonéticas são hipóteses: validar no Teste A (`docs/TESTE_MANUAL.md`).

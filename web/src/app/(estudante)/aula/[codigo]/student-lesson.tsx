@@ -3,8 +3,12 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { ArrowLeft, CalendarCheck, CircleAlert, ListChecks, SearchX, UserRound } from "lucide-react";
+import { SiteHeader } from "@/components/brand";
 import { ConsentFlow, OPTIONAL_PURPOSES, REQUIRED_PURPOSES, type Purpose } from "@/components/consent-flow";
+import { LoadingState, MessageCard } from "@/components/states";
 import { StudentView } from "@/components/student-view";
+import { buttonVariants } from "@/components/ui/button";
 import { SupabaseTransport, utteranceFetcher } from "@/lib/realtime/supabase";
 import { getSupabase } from "@/lib/supabase/client";
 import { fire } from "@/lib/supabase/fire";
@@ -158,25 +162,43 @@ export function StudentLesson() {
   if (phase.kind === "consent")
     return (
       <>
-        <div className="flex justify-end px-4 pt-2">
+        <SiteHeader showUser={false}>
           <LanguageSelect value={lang} onChange={changeLang} />
-        </div>
+        </SiteHeader>
         <ConsentFlow purposes={phase.purposes} onDone={onConsentDone} />
       </>
     );
   if (phase.kind === "error")
     return (
-      <main className="mx-auto max-w-md space-y-4 p-6">
-        <p className="text-lg">{phase.reason === "generic" ? t.common.error : t.join[phase.reason]}</p>
-        {phase.reason === "ended" && (
-          <Link className="underline underline-offset-4" href={`/aula/${code}/revisao`}>
-            {t.join.review}
-          </Link>
-        )}
-      </main>
+      <>
+        <SiteHeader />
+        <MessageCard
+          icon={phase.reason === "ended" ? CalendarCheck : phase.reason === "invalidCode" ? SearchX : CircleAlert}
+          tone={phase.reason === "ended" ? "neutral" : "warning"}
+          title={phase.reason === "generic" ? t.common.error : t.join[phase.reason]}
+          action={
+            <>
+              {phase.reason === "ended" && (
+                <Link className={buttonVariants()} href={`/aula/${code}/revisao`}>
+                  <ListChecks aria-hidden />
+                  {t.join.review}
+                </Link>
+              )}
+              <Link className={buttonVariants({ variant: "outline" })} href="/aluno">
+                <ArrowLeft aria-hidden />
+                {t.student_area.title}
+              </Link>
+            </>
+          }
+        />
+      </>
     );
   if (phase.kind !== "live")
-    return <p className="p-6 text-muted-foreground">{phase.kind === "joining" ? t.join.joining : t.common.loading}</p>;
+    return (
+      <div className="flex min-h-dvh flex-col">
+        <LoadingState text={phase.kind === "joining" ? t.join.joining : t.common.loading} />
+      </div>
+    );
 
   return (
     <StudentView
@@ -194,8 +216,14 @@ export function StudentLesson() {
       headerExtra={
         <>
           <LanguageSelect value={lang} onChange={changeLang} />
-          <Link href="/conta" className="inline-flex min-h-11 items-center px-2 text-sm underline underline-offset-4">
-            {t.student.account}
+          <Link
+            href="/conta"
+            aria-label={t.student.account}
+            title={t.student.account}
+            className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-xl px-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <UserRound aria-hidden className="size-5" />
+            <span className="hidden md:inline">{t.student.account}</span>
           </Link>
         </>
       }

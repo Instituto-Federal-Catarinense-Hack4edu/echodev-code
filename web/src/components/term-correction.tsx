@@ -1,6 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { ArrowRight, ChevronDown, SpellCheck } from "lucide-react";
+import { SectionTitle } from "@/components/page-header";
+import { Notice } from "@/components/states";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,7 +45,7 @@ export function TermCorrection({
   );
   const [heard, setHeard] = useState("");
   const [termId, setTermId] = useState(terms[0]?.id ?? "");
-  const [msg, setMsg] = useState<string | null>(null);
+  const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
 
   async function save(e: React.FormEvent) {
@@ -52,7 +55,7 @@ export function TermCorrection({
     if (!term || !value) return;
     const problem = correctionProblem(value, term.id, terms);
     if (problem) {
-      setMsg(t.correction.problems[problem]);
+      setMsg({ text: t.correction.problems[problem], ok: false });
       return;
     }
     setBusy(true);
@@ -61,52 +64,58 @@ export function TermCorrection({
       .insert({ term_id: term.id, heard: value, correct: term.canonical });
     setBusy(false);
     if (error) {
-      setMsg(t.correction.error);
+      setMsg({ text: t.correction.error, ok: false });
       return;
     }
     onSaved(term.id, value);
-    setMsg(t.correction.saved(value, term.canonical));
+    setMsg({ text: t.correction.saved(value, term.canonical), ok: true });
     setHeard("");
   }
 
   return (
-    <form onSubmit={save} className="space-y-3 rounded-xl border p-4">
-      <h2 className="font-semibold">{t.correction.title}</h2>
+    <form onSubmit={save} className="surface space-y-4 p-5" aria-labelledby="corr-title">
+      <SectionTitle icon={SpellCheck} id="corr-title">
+        {t.correction.title}
+      </SectionTitle>
       <p className="text-sm text-muted-foreground">{t.correction.hint}</p>
-      <div className="space-y-1">
-        <Label htmlFor="corr-heard">{t.correction.heard}</Label>
-        <Input
-          id="corr-heard"
-          maxLength={80}
-          placeholder={t.correction.heardPlaceholder}
-          value={heard}
-          onChange={(e) => setHeard(e.target.value)}
-          className="h-11"
-        />
+      <div className="grid items-end gap-3 md:grid-cols-[1fr_auto_1fr_auto]">
+        <div className="space-y-1.5">
+          <Label htmlFor="corr-heard">{t.correction.heard}</Label>
+          <Input
+            id="corr-heard"
+            maxLength={80}
+            placeholder={t.correction.heardPlaceholder}
+            value={heard}
+            onChange={(e) => setHeard(e.target.value)}
+          />
+        </div>
+        <ArrowRight aria-hidden className="mb-3.5 hidden size-5 text-muted-foreground md:block" />
+        <div className="space-y-1.5">
+          <Label htmlFor="corr-term">{t.correction.term}</Label>
+          <div className="relative">
+            <select
+              id="corr-term"
+              value={termId}
+              onChange={(e) => setTermId(e.target.value)}
+              className="h-11 w-full cursor-pointer appearance-none rounded-xl border border-input bg-card pr-10 pl-3.5 font-mono shadow-xs"
+            >
+              {terms.map((x) => (
+                <option key={x.id} value={x.id}>
+                  {x.canonical}
+                </option>
+              ))}
+            </select>
+            <ChevronDown
+              aria-hidden
+              className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted-foreground"
+            />
+          </div>
+        </div>
+        <Button type="submit" disabled={busy || !heard.trim()}>
+          {t.correction.save}
+        </Button>
       </div>
-      <div className="space-y-1">
-        <Label htmlFor="corr-term">{t.correction.term}</Label>
-        <select
-          id="corr-term"
-          value={termId}
-          onChange={(e) => setTermId(e.target.value)}
-          className="h-11 w-full rounded-lg border bg-background px-3"
-        >
-          {terms.map((x) => (
-            <option key={x.id} value={x.id}>
-              {x.canonical}
-            </option>
-          ))}
-        </select>
-      </div>
-      <Button type="submit" disabled={busy || !heard.trim()}>
-        {t.correction.save}
-      </Button>
-      {msg && (
-        <p role="status" className="text-sm">
-          {msg}
-        </p>
-      )}
+      {msg && <Notice tone={msg.ok ? "success" : "warning"}>{msg.text}</Notice>}
     </form>
   );
 }

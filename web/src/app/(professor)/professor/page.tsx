@@ -6,8 +6,7 @@ export const metadata: Metadata = { title: `${t.lessons.title} · ${t.app.name}`
 
 export default function Page() {
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 space-y-6 p-6">
-      <h1 className="text-2xl font-bold">{t.lessons.title}</h1>
+    <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:py-10">
       <LessonsList />
     </main>
   );
