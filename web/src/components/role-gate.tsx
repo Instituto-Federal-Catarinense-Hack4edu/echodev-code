@@ -5,7 +5,7 @@ import { ArrowRight, UserX } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { LoadingState, MessageCard } from "@/components/states";
 import { roleHome, type Role } from "@/lib/roles";
-import { useProfile } from "@/lib/supabase/use-profile";
+import { useProfile } from "@/lib/firebase/use-profile";
 import { useT } from "@/lib/i18n/context";
 
 export function RoleGate({ role, children }: { role: Role; children: React.ReactNode }) {

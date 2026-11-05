@@ -116,11 +116,11 @@ details p { margin-top: 4px; }
 
     <section id="visao-geral" aria-labelledby="h-visao">
       <h2 id="h-visao">Visão geral</h2>
-      <p>O sistema tem três peças. O <strong>site</strong> (Next.js, TypeScript) roda no navegador do professor e no celular dos estudantes. O <strong>Supabase</strong> guarda contas, aulas e frases, e entrega as frases ao vivo por um canal privado. A <strong>API em Python</strong> (FastAPI) só entra em ação no fim da aula, para gerar o resumo e o quiz com IA.</p>
+      <p>O sistema tem três peças. O <strong>site</strong> (Next.js, TypeScript) roda no navegador do professor e no celular dos estudantes. O <strong>Firebase</strong> (Authentication e Firestore) guarda contas, aulas e frases, e entrega as frases ao vivo para quem entrou na aula. A <strong>API em Python</strong> (FastAPI) só entra em ação no fim da aula, para gerar o resumo e o quiz com IA.</p>
       <p>O ponto mais importante: <strong>durante a aula, a fala não passa pela API Python nem pela IA</strong>. Tudo acontece no navegador do professor e segue direto para os celulares. Isso mantém a legenda rápida.</p>
 
       <figure>
-        <svg viewBox="0 0 900 330" role="img" aria-label="Durante a aula, a fala vai do navegador do professor ao Supabase e aos celulares; a API Python e a IA só participam no fim da aula.">
+        <svg viewBox="0 0 900 330" role="img" aria-label="Durante a aula, a fala vai do navegador do professor ao Firebase e aos celulares; a API Python e a IA só participam no fim da aula.">
           <defs>
             <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker>
             <marker id="a1r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--rust)"/></marker>
@@ -134,7 +134,7 @@ details p { margin-top: 4px; }
             <text x="125" y="124" text-anchor="middle">numera cada frase</text>
 
             <rect x="345" y="40" width="210" height="96" rx="12" fill="none" stroke="currentColor"/>
-            <text x="450" y="66" text-anchor="middle" font-weight="700">Supabase</text>
+            <text x="450" y="66" text-anchor="middle" font-weight="700">Firebase</text>
             <text x="450" y="88" text-anchor="middle">guarda a frase (24 h)</text>
             <text x="450" y="106" text-anchor="middle">canal privado da aula</text>
             <text x="450" y="124" text-anchor="middle">regras de acesso (RLS)</text>
@@ -176,7 +176,7 @@ details p { margin-top: 4px; }
             <text x="458" y="196" font-size="12">grava rascunho</text>
           </g>
         </svg>
-        <figcaption>Durante a aula a legenda vai do professor para o Supabase e dali para os celulares. A API Python e a IA aparecem só no fim, e o que a IA gera fica como rascunho até o professor aprovar.</figcaption>
+        <figcaption>Durante a aula a legenda vai do professor para o Firebase e dali para os celulares. A API Python e a IA aparecem só no fim, e o que a IA gera fica como rascunho até o professor aprovar.</figcaption>
       </figure>
     </section>
 
@@ -323,7 +323,7 @@ details p { margin-top: 4px; }
           <g font-family="Source Sans 3, Segoe UI, sans-serif" font-size="13" fill="currentColor">
             <text x="110" y="24" text-anchor="middle" font-weight="700">Navegador do professor</text>
             <text x="360" y="24" text-anchor="middle" font-weight="700" style="fill:var(--rust)">API Python</text>
-            <text x="590" y="24" text-anchor="middle" font-weight="700">Supabase</text>
+            <text x="590" y="24" text-anchor="middle" font-weight="700">Firebase</text>
             <text x="800" y="24" text-anchor="middle" font-weight="700">IA</text>
             <line x1="110" y1="34" x2="110" y2="460" stroke="currentColor" opacity=".35"/>
             <line x1="360" y1="34" x2="360" y2="460" style="stroke:var(--rust)" opacity=".6"/>
@@ -444,14 +444,14 @@ details p { margin-top: 4px; }
             <tr><td>Corretor de termos</td><td class="mono">web/src/lib/terms/matcher.ts</td></tr>
             <tr><td>Pacote de 40 termos</td><td class="mono">web/src/content/packs/programacao-geral.json</td></tr>
             <tr><td>Correções do professor</td><td class="mono">web/src/lib/terms/corrections.ts · components/term-correction.tsx</td></tr>
-            <tr><td>Canal ao vivo e recuperação de frases</td><td class="mono">web/src/lib/realtime/supabase.ts · client-state.ts</td></tr>
+            <tr><td>Canal ao vivo e recuperação de frases</td><td class="mono">web/src/lib/realtime/firestore.ts · client-state.ts</td></tr>
             <tr><td>Rotas da API (encerrar, gerar de novo)</td><td class="mono">api/app/routes/lessons.py</td></tr>
             <tr><td>Prompt, formato e regras do quiz</td><td class="mono">api/app/llm/prompts.py · api/app/schemas.py</td></tr>
             <tr><td>Geração, nova tentativa e blocos</td><td class="mono">api/app/services/materials.py</td></tr>
             <tr><td>Chamada ao Claude / modo mock</td><td class="mono">api/app/llm/anthropic_provider.py · mock_provider.py</td></tr>
             <tr><td>Limpeza de dados e relatório</td><td class="mono">api/app/services/sanitize.py · report.py</td></tr>
             <tr><td>PDF do resumo</td><td class="mono">web/src/lib/pdf/summary-pdf.ts</td></tr>
-            <tr><td>Banco e regras de acesso</td><td class="mono">supabase/migrations/*.sql</td></tr>
+            <tr><td>Banco e regras de acesso</td><td class="mono">firestore.rules · firestore.indexes.json</td></tr>
           </tbody>
         </table>
       </div>
@@ -465,7 +465,7 @@ details p { margin-top: 4px; }
       <details><summary>A IA pode inventar coisas no resumo?</summary><p>Pode errar. Por isso as instruções mandam usar só o que foi dito, a resposta tem formato obrigatório e regras checadas, e principalmente nada chega ao estudante sem o professor revisar e aprovar.</p></details>
       <details><summary>O que acontece se a internet cair no meio da aula?</summary><p>O professor vê "Canal ao vivo sem conexão". As frases continuam na fila e são salvas quando a conexão volta; o celular recupera as que faltaram pelo número de ordem.</p></details>
       <details><summary>Funciona sem chave da Anthropic?</summary><p>Sim. Com <code>LLM_PROVIDER=mock</code>, a API devolve um resumo e um quiz fixos e coerentes. Todo o fluxo de encerrar, revisar, aprovar e ver funciona igual.</p></details>
-      <details><summary>Dá para testar sem conta nem internet?</summary><p>A demonstração offline (<code>/demo/professor</code> e <code>/demo/estudante</code>) liga duas abas do mesmo navegador e reproduz uma aula gravada em texto. Não usa o Supabase nem a API.</p></details>
+      <details><summary>Dá para testar sem conta nem internet?</summary><p>A demonstração offline (<code>/demo/professor</code> e <code>/demo/estudante</code>) liga duas abas do mesmo navegador e reproduz uma aula gravada em texto. Não usa o Firebase nem a API.</p></details>
     </section>
   </main>
 </div>

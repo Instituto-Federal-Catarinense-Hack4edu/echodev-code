@@ -35,8 +35,10 @@ import { ApiError, apiFetch } from "@/lib/api/client";
 import type { LessonReportData, QuizItem, Resumo } from "@/lib/api/types";
 import { isQuiz, isResumo, lessonDate, validQuiz, validResumo, type LessonDates } from "@/lib/materials";
 import { getTerm } from "@/lib/terms/pack";
-import { getSupabase } from "@/lib/supabase/client";
-import { useProfile } from "@/lib/supabase/use-profile";
+import { collection, doc, getDocs } from "firebase/firestore";
+import { getDb } from "@/lib/firebase/client";
+import { getPlain } from "@/lib/firebase/data";
+import { useProfile } from "@/lib/firebase/use-profile";
 import { t } from "@/lib/i18n/pt-BR";
 
 type MaterialStatus = "rascunho" | "aprovado" | "descartado";
@@ -87,27 +89,25 @@ export function LessonDashboard() {
 
   const load = useCallback(async () => {
     if (!user) return;
-    const supabase = getSupabase();
-    const { data: lesson } = await supabase
-      .from("lessons")
-      .select("title,code,status,teacher_id,started_at,ended_at,created_at")
-      .eq("id", id)
-      .maybeSingle();
+    const db = getDb();
+    const lesson = await getPlain<Lesson & { teacher_id: string }>(doc(db, "lessons", id)).catch(() => null);
     if (!lesson || lesson.teacher_id !== user.id) return setNotFound(true);
+    // Counts and the term report (minimum 3 students) come from the API: the teacher
+    // cannot read memberships or term events.
     const [rep, termRep, count, mats] = await Promise.all([
-      supabase.from("lesson_reports").select("data").eq("lesson_id", id).maybeSingle(),
-      supabase.rpc("lesson_term_report", { p_lesson_id: id, p_min_students: 3 }),
-      supabase.rpc("lesson_member_count", { p_lesson_id: id }),
-      supabase.from("lesson_materials").select("kind,status,content").eq("lesson_id", id),
+      getPlain<{ data: LessonReportData }>(doc(db, "lessonReports", id)).catch(() => null),
+      apiFetch<TermRow[]>(`/lessons/${id}/term-report`).catch(() => [] as TermRow[]),
+      apiFetch<{ count: number }>(`/lessons/${id}/member-count`).catch(() => null),
+      getDocs(collection(db, "lessons", id, "materials")).then((s) => s.docs.map((d) => d.data())),
     ]);
-    const snapshot = (rep.data?.data as LessonReportData | undefined) ?? null;
-    const resumo = mats.data?.find((m) => m.kind === "resumo");
-    const quiz = mats.data?.find((m) => m.kind === "quiz");
+    const snapshot = rep?.data ?? null;
+    const resumo = mats.find((m) => m.kind === "resumo");
+    const quiz = mats.find((m) => m.kind === "quiz");
     setData({
-      lesson: lesson as Lesson,
-      members: typeof count.data === "number" ? count.data : null,
+      lesson,
+      members: count ? count.count : null,
       report: snapshot && { ...snapshot, undefined_terms: snapshot.undefined_terms.filter((x) => getTerm(x)) },
-      terms: ((termRep.data as TermRow[] | null) ?? []).filter((r) => getTerm(r.term_id)),
+      terms: termRep.filter((r) => getTerm(r.term_id)),
       resumo: resumo && isResumo(resumo.content) ? { status: resumo.status, content: resumo.content } : null,
       quiz: quiz && isQuiz(quiz.content) ? { status: quiz.status, content: quiz.content } : null,
     });

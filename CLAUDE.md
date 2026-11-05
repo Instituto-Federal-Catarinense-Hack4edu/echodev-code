@@ -10,15 +10,16 @@ MVP do Hack4Edu 2026. Legenda ao vivo de aula de programação com termos destac
 - Interface e docs em pt-BR; código, tabelas e comentários em inglês. Textos da interface só em `web/src/lib/i18n/pt-BR.ts`.
 
 ## Stack
-- Servidor = Python (`api/`): FastAPI, Pydantic v2, pydantic-settings, httpx assíncrono (PostgREST/Auth com o **token do usuário**), SDK `anthropic` + provedor `mock`. Modelo em `LLM_MODEL`. `supabase-py` só em `scripts/`.
-- Navegador = TypeScript (`web/`): Next.js App Router, Tailwind, shadcn/ui, `@supabase/ssr`, Zod, Vitest. Web Speech API atrás de `SttProvider`. Corretor de termos roda no navegador do professor (nunca no servidor).
-- Ao vivo não passa por Python nem IA: professor → `RealtimeTransport` (canal privado `lesson:<id>`) + `utterances` → estudantes.
+- Servidor = Python (`api/`): FastAPI, Pydantic v2, pydantic-settings, `firebase-admin` (valida o **ID token do usuário** e acessa o Firestore pela camada `app/store.py`), SDK `anthropic` + provedor `mock`. Modelo em `LLM_MODEL`.
+- Navegador = TypeScript (`web/`): Next.js App Router, Tailwind, shadcn/ui, Firebase JS SDK (Auth + Firestore, sem Analytics), Zod, Vitest. Web Speech API atrás de `SttProvider`. Corretor de termos roda no navegador do professor (nunca no servidor).
+- Ao vivo não passa por Python nem IA: professor grava `lessons/{id}/utterances` → estudantes recebem por listener do Firestore (`FirestoreTransport`).
+- Banco, regras e índices: `firestore.rules`, `firestore.indexes.json`, `firebase.json` (emuladores). Teste local com `npm run dev:emulators`.
 - PWA só com manifest e ícones (sem service worker).
 - Ambiente Windows: venv em `api/.venv/Scripts/python.exe`; use `node scripts/py.mjs` (acha o Python nos dois sistemas).
 
 ## Segurança e privacidade
-- RLS em todas as tabelas. Professor nunca lê `term_events` nem `profiles` de estudantes; só funções agregadas (mínimo de estudantes).
+- `firestore.rules` nega tudo que não está explícito; toda mudança nas regras vem com caso em `web/rules-tests/` (`npm run test:rules`). Professor nunca lê `termEvents`, `lessonMembers` nem `profiles` de estudantes; só agregados da API (mínimo de 3 estudantes).
 - Áudio nunca é gravado. Transcrição expira em 24 h. Nunca enviar e-mail/nome/pseudônimo ao LLM; sanitizar antes.
 - Consentimento por finalidade, nunca pré-marcado, revogável; textos são marcadores ("texto a ser aprovado pela instituição").
-- `service_role` só em `/cron/purge`, exclusão da própria conta e `scripts/`. Nunca no cliente. Nunca commit de `.env*` (exceto `.env.example`), `api/.venv`, `node_modules`.
-- Funções `security definer` com `set search_path = ''` e nomes qualificados.
+- Conta de serviço (Admin SDK) só na API e em `scripts/`, nunca no cliente; ela ignora as regras, então toda rota confere quem chama (dono da aula, o próprio usuário). Nunca commit do JSON da conta de serviço. Nunca commit de `.env*` (exceto `.env.example`), `api/.venv`, `node_modules`.
+- Membros e eventos de termos usam o pseudônimo, nunca o uid. Analytics do Firebase não é usado.

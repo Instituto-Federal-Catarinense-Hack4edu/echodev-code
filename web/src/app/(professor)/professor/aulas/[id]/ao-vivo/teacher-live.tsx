@@ -14,11 +14,13 @@ import { StatusPill } from "@/components/status-pill";
 import { TeacherConsole } from "@/components/teacher-console";
 import { TermCorrection, loadCorrections, type Corrections } from "@/components/term-correction";
 import { ApiError, apiFetch, wakeApi } from "@/lib/api/client";
-import { SupabaseTransport, maxSeq, persistUtterance } from "@/lib/realtime/supabase";
+import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { FirestoreTransport, maxSeq, persistUtterance } from "@/lib/realtime/firestore";
 import type { UtteranceMessage } from "@/lib/realtime/schemas";
-import { getSupabase } from "@/lib/supabase/client";
-import { fire } from "@/lib/supabase/fire";
-import { useProfile } from "@/lib/supabase/use-profile";
+import { getDb } from "@/lib/firebase/client";
+import { getPlain } from "@/lib/firebase/data";
+import { fire } from "@/lib/firebase/fire";
+import { useProfile } from "@/lib/firebase/use-profile";
 import { t } from "@/lib/i18n/pt-BR";
 
 /** Long lessons are summarized in several LLM calls; give the API time before giving up. */
@@ -43,7 +45,7 @@ export function TeacherLive() {
   const [qrOpen, setQrOpen] = useState(false);
   const [ending, setEnding] = useState(false);
   const [endError, setEndError] = useState<string | null>(null);
-  const [transport, setTransport] = useState<SupabaseTransport | null>(null);
+  const [transport, setTransport] = useState<FirestoreTransport | null>(null);
   const [corrections, setCorrections] = useState<Corrections>({});
 
   useEffect(() => {
@@ -65,20 +67,15 @@ export function TeacherLive() {
 
   useEffect(() => {
     if (loading || !user) return;
-    const supabase = getSupabase();
+    const db = getDb();
     void (async () => {
-      const { data } = await supabase
-        .from("lessons")
-        .select("id,title,code,status,pack_ids")
-        .eq("id", id)
-        .eq("teacher_id", user.id)
-        .maybeSingle();
-      if (!data) {
+      const data = await getPlain<Lesson & { teacher_id: string }>(doc(db, "lessons", id)).catch(() => null);
+      if (!data || data.teacher_id !== user.id) {
         setNotFound(true);
         return;
       }
-      setLesson(data as Lesson);
-      setInitialSeq(await maxSeq(supabase, id));
+      setLesson(data);
+      setInitialSeq(await maxSeq(db, id));
     })();
   }, [id, user, loading]);
 
@@ -86,7 +83,7 @@ export function TeacherLive() {
   const liveLessonId = lesson && lesson.status !== "encerrada" ? lesson.id : null;
   useEffect(() => {
     if (!liveLessonId) return;
-    const tr = new SupabaseTransport(getSupabase(), liveLessonId);
+    const tr = new FirestoreTransport(getDb(), liveLessonId, { listenUtterances: false });
     // eslint-disable-next-line react-hooks/set-state-in-effect -- channel lives only in the browser
     setTransport(tr);
     return () => tr.close();
@@ -95,10 +92,10 @@ export function TeacherLive() {
   const lessonId = lesson?.id ?? null;
   useEffect(() => {
     if (!lessonId) return;
-    const supabase = getSupabase();
+    // Counted by the API: the teacher cannot read memberships (they hold pseudonyms).
     const tick = async () => {
-      const { data } = await supabase.rpc("lesson_member_count", { p_lesson_id: lessonId });
-      if (typeof data === "number") setMembers(data);
+      const r = await apiFetch<{ count: number }>(`/lessons/${lessonId}/member-count`).catch(() => null);
+      if (r) setMembers(r.count);
     };
     void tick();
     const timer = setInterval(tick, 5000);
@@ -106,10 +103,10 @@ export function TeacherLive() {
   }, [lessonId]);
 
   const persist = useCallback(
-    (msg: UtteranceMessage) => persistUtterance(getSupabase(), id, msg),
+    (msg: UtteranceMessage) => persistUtterance(getDb(), id, msg),
     [id],
   );
-  const currentMaxSeq = useCallback(() => maxSeq(getSupabase(), id), [id]);
+  const currentMaxSeq = useCallback(() => maxSeq(getDb(), id), [id]);
   const streamApi = useRef<{ stopAndFlush: () => Promise<void> } | null>(null);
   const onReady = useCallback((api: { stopAndFlush: () => Promise<void> }) => {
     streamApi.current = api;
@@ -119,10 +116,7 @@ export function TeacherLive() {
     if (!lesson || lesson.status !== "criada") return;
     setLesson({ ...lesson, status: "ao_vivo" });
     fire(
-      getSupabase()
-        .from("lessons")
-        .update({ status: "ao_vivo", started_at: new Date().toISOString() })
-        .eq("id", lesson.id),
+      updateDoc(doc(getDb(), "lessons", lesson.id), { status: "ao_vivo", started_at: serverTimestamp() }),
       "lesson live",
     );
   }, [lesson]);
@@ -138,14 +132,14 @@ export function TeacherLive() {
     } catch (e) {
       // 502 (LLM failed) or a timeout still leave the lesson ended on the server: trust the
       // real status, not the error.
-      const { data } = await getSupabase().from("lessons").select("status").eq("id", lesson.id).maybeSingle();
+      const data = await getPlain<{ status: string }>(doc(getDb(), "lessons", lesson.id)).catch(() => null);
       if (data?.status !== "encerrada") {
         setEnding(false);
         setEndError(e instanceof ApiError ? t.lessons.endError(e.message) : t.common.error);
         return;
       }
     }
-    // Tell connected students right away (they also re-check the status on reconnect).
+    // Students see the "encerrada" status through their lesson listener right away.
     await transport?.publishControl({ type: "lesson_ended", at: Date.now() }).catch(() => undefined);
     router.push(`/professor/aulas/${lesson.id}`);
   }

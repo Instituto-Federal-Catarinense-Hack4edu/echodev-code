@@ -8,8 +8,10 @@ import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/states";
 import { StatusPill } from "@/components/status-pill";
 import { buttonVariants } from "@/components/ui/button";
-import { getSupabase } from "@/lib/supabase/client";
-import { useProfile } from "@/lib/supabase/use-profile";
+import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
+import { getDb } from "@/lib/firebase/client";
+import { plain } from "@/lib/firebase/data";
+import { useProfile } from "@/lib/firebase/use-profile";
 import { t } from "@/lib/i18n/pt-BR";
 import { cn } from "@/lib/utils";
 
@@ -32,12 +34,17 @@ export function LessonsList() {
 
   useEffect(() => {
     if (!user || profile?.role !== "professor") return;
-    void getSupabase()
-      .from("lessons")
-      .select("id,title,code,status,created_at")
-      .eq("teacher_id", user.id)
-      .order("created_at", { ascending: false })
-      .then(({ data }) => setLessons((data as LessonRow[]) ?? []));
+    const q = query(
+      collection(getDb(), "lessons"),
+      where("teacher_id", "==", user.id),
+      orderBy("created_at", "desc"),
+    );
+    void getDocs(q)
+      .then((snap) => setLessons(snap.docs.map((d) => plain<LessonRow>(d)).filter((l) => l !== null)))
+      .catch((e: unknown) => {
+        console.warn("[echodev] lessons:", e);
+        setLessons([]);
+      });
   }, [user, profile]);
 
   const newButton = (

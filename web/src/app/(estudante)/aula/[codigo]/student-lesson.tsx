@@ -9,11 +9,24 @@ import { ConsentFlow, OPTIONAL_PURPOSES, REQUIRED_PURPOSES, type Purpose } from 
 import { LoadingState, MessageCard } from "@/components/states";
 import { StudentView } from "@/components/student-view";
 import { buttonVariants } from "@/components/ui/button";
-import { SupabaseTransport, utteranceFetcher } from "@/lib/realtime/supabase";
-import { getSupabase } from "@/lib/supabase/client";
-import { fire } from "@/lib/supabase/fire";
+import {
+  addDoc,
+  collection,
+  doc,
+  getDocs,
+  query,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+  where,
+} from "firebase/firestore";
+import { ApiError, apiFetch } from "@/lib/api/client";
+import { FirestoreTransport, utteranceFetcher } from "@/lib/realtime/firestore";
+import { getDb } from "@/lib/firebase/client";
+import { getPlain } from "@/lib/firebase/data";
+import { fire } from "@/lib/firebase/fire";
 import type { Depth } from "@/lib/terms/schemas";
-import { useProfile, type Profile } from "@/lib/supabase/use-profile";
+import { useProfile, type Profile } from "@/lib/firebase/use-profile";
 import { useDebugFlag } from "@/lib/use-debug-flag";
 import { LanguageSelect } from "@/components/language-select";
 import { useT } from "@/lib/i18n/context";
@@ -53,35 +66,36 @@ export function StudentLesson() {
     (patch: Partial<Pick<Profile, "depth_pref">>) => {
       if (!profile) return;
       setProfile({ ...profile, ...patch });
-      fire(getSupabase().from("profiles").update(patch).eq("user_id", profile.user_id), "save prefs");
+      fire(updateDoc(doc(getDb(), "profiles", profile.user_id), patch), "save prefs");
     },
     [profile, setProfile],
   );
 
+  const pseudonymId = profile?.pseudonym_id ?? null;
   const join = useCallback(async () => {
-    const supabase = getSupabase();
     setPhase({ kind: "joining" });
-    const { data: lessonId, error } = await supabase.rpc("join_lesson", { p_code: code });
-    if (error || typeof lessonId !== "string") {
-      setPhase({ kind: "error", reason: joinError(error?.message ?? "") });
-      return;
+    // Joining checks consents, role and lesson status on the server (API).
+    try {
+      const r = await apiFetch<{ lesson_id: string; title: string }>("/lessons/join", {
+        method: "POST",
+        body: JSON.stringify({ code }),
+      });
+      setPseudonym(pseudonymId);
+      setPhase({ kind: "live", lessonId: r.lesson_id, title: r.title || code });
+    } catch (e) {
+      setPhase({ kind: "error", reason: joinError(e instanceof ApiError ? e.message : "") });
     }
-    const { data: lesson } = await supabase.from("lessons").select("title").eq("id", lessonId).single();
-    const { data: pseudo } = await supabase.rpc("current_pseudonym");
-    setPseudonym(typeof pseudo === "string" ? pseudo : null);
-    setPhase({ kind: "live", lessonId, title: (lesson?.title as string | undefined) ?? code });
-  }, [code]);
+  }, [code, pseudonymId]);
 
   useEffect(() => {
     if (loading || !user) return;
     let cancelled = false;
     (async () => {
-      const { data } = await getSupabase()
-        .from("consents")
-        .select("purpose,revoked_at")
-        .eq("user_id", user.id);
+      const snap = await getDocs(query(collection(getDb(), "consents"), where("user_id", "==", user.id))).catch(
+        () => null,
+      );
       if (cancelled) return;
-      const rows = data ?? [];
+      const rows = (snap?.docs ?? []).map((d) => d.data() as { purpose: string; revoked_at: unknown });
       const active = new Set(rows.filter((r) => !r.revoked_at).map((r) => r.purpose as Purpose));
       const missing = REQUIRED_PURPOSES.filter((p) => !active.has(p));
       if (missing.length) {
@@ -100,10 +114,19 @@ export function StudentLesson() {
   const onConsentDone = async (granted: Purpose[]) => {
     if (!user) return;
     if (granted.length) {
-      const { error } = await getSupabase()
-        .from("consents")
-        .insert(granted.map((purpose) => ({ user_id: user.id, purpose })));
-      if (error && error.code !== "23505") {
+      // One document per purpose ("<uid>_<purpose>"); granting again reuses it.
+      const db = getDb();
+      try {
+        await Promise.all(
+          granted.map((purpose) =>
+            setDoc(
+              doc(db, "consents", `${user.id}_${purpose}`),
+              { user_id: user.id, purpose, granted_at: serverTimestamp(), revoked_at: null },
+              { merge: true },
+            ),
+          ),
+        );
+      } catch {
         setPhase({ kind: "error", reason: "generic" });
         return;
       }
@@ -112,22 +135,22 @@ export function StudentLesson() {
   };
 
   const lessonId = phase.kind === "live" ? phase.lessonId : null;
-  const [transport, setTransport] = useState<SupabaseTransport | null>(null);
+  const [transport, setTransport] = useState<FirestoreTransport | null>(null);
   useEffect(() => {
     if (!lessonId) return;
-    const tr = new SupabaseTransport(getSupabase(), lessonId);
+    const tr = new FirestoreTransport(getDb(), lessonId, { listenUtterances: true });
     // eslint-disable-next-line react-hooks/set-state-in-effect -- channel lives only in the browser
     setTransport(tr);
     return () => tr.close();
   }, [lessonId]);
-  const fetchSince = useMemo(() => (lessonId ? utteranceFetcher(getSupabase(), lessonId) : null), [lessonId]);
+  const fetchSince = useMemo(() => (lessonId ? utteranceFetcher(getDb(), lessonId) : null), [lessonId]);
 
   // Lesson end: instant signal on the channel, plus a status check on every (re)connection
   // and a slow poll, so a student who missed the signal still gets the button.
   useEffect(() => {
     if (!transport || !lessonId) return;
     const check = async () => {
-      const { data } = await getSupabase().from("lessons").select("status").eq("id", lessonId).maybeSingle();
+      const data = await getPlain<{ status: string }>(doc(getDb(), "lessons", lessonId)).catch(() => null);
       if (data?.status === "encerrada") setEnded(true);
     };
     const offControl = transport.onControl((m) => {
@@ -150,9 +173,14 @@ export function StudentLesson() {
     (termId: string, kind: "tap" | "doubt" | "helped" | "not_helped", depth: Depth) => {
       if (!lessonId || !pseudonym) return;
       fire(
-        getSupabase()
-          .from("term_events")
-          .insert({ lesson_id: lessonId, pseudonym_id: pseudonym, term_id: termId, kind, depth }),
+        addDoc(collection(getDb(), "termEvents"), {
+          lesson_id: lessonId,
+          pseudonym_id: pseudonym,
+          term_id: termId,
+          kind,
+          depth,
+          created_at: serverTimestamp(),
+        }),
         "term event",
       );
     },

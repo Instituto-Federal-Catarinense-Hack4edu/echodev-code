@@ -7,7 +7,7 @@ Nada foi publicado. Este documento compara as opções para quando tudo estiver 
 |---|---|---|
 | `web/` (Next.js) | **Vercel** (recomendado) | Variáveis `NEXT_PUBLIC_*`. Precisa de HTTPS para o microfone e a Web Speech API funcionarem fora do `localhost`. |
 | `api/` (FastAPI) | uma das opções abaixo | Variáveis do `api/.env`. `WEB_ORIGIN` = URL exata da Vercel (sem `*`). |
-| Banco, Auth, Realtime | Supabase (já existe) | Adicionar a URL da Vercel em Authentication → URL Configuration. |
+| Banco, login, tempo real | Firebase (projeto `echodev-eb4fb`) | `npm run deploy:rules` envia as regras e os índices. Adicionar o domínio da Vercel em Authentication → Configurações → Domínios autorizados. |
 
 ## Opções para a API Python
 | Host | Limite de tempo por requisição | "Dorme"? | Observações |
@@ -24,12 +24,12 @@ Nada foi publicado. Este documento compara as opções para quando tudo estiver 
   - a tela de revisão chama `/health` ao abrir;
   - o navegador espera até 120 s pela API e mostra "Gerando… isso pode levar até 1 minuto";
   - se o LLM falhar, a aula continua encerrada e o botão "Tentar de novo" chama `regenerate`.
-- **Limpeza de 24 h**: se o `pg_cron` não estiver ativo no Supabase (veja o aviso ao colar o `bundle.sql`), configure um agendador externo (por exemplo, um cron job do próprio Render ou do GitHub Actions) para `POST https://SUA-API/cron/purge` com o cabeçalho `X-Cron-Secret: <CRON_SECRET>` a cada hora.
+- **Limpeza de 24 h** (obrigatória: no plano gratuito do Firebase não há TTL): configure um agendador externo (por exemplo, um cron job do próprio Render ou do GitHub Actions) para `POST https://SUA-API/cron/purge` com o cabeçalho `X-Cron-Secret: <CRON_SECRET>` a cada hora.
 
 ## Passo a passo resumido (Render + Vercel)
-1. Vercel: importar o repositório, **Root Directory = `web`**, preencher `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_API_URL` (URL da API), `NEXT_PUBLIC_DEV_LOGIN=false`.
-2. Render: novo Web Service, **Root Directory = `api`**, build `pip install -r requirements.txt`, start `uvicorn app.main:app --host 0.0.0.0 --port $PORT`; variáveis do `api/.env.example` com `WEB_ORIGIN=https://SEU-APP.vercel.app` e `ENVIRONMENT=production`.
-3. Supabase: incluir `https://SEU-APP.vercel.app/**` nas Redirect URLs; configurar SMTP próprio para o link por e-mail (o padrão tem limite baixo de envios).
+1. Vercel: importar o repositório, **Root Directory = `web`**, preencher as variáveis `NEXT_PUBLIC_FIREBASE_*` do `web/.env.local`, `NEXT_PUBLIC_FIREBASE_EMULATORS=false` e `NEXT_PUBLIC_API_URL` (URL da API).
+2. Render: novo Web Service, **Root Directory = `api`**, build `pip install -r requirements.txt`, start `uvicorn app.main:app --host 0.0.0.0 --port $PORT`; variáveis do `api/.env.example` com `WEB_ORIGIN=https://SEU-APP.vercel.app` e `ENVIRONMENT=production`. O JSON da conta de serviço vai como **Secret File** do Render (por exemplo `/etc/secrets/firebase.json`) e `FIREBASE_CREDENTIALS_FILE` aponta para ele.
+3. Firebase: incluir o domínio da Vercel nos domínios autorizados do Authentication; se personalizou a URL de ação do e-mail de senha, trocar para `https://SEU-APP.vercel.app/redefinir-senha`.
 4. Testar no celular: abrir a URL da Vercel, entrar numa aula e conferir `?debug=1`.
 
 ## Fontes consultadas (03/11/2026)

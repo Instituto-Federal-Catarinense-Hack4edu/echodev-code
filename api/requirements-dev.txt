@@ -2,9 +2,3 @@
 ruff==0.17.3
 pytest==9.2.0
 pytest-asyncio==1.4.1.post1
-respx==0.23.1
-# Somente para os scripts administrativos (scripts/), nunca no código da API.
-supabase==2.33.0
-# Postgres embutido para validar supabase/bundle.sql localmente (scripts/validate_sql_local.py).
-pgserver==0.1.4
-psycopg[binary]==3.3.7

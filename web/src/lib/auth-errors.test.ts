@@ -1,13 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { authErrorMessage, passwordProblem } from "./auth-errors";
+import { authErrorMessage, EMAIL_NOT_VERIFIED, passwordProblem } from "./auth-errors";
 
 describe("auth messages", () => {
-  it("maps Supabase codes to clear messages", () => {
-    expect(authErrorMessage({ code: "invalid_credentials" })).toMatch(/E-mail ou senha incorretos/);
-    expect(authErrorMessage({ code: "email_not_confirmed" })).toMatch(/confirm/i);
-    expect(authErrorMessage({ code: "user_already_exists" })).toMatch(/já existe/i);
-    expect(authErrorMessage({ status: 429 })).toMatch(/Muitas tentativas/);
-    expect(authErrorMessage({ code: "algo_novo" })).toMatch(/Não foi possível/);
+  it("maps Firebase codes to clear messages", () => {
+    expect(authErrorMessage({ code: "auth/invalid-credential" })).toMatch(/E-mail ou senha incorretos/);
+    expect(authErrorMessage({ code: EMAIL_NOT_VERIFIED })).toMatch(/confirm/i);
+    expect(authErrorMessage({ code: "auth/email-already-in-use" })).toMatch(/já existe/i);
+    expect(authErrorMessage({ code: "auth/too-many-requests" })).toMatch(/Muitas tentativas/);
+    expect(authErrorMessage({ code: "auth/expired-action-code" })).toMatch(/expirou/);
+    expect(authErrorMessage({ code: "algo/novo" })).toMatch(/Não foi possível/);
+    expect(authErrorMessage(null)).toMatch(/Não foi possível/);
   });
 
   it("checks password length and confirmation", () => {

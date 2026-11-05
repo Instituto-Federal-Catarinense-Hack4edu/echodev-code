@@ -254,7 +254,8 @@ export const t = {
     resetSent: (email: string) => `Se existir uma conta com ${email}, enviamos um link para criar uma nova senha.`,
     resetExpired: "O link para redefinir a senha expirou ou já foi usado. Peça um novo.",
     savePassword: "Salvar nova senha",
-    passwordChanged: "Senha alterada. Você já está conectado.",
+    passwordChangedLogin: "Senha alterada. Entre com a nova senha.",
+    resetFor: (email: string) => `Nova senha para ${email}.`,
     confirmSent: (email: string) =>
       `Conta criada! Enviamos um e-mail de confirmação para ${email}. Abra o link do e-mail para ativar a conta e depois entre.`,
     alreadyIn: (email: string) => `Você já está conectado como ${email}.`,

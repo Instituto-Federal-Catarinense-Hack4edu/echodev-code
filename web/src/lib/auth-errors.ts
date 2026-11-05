@@ -2,27 +2,34 @@ import { t } from "@/lib/i18n/pt-BR";
 
 export const MIN_PASSWORD = 8;
 
-export function authErrorMessage(error: { code?: string; status?: number; message?: string } | null): string {
-  if (!error) return t.auth.errors.generic;
-  switch (error.code) {
-    case "invalid_credentials":
+/** Our own code for a sign-in whose e-mail was never confirmed (Firebase allows it). */
+export const EMAIL_NOT_VERIFIED = "echodev/email-not-verified";
+
+/** Maps Firebase Auth error codes (FirebaseError.code) to clear messages. */
+export function authErrorMessage(error: { code?: string } | null | undefined): string {
+  switch (error?.code) {
+    case "auth/invalid-credential":
+    case "auth/invalid-login-credentials":
+    case "auth/wrong-password":
+    case "auth/user-not-found":
+    case "auth/invalid-email":
       return t.auth.errors.invalidCredentials;
-    case "email_not_confirmed":
+    case EMAIL_NOT_VERIFIED:
       return t.auth.errors.emailNotConfirmed;
-    case "user_already_exists":
-    case "email_exists":
+    case "auth/email-already-in-use":
       return t.auth.errors.alreadyExists;
-    case "weak_password":
+    case "auth/weak-password":
+    case "auth/password-does-not-meet-requirements":
       return t.auth.errors.weakPassword;
-    case "over_email_send_rate_limit":
-    case "over_request_rate_limit":
+    case "auth/too-many-requests":
       return t.auth.rateLimited;
-    case "same_password":
-      return t.auth.errors.samePassword;
-    case "signup_disabled":
+    case "auth/operation-not-allowed":
+    case "auth/admin-restricted-operation":
       return t.auth.errors.signupDisabled;
+    case "auth/expired-action-code":
+    case "auth/invalid-action-code":
+      return t.auth.resetExpired;
   }
-  if (error.status === 429) return t.auth.rateLimited;
   return t.auth.errors.generic;
 }
 

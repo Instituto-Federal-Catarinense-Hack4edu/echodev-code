@@ -96,3 +96,33 @@ class PurgeResponse(BaseModel):
 
 class DeleteMeResponse(BaseModel):
     deleted: bool
+
+
+class ProfileOut(BaseModel):
+    user_id: str
+    role: Literal["professor", "estudante"]
+    depth_pref: Literal["curta", "exemplo", "passos"]
+    lang_pref: Literal["pt", "en", "es"]
+    created: bool
+
+
+class JoinRequest(BaseModel):
+    code: str = Field(min_length=1, max_length=16)
+
+
+class JoinResponse(BaseModel):
+    lesson_id: str
+    title: str
+
+
+class MemberCountResponse(BaseModel):
+    count: int
+
+
+class TermReportRow(BaseModel):
+    term_id: str
+    taps: int
+    students: int
+    doubts: int
+    helped: int
+    not_helped: int

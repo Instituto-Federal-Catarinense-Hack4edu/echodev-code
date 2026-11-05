@@ -10,9 +10,11 @@ import { buttonVariants } from "@/components/ui/button";
 import { PdfButton } from "@/components/pdf-button";
 import { QuizPlayer } from "@/components/quiz-player";
 import type { QuizItem, Resumo } from "@/lib/api/types";
-import { isQuiz, isResumo, lessonDate } from "@/lib/materials";
-import { getSupabase } from "@/lib/supabase/client";
-import { useProfile } from "@/lib/supabase/use-profile";
+import { isQuiz, isResumo, lessonDate, type LessonDates } from "@/lib/materials";
+import { collection, doc, getDocs, query, where } from "firebase/firestore";
+import { getDb } from "@/lib/firebase/client";
+import { getPlain } from "@/lib/firebase/data";
+import { useProfile } from "@/lib/firebase/use-profile";
 import { LanguageSelect } from "@/components/language-select";
 import { useT } from "@/lib/i18n/context";
 import { useProfileLang } from "@/lib/i18n/use-profile-lang";
@@ -41,22 +43,33 @@ export function StudentReview() {
   const [state, setState] = useState<State>({ kind: "loading" });
 
   useEffect(() => {
-    if (loading || !user) return;
+    if (loading || !user || !profile) return;
     let timer: ReturnType<typeof setTimeout> | null = null;
     let cancelled = false;
     const load = async () => {
-      const supabase = getSupabase();
-      const { data: lesson } = await supabase
-        .from("lessons")
-        .select("id,title,started_at,ended_at,created_at")
-        .eq("code", (codigo ?? "").toUpperCase())
-        .maybeSingle();
+      const db = getDb();
+      // The code is resolved through the student's own memberships: lessons the student
+      // never joined stay invisible.
+      const code = (codigo ?? "").toUpperCase();
+      const mine = await getDocs(
+        query(collection(db, "lessonMembers"), where("pseudonym_id", "==", profile.pseudonym_id)),
+      ).catch(() => null);
+      const lessonId = mine?.docs.map((d) => d.data()).find((m) => m.lesson_code === code)?.lesson_id as
+        | string
+        | undefined;
+      const lesson = lessonId
+        ? await getPlain<{ title: string } & LessonDates>(doc(db, "lessons", lessonId)).catch(() => null)
+        : null;
       if (cancelled) return;
       if (!lesson) {
         setState({ kind: "not-member" });
         return;
       }
-      const { data } = await supabase.from("lesson_materials").select("kind,content").eq("lesson_id", lesson.id);
+      // Rules: members read only approved material, so the query must ask for that.
+      const mats = await getDocs(
+        query(collection(db, "lessons", lesson.id, "materials"), where("status", "==", "aprovado")),
+      ).catch(() => null);
+      const data = mats?.docs.map((d) => d.data()) ?? [];
       if (cancelled) return;
       const content = (kind: string) => data?.find((m) => m.kind === kind)?.content;
       const asResumo = (c: unknown) => (isResumo(c) ? c : null);
@@ -78,7 +91,7 @@ export function StudentReview() {
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [loading, user, codigo]);
+  }, [loading, user, profile, codigo]);
 
   if (state.kind === "loading") return <LoadingState text={t.common.loading} />;
   if (state.kind === "not-member")

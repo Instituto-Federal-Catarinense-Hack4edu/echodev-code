@@ -68,11 +68,11 @@
 
 ## Papéis e painel da aula (04/11/2026)
 - Professor e aluno separados no banco, nas rotas e no menu; área do aluno em `/aluno`; painel da aula após encerrar (PDF, conferir quiz, relatório); termo clicável no console do professor.
-- **Ação manual**: colar `supabase/migrations/20261104000600_roles.sql` no SQL Editor do Supabase (só esse arquivo, não o bundle).
+- (Supabase, já substituído pelo Firebase.)
 
 ## Espanhol (05/11/2026)
 - Legenda traduzida ao vivo (Chrome do professor), telas do aluno, explicações completas dos 40 termos, resumo, quiz e PDF em espanhol.
-- **Ação manual**: colar `supabase/migrations/20261105000100_spanish.sql` no SQL Editor do Supabase (depois da migração de papéis). Sem ela, as frases continuam sendo salvas só em português.
+- (Supabase, já substituído pelo Firebase.)
 - Para traduzir, o professor usa o Google Chrome 138+ no computador e clica em "Ativar tradução para espanhol" (o Chrome baixa o pacote de idioma uma vez).
 
 ## Redesenho de UI/UX (05/11/2026)
@@ -83,6 +83,15 @@
 - Tiradas da interface as menções à "demonstração offline" (seção da página inicial, atalhos no login, textos "sem login"). As páginas `/demo/professor` (agora "Painel do professor") e `/demo/estudante` ("Legenda ao vivo") continuam abrindo pelo endereço; o botão "Usar aula de demonstração" do console continua, por ser um recurso.
 - Tirados os selos de privacidade da página inicial e a linha de privacidade do rodapé (pedido do usuário). As mesmas informações seguem nos textos de consentimento e no aviso do relatório.
 - Verificado no navegador (claro e escuro, computador e celular): demonstração professor → estudante, abrir termo, quiz, relatório e editores com dados de exemplo. Telas com Supabase não foram abertas com dados reais (sem `.env` nesta máquina).
+
+## Migração para o Firebase (05/11/2026, branch `firebase`)
+- **Supabase removido.** Login no Firebase Authentication (e-mail/senha com confirmação, Google opcional, redefinição de senha), banco no Cloud Firestore, regras em `firestore.rules`, índices em `firestore.indexes.json`, emuladores em `firebase.json`. Projeto: `echodev-eb4fb`.
+- **Ao vivo**: o professor grava cada frase em `lessons/{id}/utterances` e os alunos recebem por listener do Firestore (`FirestoreTransport`, mesmo contrato `RealtimeTransport`). "Aula encerrada" chega pelo status da aula.
+- **API Python** com `firebase-admin`: valida o ID token; novas rotas `POST /me/profile` (cria o perfil com o papel da `teacherAllowlist`), `POST /lessons/join`, `GET /lessons/{id}/member-count`, `GET /lessons/{id}/term-report` (mínimo de 3 alunos); `end`, `regenerate`, `DELETE /me` e `/cron/purge` adaptadas. 57 testes `pytest` com um Firestore falso em memória.
+- **Regras provadas no emulador**: `npm run test:rules`, 15 grupos de casos (substitui o `check:rls`).
+- **Scripts**: `seed:dev`, `teacher:add` e `load:test` usam o Admin SDK (`--emulators` para rodar local); `npm run dev:emulators` sobe tudo sem tocar no projeto real.
+- `npm run check` verde. Verificado no emulador: as regras (15 grupos) e a criação dos 9 usuários de teste. **O fluxo completo no navegador (criar aula, aluno entrar, legenda, encerrar, aprovar, quiz) ficou para o teste manual da equipe.**
+- **Ação manual**: seguir `docs/SETUP_MANUAL.md` (ativar e-mail/senha, criar o Firestore, gerar a chave da conta de serviço, `firebase login`, `npm run deploy:rules`).
 
 ## Pendências para a equipe
 - **Revisão humana do conteúdo** dos 40 termos (explicações e traduções) antes da demo. Nada na interface diz "verificado".

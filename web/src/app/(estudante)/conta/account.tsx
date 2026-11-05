@@ -9,8 +9,10 @@ import { PURPOSE_ICONS, REQUIRED_PURPOSES, type Purpose } from "@/components/con
 import { SectionTitle } from "@/components/page-header";
 import { LoadingState, Notice, Spinner } from "@/components/states";
 import { apiFetch } from "@/lib/api/client";
-import { getSupabase } from "@/lib/supabase/client";
-import { useProfile } from "@/lib/supabase/use-profile";
+import { signOut } from "firebase/auth";
+import { collection, doc, getDocs, query, serverTimestamp, setDoc, updateDoc, where } from "firebase/firestore";
+import { getDb, getFirebaseAuth } from "@/lib/firebase/client";
+import { useProfile } from "@/lib/firebase/use-profile";
 import { t } from "@/lib/i18n/pt-BR";
 import { cn } from "@/lib/utils";
 
@@ -27,12 +29,12 @@ export function Account() {
 
   const load = useCallback(async () => {
     if (!user) return;
-    const { data } = await getSupabase()
-      .from("consents")
-      .select("id,purpose")
-      .eq("user_id", user.id)
-      .is("revoked_at", null);
-    setActive(Object.fromEntries((data ?? []).map((r) => [r.purpose, r.id])));
+    const snap = await getDocs(query(collection(getDb(), "consents"), where("user_id", "==", user.id)));
+    setActive(
+      Object.fromEntries(
+        snap.docs.filter((d) => d.data().revoked_at == null).map((d) => [d.data().purpose as string, d.id]),
+      ),
+    );
   }, [user]);
 
   useEffect(() => {
@@ -42,13 +44,17 @@ export function Account() {
 
   async function toggle(purpose: Purpose) {
     if (!user) return;
-    const supabase = getSupabase();
+    const db = getDb();
     setPending(purpose);
     try {
       if (active[purpose]) {
-        await supabase.from("consents").update({ revoked_at: new Date().toISOString() }).eq("id", active[purpose]);
+        await updateDoc(doc(db, "consents", active[purpose]), { revoked_at: serverTimestamp() });
       } else {
-        await supabase.from("consents").insert({ user_id: user.id, purpose });
+        await setDoc(
+          doc(db, "consents", `${user.id}_${purpose}`),
+          { user_id: user.id, purpose, granted_at: serverTimestamp(), revoked_at: null },
+          { merge: true },
+        );
       }
       await load();
     } finally {
@@ -62,7 +68,7 @@ export function Account() {
     setError(null);
     try {
       await apiFetch("/me", { method: "DELETE" });
-      await getSupabase().auth.signOut();
+      await signOut(getFirebaseAuth());
       window.alert(t.account.deleted);
       router.replace("/");
     } catch {
@@ -87,7 +93,7 @@ export function Account() {
           <Button
             variant="outline"
             onClick={async () => {
-              await getSupabase().auth.signOut();
+              await signOut(getFirebaseAuth());
               router.replace("/");
             }}
           >

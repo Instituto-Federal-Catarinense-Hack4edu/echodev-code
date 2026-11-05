@@ -27,8 +27,10 @@ import { LoadingState, Notice, Spinner } from "@/components/states";
 import { ApiError, apiFetch, wakeApi } from "@/lib/api/client";
 import type { QuizItem, RegenerateResponse, Resumo } from "@/lib/api/types";
 import { cleanResumo, isQuiz, isResumo, lessonDate, validQuiz, validResumo, type LessonDates } from "@/lib/materials";
-import { getSupabase } from "@/lib/supabase/client";
-import { useProfile } from "@/lib/supabase/use-profile";
+import { collection, doc, getDocs, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
+import { getDb } from "@/lib/firebase/client";
+import { getPlain } from "@/lib/firebase/data";
+import { useProfile } from "@/lib/firebase/use-profile";
 import { t } from "@/lib/i18n/pt-BR";
 import { createEsTranslator, esAvailability } from "@/lib/translate/browser";
 import { translateMaterials } from "@/lib/translate/materials";
@@ -61,19 +63,16 @@ export function TeacherReview() {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const supabase = getSupabase();
-    const { data: l } = await supabase
-      .from("lessons")
-      .select("title,code,status,teacher_id,started_at,ended_at,created_at")
-      .eq("id", id)
-      .maybeSingle();
+    const db = getDb();
+    const l = await getPlain<LessonInfo & { teacher_id: string }>(doc(db, "lessons", id)).catch(() => null);
     if (!l || l.teacher_id !== user?.id) {
       setNotFound(true);
       return;
     }
     setLesson(l);
-    const { data } = await supabase.from("lesson_materials").select("id,kind,status,content").eq("lesson_id", id);
-    const rows = (data ?? []) as Row<unknown>[];
+    // Material documents are keyed by kind, so the id is the kind.
+    const snap = await getDocs(collection(db, "lessons", id, "materials"));
+    const rows = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as Row<unknown>[];
     const resumoRow = (kind: Row<unknown>["kind"]) => {
       const r = rows.find((x) => x.kind === kind);
       return r && isResumo(r.content) ? (r as Row<Resumo>) : null;
@@ -150,25 +149,33 @@ export function TeacherReview() {
   }
 
   async function storeSpanish(kind: "resumo_es" | "quiz_es", existing: Row<unknown> | null, content: unknown) {
-    const supabase = getSupabase();
-    const now = new Date().toISOString();
-    const { error: err } = existing
-      ? await supabase
-          .from("lesson_materials")
-          .update({ content, status: "rascunho", approved_at: null, updated_at: now })
-          .eq("id", existing.id)
-      : await supabase.from("lesson_materials").insert({ lesson_id: id, kind, content });
-    if (err) throw new Error(err.message);
+    const ref = doc(getDb(), "lessons", id, "materials", kind);
+    if (existing) {
+      await updateDoc(ref, { content, status: "rascunho", approved_at: null, updated_at: serverTimestamp() });
+    } else {
+      await setDoc(ref, {
+        kind,
+        content,
+        status: "rascunho",
+        approved_at: null,
+        created_at: serverTimestamp(),
+        updated_at: serverTimestamp(),
+      });
+    }
   }
 
   async function save<C>(row: Row<C>, content: C, status: Status) {
     setBusy(true);
     setError(null);
-    const now = new Date().toISOString();
-    const { error: err } = await getSupabase()
-      .from("lesson_materials")
-      .update({ content, status, approved_at: status === "aprovado" ? now : null, updated_at: now })
-      .eq("id", row.id);
+    const err = await updateDoc(doc(getDb(), "lessons", id, "materials", row.id), {
+      content,
+      status,
+      approved_at: status === "aprovado" ? serverTimestamp() : null,
+      updated_at: serverTimestamp(),
+    }).then(
+      () => null,
+      (e: unknown) => e,
+    );
     setBusy(false);
     if (err) {
       setError(t.common.error);

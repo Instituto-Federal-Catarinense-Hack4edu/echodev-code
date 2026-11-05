@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import type { User } from "@supabase/supabase-js";
+import { onAuthStateChanged, signOut, type User } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 import { GraduationCap, LayoutGrid, LogIn, LogOut, UserRound } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { hasSupabaseEnv } from "@/lib/env";
-import { getSupabase } from "@/lib/supabase/client";
+import { hasFirebaseEnv } from "@/lib/env";
+import { getDb, getFirebaseAuth } from "@/lib/firebase/client";
 import { useT } from "@/lib/i18n/context";
 import { cn } from "@/lib/utils";
 
@@ -19,23 +20,21 @@ export function UserMenu() {
   const [isTeacher, setIsTeacher] = useState(false);
 
   useEffect(() => {
-    if (!hasSupabaseEnv()) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- no auth without Supabase
+    if (!hasFirebaseEnv()) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- no auth without Firebase
       setUser(null);
       return;
     }
-    const supabase = getSupabase();
-    const load = async (u: User | null) => {
-      setUser(u);
-      if (!u) return setIsTeacher(false);
-      const { data } = await supabase.from("profiles").select("role").eq("user_id", u.id).maybeSingle();
-      setIsTeacher(data?.role === "professor");
-    };
-    void supabase.auth.getUser().then(({ data }) => load(data.user ?? null));
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      void load(session?.user ?? null);
+    // Fires once with the restored session and again on every sign-in / sign-out.
+    return onAuthStateChanged(getFirebaseAuth(), (u) => {
+      // An unconfirmed sign-up is not a session yet (same as before).
+      const active = u && u.emailVerified ? u : null;
+      setUser(active);
+      if (!active) return setIsTeacher(false);
+      void getDoc(doc(getDb(), "profiles", active.uid))
+        .then((p) => setIsTeacher(p.data()?.role === "professor"))
+        .catch(() => setIsTeacher(false));
     });
-    return () => sub.subscription.unsubscribe();
   }, []);
 
   if (user === undefined) return <span className="inline-block h-11 w-24 animate-pulse rounded-xl bg-muted" aria-hidden />;
@@ -80,7 +79,7 @@ export function UserMenu() {
         title={t.auth.signOut}
         className="text-muted-foreground hover:text-foreground"
         onClick={async () => {
-          await getSupabase().auth.signOut();
+          await signOut(getFirebaseAuth());
           router.replace("/");
           router.refresh();
         }}

@@ -8,8 +8,10 @@ import { EmptyState } from "@/components/states";
 import { StatusPill } from "@/components/status-pill";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { getSupabase } from "@/lib/supabase/client";
-import { useProfile } from "@/lib/supabase/use-profile";
+import { collection, doc, getDocs, query, where } from "firebase/firestore";
+import { getDb } from "@/lib/firebase/client";
+import { getPlain, plain } from "@/lib/firebase/data";
+import { useProfile } from "@/lib/firebase/use-profile";
 import { useT } from "@/lib/i18n/context";
 import { useProfileLang } from "@/lib/i18n/use-profile-lang";
 import { LanguageSelect } from "@/components/language-select";
@@ -30,24 +32,27 @@ export function StudentHome() {
   const [lessons, setLessons] = useState<JoinedLesson[] | null>(null);
 
   useEffect(() => {
-    if (loading || !user) return;
+    if (loading || !user || !profile) return;
     void (async () => {
-      const supabase = getSupabase();
-      const { data: rows } = await supabase
-        .from("lesson_members")
-        .select("lesson_id,joined_at")
-        .order("joined_at", { ascending: false });
-      const ids = (rows ?? []).map((r) => r.lesson_id as string);
-      if (!ids.length) return setLessons([]);
-      const { data } = await supabase.from("lessons").select("id,title,code,status").in("id", ids);
-      const joined = new Map((rows ?? []).map((r) => [r.lesson_id as string, r.joined_at as string]));
+      const db = getDb();
+      // Own memberships only (by pseudonym); the rules refuse anything else.
+      const snap = await getDocs(
+        query(collection(db, "lessonMembers"), where("pseudonym_id", "==", profile.pseudonym_id)),
+      ).catch(() => null);
+      const rows = (snap?.docs ?? [])
+        .map((d) => plain<{ lesson_id: string; joined_at: string | null }>(d))
+        .filter((r) => r !== null);
+      const found = await Promise.all(
+        rows.map(async (r) => {
+          const l = await getPlain<Omit<JoinedLesson, "joinedAt">>(doc(db, "lessons", r.lesson_id)).catch(() => null);
+          return l ? { ...l, joinedAt: r.joined_at ?? "" } : null;
+        }),
+      );
       setLessons(
-        (data ?? [])
-          .map((l) => ({ ...(l as Omit<JoinedLesson, "joinedAt">), joinedAt: joined.get(l.id as string) ?? "" }))
-          .sort((a, b) => b.joinedAt.localeCompare(a.joinedAt)),
+        found.filter((l) => l !== null).sort((a, b) => b.joinedAt.localeCompare(a.joinedAt)),
       );
     })();
-  }, [loading, user]);
+  }, [loading, user, profile]);
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 space-y-8 px-4 py-8 sm:py-10">

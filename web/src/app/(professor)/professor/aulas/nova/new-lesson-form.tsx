@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { generateLessonCode } from "@/lib/lesson-code";
-import { getSupabase } from "@/lib/supabase/client";
-import { useProfile } from "@/lib/supabase/use-profile";
+import { doc, serverTimestamp, writeBatch } from "firebase/firestore";
+import { getDb } from "@/lib/firebase/client";
+import { DEFAULT_PACK_ID } from "@/lib/terms/pack";
+import { useProfile } from "@/lib/firebase/use-profile";
 import { t } from "@/lib/i18n/pt-BR";
 
 const MAX_ATTEMPTS = 5;
@@ -35,18 +37,33 @@ export function NewLessonForm() {
     if (!user) return;
     setBusy(true);
     setError(false);
-    // Retry on the (rare) unique-code collision.
+    // The code is reserved in lessonCodes in the same batch; an existing code makes the
+    // rules refuse the batch, so retry with a new one (rare collision).
+    const db = getDb();
     for (let i = 0; i < MAX_ATTEMPTS; i++) {
-      const { data, error: err } = await getSupabase()
-        .from("lessons")
-        .insert({ teacher_id: user.id, title: title.trim(), code: generateLessonCode() })
-        .select("id")
-        .single();
-      if (!err && data) {
-        router.push(`/professor/aulas/${data.id}/ao-vivo`);
+      const id = crypto.randomUUID();
+      const code = generateLessonCode();
+      const batch = writeBatch(db);
+      batch.set(doc(db, "lessons", id), {
+        teacher_id: user.id,
+        title: title.trim(),
+        code,
+        status: "criada",
+        pack_ids: [DEFAULT_PACK_ID],
+        started_at: null,
+        ended_at: null,
+        created_at: serverTimestamp(),
+      });
+      batch.set(doc(db, "lessonCodes", code), { lesson_id: id });
+      try {
+        await batch.commit();
+        router.push(`/professor/aulas/${id}/ao-vivo`);
         return;
+      } catch (err) {
+        // Shown in the browser console (F12) to diagnose "Não foi possível criar a aula".
+        console.warn("[echodev] create lesson:", err);
+        if ((err as { code?: string }).code !== "permission-denied") break;
       }
-      if (err?.code !== "23505") break;
     }
     setBusy(false);
     setError(true);

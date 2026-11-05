@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { correctionProblem } from "@/lib/terms/corrections";
 import { termsFor } from "@/lib/terms/pack";
-import { getSupabase } from "@/lib/supabase/client";
+import { addDoc, collection, getDocs, limit, query, serverTimestamp } from "firebase/firestore";
+import { getDb } from "@/lib/firebase/client";
 import { t } from "@/lib/i18n/pt-BR";
 
 export type Corrections = Record<string, string[]>;
@@ -21,11 +22,11 @@ export type Corrections = Record<string, string[]>;
 export async function loadCorrections(packIds?: string[]): Promise<Corrections> {
   const terms = termsFor(packIds);
   const known = new Set(terms.map((x) => x.id));
-  const { data } = await getSupabase().from("term_corrections").select("term_id,heard").limit(1000);
+  const snap = await getDocs(query(collection(getDb(), "termCorrections"), limit(1000))).catch(() => null);
   const out: Corrections = {};
-  for (const row of data ?? []) {
-    const termId = row.term_id as string;
-    const heard = row.heard as string;
+  for (const d of snap?.docs ?? []) {
+    const termId = d.data().term_id as string;
+    const heard = d.data().heard as string;
     if (!known.has(termId) || correctionProblem(heard, termId, terms)) continue;
     (out[termId] ??= []).push(heard);
   }
@@ -59,9 +60,15 @@ export function TermCorrection({
       return;
     }
     setBusy(true);
-    const { error } = await getSupabase()
-      .from("term_corrections")
-      .insert({ term_id: term.id, heard: value, correct: term.canonical });
+    const error = await addDoc(collection(getDb(), "termCorrections"), {
+      term_id: term.id,
+      heard: value,
+      correct: term.canonical,
+      created_at: serverTimestamp(),
+    }).then(
+      () => null,
+      (e: unknown) => e,
+    );
     setBusy(false);
     if (error) {
       setMsg({ text: t.correction.error, ok: false });

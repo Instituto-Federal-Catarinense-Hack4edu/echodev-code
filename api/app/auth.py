@@ -1,73 +1,50 @@
-"""Validates the browser's Supabase access token by asking Supabase Auth (GET /auth/v1/user).
+"""Validates the browser's Firebase ID token with the Admin SDK.
 
-We never trust a token just because it decodes; Supabase is moving to asymmetric signing keys,
-so asking the Auth server is the simplest correct check. A short per-token cache avoids
-one round trip per request.
+`verify_id_token` checks the signature against Google's public keys (cached by the SDK),
+the expiry and the project. With FIREBASE_AUTH_EMULATOR_HOST set it accepts emulator tokens.
 """
 
-import hashlib
-import time
+import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass
 
-import httpx
 from fastapi import Depends, HTTPException, Request, status
 
 from app.config import Settings, get_settings
+from app.firebase import verify_id_token
 
-CACHE_TTL_SECONDS = 10.0
-_MAX_CACHE = 2048
-_cache: dict[str, tuple[float, str]] = {}
+TokenVerifier = Callable[[str], dict]
 
 
 @dataclass(frozen=True)
 class CurrentUser:
     id: str
-    token: str
+    email: str
+    email_verified: bool
 
 
-def get_http(request: Request) -> httpx.AsyncClient:
-    return request.app.state.http
-
-
-def _key(token: str) -> str:
-    return hashlib.sha256(token.encode()).hexdigest()
-
-
-def clear_auth_cache() -> None:
-    _cache.clear()
+def get_token_verifier(settings: Settings = Depends(get_settings)) -> TokenVerifier:
+    return lambda token: verify_id_token(settings, token)
 
 
 async def get_current_user(
     request: Request,
-    settings: Settings = Depends(get_settings),
-    http: httpx.AsyncClient = Depends(get_http),
+    verify: TokenVerifier = Depends(get_token_verifier),
 ) -> CurrentUser:
     header = request.headers.get("authorization", "")
     scheme, _, token = header.partition(" ")
     if scheme.lower() != "bearer" or not token.strip():
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token ausente.")
-    token = token.strip()
-
-    now = time.monotonic()
-    cached = _cache.get(_key(token))
-    if cached and cached[0] > now:
-        return CurrentUser(id=cached[1], token=token)
-
     try:
-        res = await http.get(
-            f"{settings.supabase_url.rstrip('/')}/auth/v1/user",
-            headers={"apikey": settings.supabase_anon_key, "Authorization": f"Bearer {token}"},
-        )
-    except httpx.HTTPError as exc:
-        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Auth indisponível.") from exc
-
-    if res.status_code != 200:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token inválido ou expirado.")
-    user_id = res.json().get("id")
-    if not isinstance(user_id, str) or not user_id:
+        # The SDK may fetch Google's public keys over the network: keep it off the event loop.
+        claims = await asyncio.to_thread(verify, token.strip())
+    except Exception as exc:  # invalid, expired, revoked, wrong project, keys unavailable
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token inválido ou expirado.") from exc
+    uid = claims.get("uid") or claims.get("sub")
+    if not isinstance(uid, str) or not uid:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token inválido.")
-
-    if len(_cache) >= _MAX_CACHE:
-        _cache.clear()
-    _cache[_key(token)] = (now + CACHE_TTL_SECONDS, user_id)
-    return CurrentUser(id=user_id, token=token)
+    return CurrentUser(
+        id=uid,
+        email=str(claims.get("email") or "").lower(),
+        email_verified=bool(claims.get("email_verified")),
+    )

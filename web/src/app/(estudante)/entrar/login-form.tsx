@@ -3,19 +3,28 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { User } from "@supabase/supabase-js";
+import {
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  sendEmailVerification,
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signOut as firebaseSignOut,
+} from "firebase/auth";
 import { ArrowLeft, ArrowRight, KeyRound, LogOut, Mail, UserRoundCheck } from "lucide-react";
 import { PasswordInput } from "@/components/password-input";
 import { Notice, Spinner } from "@/components/states";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { authErrorMessage, MIN_PASSWORD, passwordProblem } from "@/lib/auth-errors";
-import { hasSupabaseEnv, publicEnv } from "@/lib/env";
+import { authErrorMessage, EMAIL_NOT_VERIFIED, MIN_PASSWORD, passwordProblem } from "@/lib/auth-errors";
+import { hasFirebaseEnv, publicEnv } from "@/lib/env";
+import { currentUser, getFirebaseAuth } from "@/lib/firebase/client";
+import { loadProfile, toAppUser, type AppUser } from "@/lib/firebase/use-profile";
 import { t } from "@/lib/i18n/pt-BR";
 import { destinationFor, type Role } from "@/lib/roles";
 import { safeNext } from "@/lib/safe-next";
-import { getSupabase } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 type Mode = "login" | "signup" | "reset";
@@ -30,8 +39,8 @@ export function LoginForm() {
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<NoticeState>(null);
-  const [current, setCurrent] = useState<User | null | undefined>(undefined);
-  const configured = hasSupabaseEnv();
+  const [current, setCurrent] = useState<AppUser | null | undefined>(undefined);
+  const configured = hasFirebaseEnv();
   const env = configured ? publicEnv() : null;
 
   useEffect(() => {
@@ -40,13 +49,17 @@ export function LoginForm() {
     setNext(safeNext(params.get("next")));
     if (params.get("erro") === "link") setNotice({ kind: "error", text: t.auth.callbackError });
     if (params.get("modo") === "criar") setMode("signup");
-    if (configured) void getSupabase().auth.getUser().then(({ data }) => setCurrent(data.user ?? null));
+    if (configured)
+      void currentUser().then((u) => setCurrent(u && u.emailVerified ? toAppUser(u) : null));
   }, [configured]);
 
   if (!configured || !env)
     return <Notice tone="warning">{t.auth.notConfigured}</Notice>;
 
-  const callbackUrl = (to: string) => `${window.location.origin}/auth/callback?next=${encodeURIComponent(to)}`;
+  /** Where the links in Firebase e-mails send the user back to. */
+  const backToLogin = (to: string) => ({
+    url: `${window.location.origin}/entrar?next=${encodeURIComponent(to)}`,
+  });
 
   function switchMode(m: Mode) {
     setMode(m);
@@ -57,7 +70,7 @@ export function LoginForm() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    const supabase = getSupabase();
+    const auth = getFirebaseAuth();
     const mail = email.trim().toLowerCase();
     setNotice(null);
 
@@ -69,30 +82,27 @@ export function LoginForm() {
     setBusy(true);
     try {
       if (mode === "login") {
-        const { data, error } = await supabase.auth.signInWithPassword({ email: mail, password });
-        if (error) return setNotice({ kind: "error", text: authErrorMessage(error) });
-        await goToArea(data.user?.id);
-      } else if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({
-          email: mail,
-          password,
-          options: { emailRedirectTo: callbackUrl(next) },
-        });
-        if (error) return setNotice({ kind: "error", text: authErrorMessage(error) });
-        // With e-mail confirmation off, Supabase returns a session right away.
-        if (data.session) return goToArea(data.user?.id);
-        // An existing confirmed address comes back with no identities (no e-mail is sent).
-        if (data.user && data.user.identities?.length === 0) {
-          return setNotice({ kind: "error", text: t.auth.errors.alreadyExists });
+        const { user } = await signInWithEmailAndPassword(auth, mail, password);
+        // Firebase signs in unconfirmed accounts; EchoDev waits for the confirmation link.
+        if (!user.emailVerified) {
+          await firebaseSignOut(auth);
+          throw { code: EMAIL_NOT_VERIFIED };
         }
+        await goToArea(user.uid);
+      } else if (mode === "signup") {
+        const { user } = await createUserWithEmailAndPassword(auth, mail, password);
+        await sendEmailVerification(user, backToLogin(next));
+        await firebaseSignOut(auth);
         setNotice({ kind: "ok", text: t.auth.confirmSent(mail) });
       } else {
-        const { error } = await supabase.auth.resetPasswordForEmail(mail, {
-          redirectTo: callbackUrl("/redefinir-senha"),
-        });
-        if (error) return setNotice({ kind: "error", text: authErrorMessage(error) });
+        await sendPasswordResetEmail(auth, mail, backToLogin("/"));
         setNotice({ kind: "ok", text: t.auth.resetSent(mail) });
       }
+    } catch (err) {
+      // Reset never says whether the address exists.
+      if (mode === "reset" && (err as { code?: string }).code === "auth/user-not-found")
+        setNotice({ kind: "ok", text: t.auth.resetSent(mail) });
+      else setNotice({ kind: "error", text: authErrorMessage(err as { code?: string }) });
     } finally {
       setBusy(false);
     }
@@ -100,8 +110,8 @@ export function LoginForm() {
 
   async function roleOf(userId: string | undefined): Promise<Role> {
     if (!userId) return "estudante";
-    const { data } = await getSupabase().from("profiles").select("role").eq("user_id", userId).maybeSingle();
-    return data?.role === "professor" ? "professor" : "estudante";
+    const p = await loadProfile(userId).catch(() => null);
+    return p?.role === "professor" ? "professor" : "estudante";
   }
 
   async function goToArea(userId: string | undefined) {
@@ -110,13 +120,20 @@ export function LoginForm() {
   }
 
   async function signOut() {
-    await getSupabase().auth.signOut();
+    await firebaseSignOut(getFirebaseAuth());
     setCurrent(null);
     router.refresh();
   }
 
   async function google() {
-    await getSupabase().auth.signInWithOAuth({ provider: "google", options: { redirectTo: callbackUrl(next) } });
+    setNotice(null);
+    try {
+      const { user } = await signInWithPopup(getFirebaseAuth(), new GoogleAuthProvider());
+      await goToArea(user.uid);
+    } catch (err) {
+      if ((err as { code?: string }).code !== "auth/popup-closed-by-user")
+        setNotice({ kind: "error", text: authErrorMessage(err as { code?: string }) });
+    }
   }
 
   if (current) {
