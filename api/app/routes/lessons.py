@@ -8,12 +8,14 @@ from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import ValidationError
 
 from app.auth import CurrentUser, get_current_user
 from app.deps import get_llm, get_store
 from app.llm.base import LLMError, LLMProvider
 from app.schemas import (
     EndLessonResponse,
+    GenerateRequest,
     JoinRequest,
     JoinResponse,
     LessonReportData,
@@ -60,6 +62,7 @@ async def _save_drafts(
     contents = {
         "resumo": materials.resumo.model_dump(),
         "quiz": [q.model_dump() for q in materials.quiz],
+        "glossario": {"termos": [g.model_dump() for g in materials.glossario]},
     }
     saved: list[dict[str, Any]] = []
     for kind, content in contents.items():
@@ -83,10 +86,21 @@ async def _save_drafts(
 
 
 def _out(rows: list[dict[str, Any]]) -> list[MaterialOut]:
-    return [
-        MaterialOut(id=r["id"], kind=r["kind"], status=r["status"], content=r["content"])
-        for r in rows
-    ]
+    out: list[MaterialOut] = []
+    for r in rows:
+        try:
+            out.append(
+                MaterialOut(id=r["id"], kind=r["kind"], status=r["status"], content=r["content"])
+            )
+        except ValidationError:
+            # Edited by the teacher in the browser (rules, not Pydantic, guard those writes):
+            # the response is informative only, the page reads materials from Firestore.
+            log.warning("material %s skipped in the response: does not match the schema", r["id"])
+    return out
+
+
+def _known(body: GenerateRequest | None) -> list[str]:
+    return body.known_terms if body else []
 
 
 @router.post("/join", response_model=JoinResponse)
@@ -136,6 +150,7 @@ async def lesson_term_report(
 @router.post("/{lesson_id}/end", response_model=EndLessonResponse)
 async def end_lesson(
     lesson_id: UUID,
+    body: GenerateRequest | None = None,
     user: CurrentUser = Depends(get_current_user),
     store: Store = Depends(get_store),
     llm: LLMProvider = Depends(get_llm),
@@ -174,7 +189,7 @@ async def end_lesson(
         )
 
     try:
-        materials = await generate_materials(llm, [u["text"] for u in utterances])
+        materials = await generate_materials(llm, [u["text"] for u in utterances], _known(body))
     except LLMError as exc:
         log.warning("LLM failed for lesson %s: %s", lesson_id, exc)
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, LLM_FAILED) from exc
@@ -192,6 +207,7 @@ async def end_lesson(
 @router.post("/{lesson_id}/materials/regenerate", response_model=RegenerateResponse)
 async def regenerate_materials(
     lesson_id: UUID,
+    body: GenerateRequest | None = None,
     user: CurrentUser = Depends(get_current_user),
     store: Store = Depends(get_store),
     llm: LLMProvider = Depends(get_llm),
@@ -214,7 +230,7 @@ async def regenerate_materials(
             "A transcrição desta aula não está mais disponível (ela é apagada em 24 horas).",
         )
     try:
-        materials = await generate_materials(llm, [u["text"] for u in utterances])
+        materials = await generate_materials(llm, [u["text"] for u in utterances], _known(body))
     except LLMError as exc:
         log.warning("LLM failed for lesson %s: %s", lesson_id, exc)
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, LLM_FAILED) from exc

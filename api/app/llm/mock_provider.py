@@ -79,6 +79,59 @@ MOCK_MATERIALS: dict[str, Any] = {
     ],
 }
 
+MOCK_MATERIALS["glossario"] = [
+    {
+        "termo": "git init",
+        "nome_es": "git init",
+        "categoria": "git",
+        "pt": {
+            "curta": "Comando que transforma a pasta atual em um repositório Git novo.",
+            "exemplo": "git init → a pasta do projeto passa a guardar o histórico do Git.",
+            "passos": [
+                "Abra o terminal na pasta do projeto.",
+                "Digite git init e aperte Enter.",
+                "Pronto: agora você já pode fazer commits nessa pasta.",
+            ],
+        },
+        "es": {
+            "curta": "Comando que convierte la carpeta actual en un repositorio Git nuevo.",
+            "exemplo": "git init → la carpeta del proyecto empieza a guardar el historial de Git.",
+            "passos": [
+                "Abre la terminal en la carpeta del proyecto.",
+                "Escribe git init y pulsa Enter.",
+                "Listo: ya puedes hacer commits en esa carpeta.",
+            ],
+        },
+        "en_curta": "Command that turns the current folder into a new Git repository.",
+        "variacoes": ["guit init", "git inite"],
+    },
+    {
+        "termo": "componente",
+        "nome_es": "componente",
+        "categoria": "web",
+        "pt": {
+            "curta": "No React, um pedaço reutilizável da tela, com seu próprio código.",
+            "exemplo": "function Botao() { return <button>Ok</button>; } → <Botao /> é um botão.",
+            "passos": [
+                "Crie uma função com nome começando por letra maiúscula.",
+                "Faça a função devolver o que deve aparecer na tela.",
+                "Use o componente como uma tag: <Botao />.",
+            ],
+        },
+        "es": {
+            "curta": "En React, una parte reutilizable de la pantalla, con su propio código.",
+            "exemplo": "function Boton() { return <button>Ok</button>; } → <Boton /> es un botón.",
+            "passos": [
+                "Crea una función cuyo nombre empiece con mayúscula.",
+                "Haz que la función devuelva lo que debe aparecer en pantalla.",
+                "Usa el componente como una etiqueta: <Boton />.",
+            ],
+        },
+        "en_curta": "In React, a reusable piece of the screen with its own code.",
+        "variacoes": [],
+    },
+]
+
 MOCK_CHUNK_NOTES: dict[str, Any] = {
     "topicos": ["Histórico do código com Git", "Commits e branches"],
     "termos": ["git", "commit", "branch"],

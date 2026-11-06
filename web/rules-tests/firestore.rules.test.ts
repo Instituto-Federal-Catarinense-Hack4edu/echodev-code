@@ -259,6 +259,13 @@ describe("materials", () => {
     );
     await assertSucceeds(updateDoc(doc(mats(teacher()), "resumo"), { status: "aprovado" }));
     await assertFails(setDoc(doc(mats(teacher()), "outro"), { kind: "outro", status: "rascunho", content: {} }));
+    await assertSucceeds(
+      setDoc(doc(mats(teacher()), "glossario"), { kind: "glossario", status: "rascunho", content: { termos: [] } }),
+    );
+    await assertFails(getDoc(doc(mats(member()), "glossario"))); // draft
+    await assertFails(
+      setDoc(doc(mats(member()), "glossario"), { kind: "glossario", status: "aprovado", content: { termos: [] } }),
+    );
     await assertFails(updateDoc(doc(mats(member()), "quiz"), { status: "descartado" }));
     await assertSucceeds(getDoc(doc(mats(member()), "quiz")));
     await assertFails(getDoc(doc(mats(member()), "resumo_es"))); // draft

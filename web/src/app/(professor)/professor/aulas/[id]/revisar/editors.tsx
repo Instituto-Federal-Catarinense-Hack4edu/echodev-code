@@ -1,12 +1,13 @@
 "use client";
 
-import { Code2, Lightbulb, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, Code2, Lightbulb, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import type { QuizItem, Resumo } from "@/lib/api/types";
+import type { Glossario, QuizItem, Resumo, TermoGlossario } from "@/lib/api/types";
 import { t } from "@/lib/i18n/pt-BR";
+import { validTermo } from "@/lib/materials";
 import { cn } from "@/lib/utils";
 
 export function ResumoEditor({ value, onChange }: { value: Resumo; onChange: (r: Resumo) => void }) {
@@ -173,6 +174,148 @@ export function QuizEditor({ value, onChange }: { value: QuizItem[]; onChange: (
           </div>
         </li>
       ))}
+    </ol>
+  );
+}
+
+type Explanation = TermoGlossario["pt"];
+
+function ExplanationFields({
+  id,
+  value,
+  onChange,
+  labels,
+  lang,
+}: {
+  id: string;
+  value: Explanation;
+  onChange: (e: Explanation) => void;
+  labels: { short: string; example: string; steps: string };
+  lang: "pt-BR" | "es";
+}) {
+  return (
+    <div className="space-y-3" lang={lang}>
+      <div className="space-y-1.5">
+        <Label htmlFor={`${id}-curta`}>{labels.short}</Label>
+        <Textarea
+          id={`${id}-curta`}
+          rows={2}
+          value={value.curta}
+          onChange={(e) => onChange({ ...value, curta: e.target.value })}
+        />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor={`${id}-exemplo`}>{labels.example}</Label>
+        <Textarea
+          id={`${id}-exemplo`}
+          rows={2}
+          className="font-mono text-sm"
+          value={value.exemplo}
+          onChange={(e) => onChange({ ...value, exemplo: e.target.value })}
+        />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor={`${id}-passos`}>{labels.steps}</Label>
+        <Textarea
+          id={`${id}-passos`}
+          rows={3}
+          value={value.passos.join("\n")}
+          onChange={(e) => onChange({ ...value, passos: e.target.value.split("\n") })}
+        />
+      </div>
+    </div>
+  );
+}
+
+export function GlossaryEditor({ value, onChange }: { value: Glossario; onChange: (g: Glossario) => void }) {
+  const terms = value.termos ?? [];
+  const setTerm = (i: number, patch: Partial<TermoGlossario>) =>
+    onChange({ termos: terms.map((x, j) => (j === i ? { ...x, ...patch } : x)) });
+  return (
+    <ol className="space-y-3">
+      {terms.map((term, i) => {
+        const id = `g${i}`;
+        return (
+          <li key={i} className={cn("rounded-2xl border bg-muted/20", !validTermo(term) && "border-warning")}>
+            <details className="group" open={!validTermo(term)}>
+              <summary className="flex min-h-14 cursor-pointer list-none items-center gap-3 px-4 py-3">
+                <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-primary text-xs font-bold text-primary-foreground">
+                  {i + 1}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-mono font-semibold">{term.termo || "…"}</span>
+                  <span className="block truncate text-sm text-muted-foreground">{term.pt.curta}</span>
+                </span>
+                <ChevronDown aria-hidden className="size-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
+              </summary>
+              <div className="space-y-4 border-t p-4">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor={`${id}-termo`}>{t.review.termName}</Label>
+                    <Input
+                      id={`${id}-termo`}
+                      className="font-mono"
+                      value={term.termo}
+                      onChange={(e) => setTerm(i, { termo: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor={`${id}-nome-es`}>{t.review.termNameEs}</Label>
+                    <Input
+                      id={`${id}-nome-es`}
+                      className="font-mono"
+                      lang="es"
+                      value={term.nome_es}
+                      onChange={(e) => setTerm(i, { nome_es: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <ExplanationFields
+                  id={`${id}-pt`}
+                  lang="pt-BR"
+                  value={term.pt}
+                  onChange={(pt) => setTerm(i, { pt })}
+                  labels={{ short: t.review.termShortPt, example: t.review.termExamplePt, steps: t.review.termStepsPt }}
+                />
+                <ExplanationFields
+                  id={`${id}-es`}
+                  lang="es"
+                  value={term.es}
+                  onChange={(es) => setTerm(i, { es })}
+                  labels={{ short: t.review.termShortEs, example: t.review.termExampleEs, steps: t.review.termStepsEs }}
+                />
+                <div className="space-y-1.5">
+                  <Label htmlFor={`${id}-en`}>{t.review.termShortEn}</Label>
+                  <Textarea
+                    id={`${id}-en`}
+                    lang="en"
+                    rows={2}
+                    value={term.en_curta ?? ""}
+                    onChange={(e) => setTerm(i, { en_curta: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor={`${id}-var`}>{t.review.termVariants}</Label>
+                  <Input
+                    id={`${id}-var`}
+                    className="font-mono"
+                    value={(term.variacoes ?? []).join(", ")}
+                    onChange={(e) => setTerm(i, { variacoes: e.target.value.split(/,\s*/) })}
+                  />
+                </div>
+                <Button
+                  variant="outline"
+                  className="text-destructive hover:bg-danger-soft"
+                  onClick={() => onChange({ termos: terms.filter((_, j) => j !== i) })}
+                >
+                  <Trash2 aria-hidden />
+                  {t.review.removeTerm(term.termo)}
+                </Button>
+              </div>
+            </details>
+          </li>
+        );
+      })}
     </ol>
   );
 }

@@ -128,11 +128,12 @@ service cloud.firestore {
           && request.resource.data.expires_at <= request.time + duration.value(25, 'h');
       }
 
-      // Summary and quiz: the owner does everything; members read only approved material.
+      // Summary, quiz and AI glossary: the owner does everything; members read only approved
+      // material.
       match /materials/{kind} {
         allow read: if isOwner(lessonId) || (resource.data.status == 'aprovado' && isMember(lessonId));
         allow create, update: if isOwner(lessonId)
-          && kind in ['resumo', 'quiz', 'resumo_es', 'quiz_es']
+          && kind in ['resumo', 'quiz', 'glossario', 'resumo_es', 'quiz_es']
           && request.resource.data.kind == kind
           && request.resource.data.status in ['rascunho', 'aprovado', 'descartado'];
         allow delete: if isOwner(lessonId);

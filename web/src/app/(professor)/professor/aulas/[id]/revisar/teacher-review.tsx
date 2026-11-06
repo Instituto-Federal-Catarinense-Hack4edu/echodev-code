@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import {
+  BookOpen,
   CheckCircle2,
   FileText,
   Languages,
@@ -25,8 +26,20 @@ import { PageHeader, SectionTitle } from "@/components/page-header";
 import { PdfButton } from "@/components/pdf-button";
 import { LoadingState, Notice, Spinner } from "@/components/states";
 import { ApiError, apiFetch, wakeApi } from "@/lib/api/client";
-import type { QuizItem, RegenerateResponse, Resumo } from "@/lib/api/types";
-import { cleanResumo, isQuiz, isResumo, lessonDate, validQuiz, validResumo, type LessonDates } from "@/lib/materials";
+import type { Glossario, QuizItem, RegenerateResponse, Resumo } from "@/lib/api/types";
+import {
+  cleanGlossario,
+  cleanResumo,
+  generateBody,
+  isGlossario,
+  isQuiz,
+  isResumo,
+  lessonDate,
+  validGlossario,
+  validQuiz,
+  validResumo,
+  type LessonDates,
+} from "@/lib/materials";
 import { collection, doc, getDocs, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { getDb } from "@/lib/firebase/client";
 import { getPlain } from "@/lib/firebase/data";
@@ -34,17 +47,18 @@ import { useProfile } from "@/lib/firebase/use-profile";
 import { t } from "@/lib/i18n/pt-BR";
 import { createEsTranslator, esAvailability } from "@/lib/translate/browser";
 import { translateMaterials } from "@/lib/translate/materials";
-import { QuizEditor, ResumoEditor } from "./editors";
+import { GlossaryEditor, QuizEditor, ResumoEditor } from "./editors";
 
 type Status = "rascunho" | "aprovado" | "descartado";
 interface LessonInfo extends LessonDates {
   title: string;
   code: string;
   status: string;
+  pack_ids?: string[];
 }
 interface Row<C> {
   id: string;
-  kind: "resumo" | "quiz" | "resumo_es" | "quiz_es";
+  kind: "resumo" | "quiz" | "glossario" | "resumo_es" | "quiz_es";
   status: Status;
   content: C;
 }
@@ -58,6 +72,7 @@ export function TeacherReview() {
   const [quiz, setQuiz] = useState<Row<QuizItem[]> | null>(null);
   const [resumoEs, setResumoEs] = useState<Row<Resumo> | null>(null);
   const [quizEs, setQuizEs] = useState<Row<QuizItem[]> | null>(null);
+  const [glossario, setGlossario] = useState<Row<Glossario> | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -85,6 +100,8 @@ export function TeacherReview() {
     setQuiz(quizRow("quiz"));
     setResumoEs(resumoRow("resumo_es"));
     setQuizEs(quizRow("quiz_es"));
+    const g = rows.find((x) => x.kind === "glossario");
+    setGlossario(g && isGlossario(g.content) ? (g as Row<Glossario>) : null);
   }, [id, user]);
 
   useEffect(() => {
@@ -105,6 +122,7 @@ export function TeacherReview() {
     try {
       await apiFetch<RegenerateResponse>(`/lessons/${id}/materials/regenerate`, {
         method: "POST",
+        body: generateBody(lesson?.pack_ids),
         timeoutMs: 300_000,
       });
       await load();
@@ -189,7 +207,8 @@ export function TeacherReview() {
   if (!lesson) return <LoadingState text={t.common.loading} />;
 
   const studentUrl = typeof window !== "undefined" ? `${window.location.origin}/aula/${lesson.code}/revisao` : "";
-  const hasApproved = resumo?.status === "aprovado" || quiz?.status === "aprovado";
+  const hasApproved = [resumo, quiz, glossario].some((r) => r?.status === "aprovado");
+  const glossaryTerms = glossario && glossario.status !== "descartado" ? cleanGlossario(glossario.content).termos : null;
   const nothing = !resumo && !quiz;
 
   return (
@@ -256,6 +275,7 @@ export function TeacherReview() {
                 date: lessonDate(lesson),
                 resumo: cleanResumo(resumo.content),
                 quiz: quiz && validQuiz(quiz.content) ? quiz.content : null,
+                glossario: glossaryTerms,
               }}
             />
           )}
@@ -289,6 +309,28 @@ export function TeacherReview() {
           <QuizEditor value={quiz.content} onChange={(content) => setQuiz({ ...quiz, content })} />
         </MaterialCard>
       )}
+      {glossario &&
+        (glossario.content.termos?.length ? (
+          <MaterialCard
+            icon={BookOpen}
+            title={t.review.glossary}
+            row={glossario}
+            busy={busy}
+            valid={validGlossario(glossario.content)}
+            invalidText={t.review.invalidGlossary}
+            onSave={(status) => save(glossario, cleanGlossario(glossario.content), status)}
+          >
+            <p className="text-sm text-muted-foreground">{t.review.glossaryIntro}</p>
+            <GlossaryEditor value={glossario.content} onChange={(content) => setGlossario({ ...glossario, content })} />
+          </MaterialCard>
+        ) : (
+          <section className="surface space-y-3 p-5" aria-label={t.review.glossary}>
+            <SectionTitle icon={BookOpen}>
+              <span className="text-lg">{t.review.glossary}</span>
+            </SectionTitle>
+            <p className="text-muted-foreground">{t.review.glossaryEmpty}</p>
+          </section>
+        ))}
 
       {!nothing && (
         <section className="space-y-4 border-t pt-8" aria-labelledby="es-title">

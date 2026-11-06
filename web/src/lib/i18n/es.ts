@@ -144,6 +144,11 @@ export const es: MessageOverrides = {
     summary: "Resumen",
     aiNotice: "Material generado por IA y revisado por el profesor.",
     esFallback: "Todavía no hay una versión aprobada en español; se muestra en portugués.",
+    glossaryTitle: "Glosario de la clase",
+    glossaryStudentIntro: "Términos nuevos de esta clase, explicados por la IA y revisados por el profesor.",
+    termCount: (n: number) => (n === 1 ? "1 término" : `${n} términos`),
+    example: "Ejemplo",
+    steps: "Paso a paso",
   },
   pdf: {
     download: "Descargar resumen en PDF",

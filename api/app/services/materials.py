@@ -1,16 +1,18 @@
-"""Summary + quiz generation: sanitize -> (chunk if long) -> LLM -> extract JSON -> validate,
-with exactly one corrective retry on validation failure."""
+"""Summary + quiz + glossary generation: sanitize -> (chunk if long) -> LLM -> extract JSON ->
+validate, with exactly one corrective retry on validation failure."""
 
 import asyncio
 import json
 import re
+import unicodedata
+from collections.abc import Sequence
 from typing import TypeVar
 
 from pydantic import BaseModel, ValidationError
 
 from app.llm import prompts
 from app.llm.base import LLMError, LLMProvider
-from app.schemas import ChunkNotes, Materials
+from app.schemas import ChunkNotes, Materials, TermoGlossario
 from app.services.sanitize import sanitize
 
 MAX_DIRECT_CHARS = 40_000
@@ -68,7 +70,9 @@ def split_chunks(text: str, size: int = CHUNK_CHARS) -> list[str]:
     return chunks
 
 
-async def generate_materials(provider: LLMProvider, sentences: list[str]) -> Materials:
+async def generate_materials(
+    provider: LLMProvider, sentences: list[str], known_terms: Sequence[str] = ()
+) -> Materials:
     transcript = sanitize("\n".join(s.strip() for s in sentences if s.strip()))
     if len(transcript) > MAX_DIRECT_CHARS:
         chunks = split_chunks(transcript)
@@ -94,10 +98,45 @@ async def generate_materials(provider: LLMProvider, sentences: list[str]) -> Mat
                 f"Código citado: {' | '.join(n.exemplos_de_codigo) or 'nenhum'}"
             )
         transcript = "\n\n".join(notes)
-    return await _ask(
+    materials = await _ask(
         provider,
         Materials,
-        prompts.MATERIALS_TASK.format(transcript=transcript),
+        prompts.MATERIALS_TASK.format(known=_known_list(known_terms), transcript=transcript),
         prompts.MATERIALS_SCHEMA,
         "materials",
     )
+    materials.glossario = clean_glossary(materials.glossario, known_terms)
+    return materials
+
+
+def term_key(s: str) -> str:
+    """Comparison key: no accents, no case, letters and digits only ("Use State" = "useState")."""
+    plain = unicodedata.normalize("NFD", s).encode("ascii", "ignore").decode()
+    return re.sub(r"[^a-z0-9]", "", plain.lower())
+
+
+def _known_list(known_terms: Sequence[str]) -> str:
+    # Only names (they come from the teacher's browser): no markup that could close the tag.
+    names = sorted({re.sub(r"[<>\s]+", " ", k).strip() for k in known_terms if k.strip()})
+    return ", ".join(names) or "(nenhum)"
+
+
+def clean_glossary(terms: list[TermoGlossario], known_terms: Sequence[str]) -> list[TermoGlossario]:
+    """Drops terms the dictionary already knows and repeated ones; tidies the variants."""
+    seen = {term_key(k) for k in known_terms}
+    out: list[TermoGlossario] = []
+    for t in terms:
+        key = term_key(t.termo)
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        variants: list[str] = []
+        variant_keys = {key}
+        for raw in t.variacoes:
+            v = " ".join(raw.split())
+            vk = term_key(v)
+            if 3 <= len(v) <= 40 and vk and vk not in variant_keys:
+                variant_keys.add(vk)
+                variants.append(v)
+        out.append(t.model_copy(update={"variacoes": variants[:4]}))
+    return out

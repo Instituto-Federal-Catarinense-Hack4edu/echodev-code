@@ -200,6 +200,29 @@ export interface components {
             materials: components["schemas"]["MaterialOut"][];
             report: components["schemas"]["LessonReportData"];
         };
+        /** ExplicacaoTermo */
+        ExplicacaoTermo: {
+            /** Curta */
+            curta: string;
+            /** Exemplo */
+            exemplo: string;
+            /** Passos */
+            passos: string[];
+        };
+        /**
+         * GenerateRequest
+         * @description Optional body of end/regenerate: the terms the dictionary already knows (canonical
+         *     names), so the glossary only brings new ones.
+         */
+        GenerateRequest: {
+            /** Known Terms */
+            known_terms?: string[];
+        };
+        /** Glossario */
+        Glossario: {
+            /** Termos */
+            termos?: components["schemas"]["TermoGlossario"][];
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -240,14 +263,14 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "resumo" | "quiz";
+            kind: "resumo" | "quiz" | "glossario";
             /**
              * Status
              * @enum {string}
              */
             status: "rascunho" | "aprovado" | "descartado";
             /** Content */
-            content: components["schemas"]["Resumo"] | components["schemas"]["QuizItem"][];
+            content: components["schemas"]["Resumo"] | components["schemas"]["QuizItem"][] | components["schemas"]["Glossario"];
         };
         /** MemberCountResponse */
         MemberCountResponse: {
@@ -341,6 +364,32 @@ export interface components {
             helped: number;
             /** Not Helped */
             not_helped: number;
+        };
+        /**
+         * TermoGlossario
+         * @description A technical term said in class that the dictionary does not know yet (AI-written,
+         *     reviewed by the teacher before students see it).
+         */
+        TermoGlossario: {
+            /** Termo */
+            termo: string;
+            /** Nome Es */
+            nome_es: string;
+            /**
+             * Categoria
+             * @default conceitos
+             * @enum {string}
+             */
+            categoria: "conceitos" | "git" | "web" | "ferramentas";
+            pt: components["schemas"]["ExplicacaoTermo"];
+            es: components["schemas"]["ExplicacaoTermo"];
+            /**
+             * En Curta
+             * @default
+             */
+            en_curta: string;
+            /** Variacoes */
+            variacoes?: string[];
         };
         /** ValidationError */
         ValidationError: {
@@ -490,7 +539,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["GenerateRequest"] | null;
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -521,7 +574,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["GenerateRequest"] | null;
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

@@ -27,6 +27,11 @@ export function getTerm(id: string): Term | undefined {
   return termIndex.get(id);
 }
 
+/** Canonical names the dictionary already explains: the AI glossary skips them. */
+export function knownTermNames(packIds?: string[]): string[] {
+  return termsFor(packIds).map((t) => t.canonical);
+}
+
 export function matcherFor(packIds: string[] = [DEFAULT_PACK_ID]): Matcher {
   return createMatcher(termsFor(packIds));
 }

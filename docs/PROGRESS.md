@@ -105,6 +105,12 @@
 - Na legenda traduzida e no resumo e quiz em espanhol, jargão como `commit`, `push`, `merge`, `pull request` e `useState` fica como foi dito; variável, função, classe etc. continuam traduzidos (`web/src/lib/translate/keep-terms.ts`).
 - 9 testes novos com um tradutor falso que imita o Chrome (inclusive perdendo as marcas, para o plano B). `npm run check` verde. **Não testado no Chrome de verdade**: o comportamento das marcas no tradutor real precisa ser conferido numa aula de teste (se ele perder as marcas, o plano B entra sozinho).
 
+## Fase 8: glossário da aula feito pela IA (05/11/2026)
+- A IA lista os termos técnicos novos da aula (além do dicionário) com explicações em português e espanhol; o professor revisa e aprova em "Revisar materiais" (editor com nome, nome em espanhol, explicações, exemplos, passos e variações). O aluno vê o glossário aprovado na revisão da aula e no PDF; o painel da aula mostra o estado do glossário.
+- API: `glossario` no esquema, no prompt e no `mock`; `known_terms` opcional em `end`/`regenerate`; 6 testes novos (83 no `pytest`). Web: 1 teste novo do PDF. `npm run check` verde.
+- **Regras do Firestore mudaram** (`glossario` é um tipo de material permitido): rode `npm run deploy:rules` para enviar ao projeto. O caso novo em `web/rules-tests/` **não foi rodado** nesta máquina (os emuladores precisam do Java).
+- **Não testado no navegador nem com o Gemini de verdade.**
+
 ## Pendências para a equipe
 - **Aprovar o uso do Gemini gratuito** com a instituição: no plano gratuito o Google pode usar a transcrição enviada para melhorar os produtos dele (no plano pago, não).
 - **Revisão humana do conteúdo** dos 40 termos (explicações e traduções) antes da demo. Nada na interface diz "verificado".

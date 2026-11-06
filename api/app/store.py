@@ -9,6 +9,7 @@ Collections (see firestore.rules and docs/DECISIONS.md):
                                  started_at, ended_at, created_at
   lessons/{id}/utterances/{seq}  seq, text, text_es, terms, wpm, created_at, expires_at
   lessons/{id}/materials/{kind}  kind, content, status, approved_at, created_at, updated_at
+                                 kind: resumo, quiz, glossario (+ resumo_es, quiz_es: browser)
   lessonCodes/{code}             lesson_id
   lessonMembers/{id}_{pseudonym} lesson_id, pseudonym_id, lesson_code, joined_at
   lessonReports/{id}             data, created_at
@@ -152,9 +153,9 @@ class FirestoreStore:
     async def list_materials(self, lesson_id: str) -> list[dict[str, Any]]:
         out = []
         async for doc in self._materials(lesson_id).stream():
-            if doc.id in ("resumo", "quiz"):
+            if doc.id in ("resumo", "quiz", "glossario"):
                 out.append(_material(doc))
-        return sorted(out, key=lambda m: m["kind"], reverse=True)  # resumo, quiz
+        return sorted(out, key=lambda m: m["kind"], reverse=True)  # resumo, quiz, glossario
 
     async def get_material(self, lesson_id: str, kind: str) -> dict[str, Any] | None:
         snap = await self._materials(lesson_id).document(kind).get()

@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import {
   BarChart3,
+  BookOpen,
   CalendarDays,
   Clock,
   Eye,
@@ -32,8 +33,18 @@ import { QuizPlayer } from "@/components/quiz-player";
 import { LoadingState, Notice, Spinner } from "@/components/states";
 import { StatusPill } from "@/components/status-pill";
 import { ApiError, apiFetch } from "@/lib/api/client";
-import type { LessonReportData, QuizItem, Resumo } from "@/lib/api/types";
-import { isQuiz, isResumo, lessonDate, validQuiz, validResumo, type LessonDates } from "@/lib/materials";
+import type { Glossario, LessonReportData, QuizItem, Resumo } from "@/lib/api/types";
+import {
+  cleanGlossario,
+  generateBody,
+  isGlossario,
+  isQuiz,
+  isResumo,
+  lessonDate,
+  validQuiz,
+  validResumo,
+  type LessonDates,
+} from "@/lib/materials";
 import { getTerm } from "@/lib/terms/pack";
 import { collection, doc, getDocs } from "firebase/firestore";
 import { getDb } from "@/lib/firebase/client";
@@ -47,6 +58,7 @@ interface Lesson extends LessonDates {
   title: string;
   code: string;
   status: "criada" | "ao_vivo" | "encerrada";
+  pack_ids?: string[];
 }
 
 interface Data {
@@ -56,6 +68,7 @@ interface Data {
   terms: TermRow[];
   resumo: { status: MaterialStatus; content: Resumo } | null;
   quiz: { status: MaterialStatus; content: QuizItem[] } | null;
+  glossario: { status: MaterialStatus; content: Glossario } | null;
 }
 
 function Stat({ label, value, icon: Icon }: { label: string; value: string; icon: LucideIcon }) {
@@ -103,6 +116,7 @@ export function LessonDashboard() {
     const snapshot = rep?.data ?? null;
     const resumo = mats.find((m) => m.kind === "resumo");
     const quiz = mats.find((m) => m.kind === "quiz");
+    const glossario = mats.find((m) => m.kind === "glossario");
     setData({
       lesson,
       members: count ? count.count : null,
@@ -110,6 +124,8 @@ export function LessonDashboard() {
       terms: termRep.filter((r) => getTerm(r.term_id)),
       resumo: resumo && isResumo(resumo.content) ? { status: resumo.status, content: resumo.content } : null,
       quiz: quiz && isQuiz(quiz.content) ? { status: quiz.status, content: quiz.content } : null,
+      glossario:
+        glossario && isGlossario(glossario.content) ? { status: glossario.status, content: glossario.content } : null,
     });
   }, [id, user]);
 
@@ -122,7 +138,11 @@ export function LessonDashboard() {
     setBusy(true);
     setMessage(t.review.generating);
     try {
-      await apiFetch(`/lessons/${id}/materials/regenerate`, { method: "POST", timeoutMs: 300_000 });
+      await apiFetch(`/lessons/${id}/materials/regenerate`, {
+        method: "POST",
+        body: generateBody(data?.lesson.pack_ids),
+        timeoutMs: 300_000,
+      });
       setMessage(null);
       await load();
     } catch (e) {
@@ -135,7 +155,9 @@ export function LessonDashboard() {
   if (notFound) return <NotFoundCard />;
   if (!data) return <LoadingState text={t.common.loading} />;
 
-  const { lesson, report, resumo, quiz } = data;
+  const { lesson, report, resumo, quiz, glossario } = data;
+  const glossaryTerms =
+    glossario && glossario.status !== "descartado" ? cleanGlossario(glossario.content).termos : null;
   const date = lessonDate(lesson);
   const ended = lesson.status === "encerrada";
   const canPdf = resumo && validResumo(resumo.content);
@@ -200,7 +222,7 @@ export function LessonDashboard() {
           <SectionTitle icon={Sparkles} id="mat-h">
             {t.dashboard.materials}
           </SectionTitle>
-          <ul className="grid gap-2 sm:grid-cols-2">
+          <ul className="grid gap-2 sm:grid-cols-3">
             <li className="flex items-center gap-3 rounded-xl border bg-muted/40 px-4 py-3">
               <FileText aria-hidden className="size-5 text-muted-foreground" />
               <span className="mr-auto font-medium">{t.review.summary}</span>
@@ -211,6 +233,18 @@ export function LessonDashboard() {
               <span className="mr-auto font-medium">{t.review.quiz}</span>
               <StatusBadge status={quiz?.status ?? null} />
             </li>
+            {glossario && (
+              <li className="flex items-center gap-3 rounded-xl border bg-muted/40 px-4 py-3">
+                <BookOpen aria-hidden className="size-5 text-muted-foreground" />
+                <span className="mr-auto font-medium">
+                  {t.dashboard.glossary}
+                  <span className="block text-sm font-normal text-muted-foreground">
+                    {t.review.termCount(glossario.content.termos?.length ?? 0)}
+                  </span>
+                </span>
+                {(glossario.content.termos?.length ?? 0) > 0 && <StatusBadge status={glossario.status} />}
+              </li>
+            )}
           </ul>
           <Notice tone={allApproved ? "success" : "info"} live={false}>
             {allApproved ? t.dashboard.approvedHint : t.dashboard.approveHint}
@@ -231,7 +265,13 @@ export function LessonDashboard() {
             {canPdf && (
               <PdfButton
                 label={t.pdf.downloadTeacher}
-                data={{ lessonTitle: lesson.title, date, resumo: resumo.content, quiz: quizOk ? quiz.content : null }}
+                data={{
+                  lessonTitle: lesson.title,
+                  date,
+                  resumo: resumo.content,
+                  quiz: quizOk ? quiz.content : null,
+                  glossario: glossaryTerms,
+                }}
               />
             )}
             {quizOk && (

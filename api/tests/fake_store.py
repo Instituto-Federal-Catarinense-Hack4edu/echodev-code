@@ -112,7 +112,7 @@ class FakeStore:
 
     async def list_materials(self, lesson_id: str) -> list[dict[str, Any]]:
         mats = self.materials.get(lesson_id, {})
-        out = [dict(m) for kind, m in mats.items() if kind in ("resumo", "quiz")]
+        out = [dict(m) for kind, m in mats.items() if kind in ("resumo", "quiz", "glossario")]
         return sorted(out, key=lambda m: m["kind"], reverse=True)
 
     async def get_material(self, lesson_id: str, kind: str) -> dict[str, Any] | None:

@@ -1,5 +1,6 @@
 import type { jsPDF as JsPDF } from "jspdf";
-import type { QuizItem, Resumo } from "@/lib/api/types";
+import type { QuizItem, Resumo, TermoGlossario } from "@/lib/api/types";
+import { normalize } from "@/lib/terms/matcher";
 import { getTerm, matcherFor } from "@/lib/terms/pack";
 import { messagesFor } from "@/lib/i18n/messages";
 import type { Lang } from "@/lib/terms/schemas";
@@ -10,6 +11,8 @@ export interface SummaryPdfData {
   resumo: Resumo;
   /** Teacher copy only: quiz with answer key. */
   quiz?: QuizItem[] | null;
+  /** Terms the AI explained for this lesson (approved ones for students). */
+  glossario?: TermoGlossario[] | null;
   lang?: Lang;
 }
 
@@ -49,17 +52,39 @@ export function pdfFileName(title: string): string {
   return `resumo-${slug || "aula"}.pdf`;
 }
 
-export function glossary(keyTerms: string[], lang: Lang = "pt"): { term: string; short: string | null }[] {
+const termKey = (s: string) => normalize(s).replace(/[^a-z0-9]/g, "");
+
+/**
+ * Key terms explained by the dictionary or, for new terms, by the lesson's AI glossary; AI terms
+ * that are not among the key terms are listed after them.
+ */
+export function glossary(
+  keyTerms: string[],
+  lang: Lang = "pt",
+  aiTerms: TermoGlossario[] = [],
+): { term: string; short: string | null }[] {
   const m = matcherFor();
-  return keyTerms
+  const byKey = new Map(aiTerms.map((g) => [termKey(g.termo), g]));
+  const used = new Set<string>();
+  const fromAi = (g: TermoGlossario) => ({
+    term: lang === "es" ? g.nome_es : g.termo,
+    short: (lang === "es" ? g.es.curta : lang === "en" && g.en_curta ? g.en_curta : g.pt.curta) || null,
+  });
+  const listed = keyTerms
     .map((k) => k.trim())
     .filter(Boolean)
     .map((k) => {
+      const ai = byKey.get(termKey(k));
+      if (ai) {
+        used.add(termKey(ai.termo));
+        return fromAi(ai);
+      }
       const span = m.match(k).terms[0];
       const term = span ? getTerm(span.termId) : undefined;
       const short = term ? (term.explanations[lang]?.short ?? term.explanations.pt.short) : null;
       return { term: term?.canonical ?? k, short };
     });
+  return [...listed, ...aiTerms.filter((g) => !used.has(termKey(g.termo))).map(fromAi)];
 }
 
 const MARGIN = 56;
@@ -113,7 +138,7 @@ export function buildSummaryPdf(JsPDFCtor: typeof JsPDF, data: SummaryPdfData, l
   write(data.resumo.titulo, { size: 14, bold: true, gap: 6 });
   for (const topic of data.resumo.topicos) write(`-  ${topic}`, { indent: 8, gap: 6 });
 
-  const terms = glossary(data.resumo.termos_chave ?? [], data.lang);
+  const terms = glossary(data.resumo.termos_chave ?? [], data.lang, data.glossario ?? []);
   if (terms.length) {
     y += 8;
     write(t.pdf.glossary, { size: 13, bold: true, gap: 6 });

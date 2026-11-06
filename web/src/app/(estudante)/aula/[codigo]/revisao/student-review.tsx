@@ -3,14 +3,15 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, FileText, Hourglass, ListChecks, Lock, Sparkles } from "lucide-react";
+import { ArrowLeft, BookOpen, FileText, Hourglass, ListChecks, Lock, Sparkles } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { LoadingState, MessageCard, Notice } from "@/components/states";
 import { buttonVariants } from "@/components/ui/button";
+import { GlossaryList } from "@/components/glossary-list";
 import { PdfButton } from "@/components/pdf-button";
 import { QuizPlayer } from "@/components/quiz-player";
-import type { QuizItem, Resumo } from "@/lib/api/types";
-import { isQuiz, isResumo, lessonDate, type LessonDates } from "@/lib/materials";
+import type { QuizItem, Resumo, TermoGlossario } from "@/lib/api/types";
+import { isGlossario, isQuiz, isResumo, lessonDate, type LessonDates } from "@/lib/materials";
 import { collection, doc, getDocs, query, where } from "firebase/firestore";
 import { getDb } from "@/lib/firebase/client";
 import { getPlain } from "@/lib/firebase/data";
@@ -32,6 +33,7 @@ type State =
       quiz: QuizItem[] | null;
       resumoEs: Resumo | null;
       quizEs: QuizItem[] | null;
+      glossario: TermoGlossario[];
     };
 
 /** RLS returns only approved materials to members; drafts never reach this page. */
@@ -82,6 +84,10 @@ export function StudentReview() {
         quiz: asQuiz(content("quiz")),
         resumoEs: asResumo(content("resumo_es")),
         quizEs: asQuiz(content("quiz_es")),
+        glossario: (() => {
+          const g = content("glossario");
+          return isGlossario(g) ? (g.termos ?? []) : [];
+        })(),
       };
       setState(next);
       if (!next.resumo || !next.quiz) timer = setTimeout(load, APPROVAL_POLL_MS);
@@ -153,6 +159,7 @@ export function StudentReview() {
                 lessonTitle: state.title,
                 date: state.date,
                 resumo,
+                glossario: state.glossario,
                 lang: resumo === state.resumoEs ? "es" : "pt",
               }}
             />
@@ -186,6 +193,21 @@ export function StudentReview() {
             <span className="text-sm font-medium text-muted-foreground">· {t.review.questionsCount(quiz.length)}</span>
           </h2>
           <QuizPlayer key={quiz === state.quizEs ? "es" : "pt"} items={quiz} />
+        </section>
+      )}
+      {state.glossario.length > 0 && (
+        <section className="surface space-y-4 p-5 sm:p-7" aria-labelledby="glossario-h">
+          <div className="space-y-1">
+            <h2 id="glossario-h" className="flex items-center gap-2 text-xl font-bold">
+              <BookOpen aria-hidden className="size-5 text-primary" />
+              {t.review.glossaryTitle}
+              <span className="text-sm font-medium text-muted-foreground">
+                · {t.review.termCount(state.glossario.length)}
+              </span>
+            </h2>
+            <p className="text-base text-muted-foreground">{t.review.glossaryStudentIntro}</p>
+          </div>
+          <GlossaryList terms={state.glossario} lang={lang} />
         </section>
       )}
       <p className="flex items-center gap-2 text-sm text-muted-foreground">

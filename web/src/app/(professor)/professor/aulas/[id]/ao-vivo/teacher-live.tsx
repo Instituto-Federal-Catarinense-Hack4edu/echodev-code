@@ -22,6 +22,7 @@ import { getPlain } from "@/lib/firebase/data";
 import { fire } from "@/lib/firebase/fire";
 import { useProfile } from "@/lib/firebase/use-profile";
 import { t } from "@/lib/i18n/pt-BR";
+import { generateBody } from "@/lib/materials";
 
 /** Long lessons are summarized in several LLM calls; give the API time before giving up. */
 const END_TIMEOUT_MS = 300_000;
@@ -128,7 +129,11 @@ export function TeacherLive() {
     // Stop listening and wait for pending sentences, so nothing lands after the summary.
     await streamApi.current?.stopAndFlush();
     try {
-      await apiFetch(`/lessons/${lesson.id}/end`, { method: "POST", timeoutMs: END_TIMEOUT_MS });
+      await apiFetch(`/lessons/${lesson.id}/end`, {
+        method: "POST",
+        body: generateBody(lesson.pack_ids),
+        timeoutMs: END_TIMEOUT_MS,
+      });
     } catch (e) {
       // 502 (LLM failed) or a timeout still leave the lesson ended on the server: trust the
       // real status, not the error.
