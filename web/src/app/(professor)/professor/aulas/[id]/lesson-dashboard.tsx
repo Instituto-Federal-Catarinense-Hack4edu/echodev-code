@@ -45,6 +45,7 @@ import {
   validResumo,
   type LessonDates,
 } from "@/lib/materials";
+import { loadAiTerms } from "@/lib/terms/ai-terms";
 import { getTerm } from "@/lib/terms/pack";
 import { collection, doc, getDocs } from "firebase/firestore";
 import { getDb } from "@/lib/firebase/client";
@@ -107,6 +108,8 @@ export function LessonDashboard() {
     if (!lesson || lesson.teacher_id !== user.id) return setNotFound(true);
     // Counts and the term report (minimum 3 students) come from the API: the teacher
     // cannot read memberships or term events.
+    // AI terms (approved glossaries) appear in the report too: load them before filtering.
+    await loadAiTerms(db).catch(() => 0);
     const [rep, termRep, count, mats] = await Promise.all([
       getPlain<{ data: LessonReportData }>(doc(db, "lessonReports", id)).catch(() => null),
       apiFetch<TermRow[]>(`/lessons/${id}/term-report`).catch(() => [] as TermRow[]),

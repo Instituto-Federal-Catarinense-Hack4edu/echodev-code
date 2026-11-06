@@ -308,6 +308,10 @@ details p { margin-top: 4px; }
       <h3>O professor ensina o dicionário</h3>
       <p>Na tela ao vivo, o quadro "Corrigir reconhecimento de termo" grava um par "o reconhecimento escreveu X → é o termo Y" na tabela <code>term_corrections</code>. O par vira variação extra na hora e passa a valer em todas as aulas. Para não virar um problema, o EchoDev recusa textos com menos de 3 letras, palavras comuns do português ("que", "para isso"), palavrões e o que já é outro termo.</p>
 
+      <h3>A IA aumenta o dicionário (com aprovação do professor)</h3>
+      <p>Os 40 termos são só o começo. No fim de cada aula, a IA lista os termos técnicos que apareceram e que o dicionário não tem (o glossário da aula, Parte 3). Quando o professor aprova o glossário, cada termo vai para a coleção <code>glossaryTerms</code> do Firestore e passa a valer em todas as aulas seguintes: o corretor do navegador do professor destaca o termo (e troca os erros de reconhecimento que a IA sugeriu e o professor manteve), e o aluno toca nele e vê a explicação em três profundidades. A IA nunca participa da aula ao vivo: ela só escreve o glossário depois, e o que entra no dicionário passou pelo professor.</p>
+      <p>As mesmas proteções das correções valem aqui: nome ou erro de reconhecimento que seja palavra comum do português, palavrão, outro termo ou tenha menos de 3 letras fica de fora, e esses termos nunca usam a correção aproximada. Um termo aprovado não é sobrescrito por outra aula.</p>
+
       <h3>O que o estudante vê</h3>
       <p>No celular, cada termo destacado é um botão. Tocar abre a explicação em três profundidades (curta, exemplo, passo a passo), em português, inglês ou espanhol, com a tradução literal quando o termo é uma metáfora (<em>bug</em> = inseto). Cada toque e cada "Ajudou / Não ajudou / Ainda tenho dúvida" vira um evento anônimo, usado no relatório do professor.</p>
     </section>

@@ -275,6 +275,30 @@ describe("materials", () => {
   });
 });
 
+describe("glossaryTerms (dictionary grown from approved AI glossaries)", () => {
+  const term = (id = "ia-docker") => ({
+    id,
+    canonical: "Docker",
+    variants: ["dóquer"],
+    category: "ferramentas",
+    explanations: { pt: { short: "x", example: "y", steps: ["a", "b"] }, es: { names: ["Docker"], short: "x" } },
+    source: "ia",
+    created_at: serverTimestamp(),
+  });
+
+  it("teachers add terms, everyone with a profile reads, nobody edits or deletes", async () => {
+    await assertSucceeds(setDoc(doc(teacher(), "glossaryTerms", "ia-docker"), term()));
+    await assertFails(setDoc(doc(member(), "glossaryTerms", "ia-npm"), term("ia-npm"))); // student
+    await assertFails(setDoc(doc(teacher(), "glossaryTerms", "docker"), term("docker"))); // no prefix
+    await assertFails(setDoc(doc(teacher(), "glossaryTerms", "ia-x"), { ...term("ia-x"), author: "t1" }));
+    await assertSucceeds(getDoc(doc(member(), "glossaryTerms", "ia-docker")));
+    await assertSucceeds(getDocs(collection(member(), "glossaryTerms")));
+    await assertFails(getDocs(collection(anon(), "glossaryTerms")));
+    await assertFails(updateDoc(doc(teacher(), "glossaryTerms", "ia-docker"), { canonical: "Outro" }));
+    await assertFails(deleteDoc(doc(teacher(), "glossaryTerms", "ia-docker")));
+  });
+});
+
 describe("privacy of students", () => {
   it("a student sees only their own memberships; the teacher sees none", async () => {
     const mine = (db: Firestore, p: string) => query(collection(db, "lessonMembers"), where("pseudonym_id", "==", p));

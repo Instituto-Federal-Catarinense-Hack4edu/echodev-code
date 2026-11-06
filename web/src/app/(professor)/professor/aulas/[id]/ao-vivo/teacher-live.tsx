@@ -23,6 +23,7 @@ import { fire } from "@/lib/firebase/fire";
 import { useProfile } from "@/lib/firebase/use-profile";
 import { t } from "@/lib/i18n/pt-BR";
 import { generateBody } from "@/lib/materials";
+import { useAiTerms } from "@/lib/terms/use-ai-terms";
 
 /** Long lessons are summarized in several LLM calls; give the API time before giving up. */
 const END_TIMEOUT_MS = 300_000;
@@ -48,6 +49,8 @@ export function TeacherLive() {
   const [endError, setEndError] = useState<string | null>(null);
   const [transport, setTransport] = useState<FirestoreTransport | null>(null);
   const [corrections, setCorrections] = useState<Corrections>({});
+  // Approved AI terms join the corrector, so it is built only after they load.
+  const dictionaryReady = useAiTerms(!!user);
 
   useEffect(() => {
     // Free hosts sleep after ~15 min idle; keep the API awake so "end" is fast later.
@@ -158,7 +161,7 @@ export function TeacherLive() {
   const isLocalOrigin = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:|\/|$)/.test(joinUrl);
 
   if (notFound) return <NotFoundCard />;
-  if (!lesson || initialSeq === null) return <LoadingState text={t.common.loading} />;
+  if (!lesson || initialSeq === null || !dictionaryReady) return <LoadingState text={t.common.loading} />;
 
   return (
     <main className="mx-auto w-full max-w-6xl space-y-5 px-4 py-6">

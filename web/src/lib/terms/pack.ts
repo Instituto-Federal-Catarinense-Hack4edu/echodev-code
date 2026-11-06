@@ -14,17 +14,40 @@ export function getPack(id: string = DEFAULT_PACK_ID): Pack {
   return p;
 }
 
-/** Terms of the given packs; unknown ids are ignored (default pack if none is known). */
+/**
+ * Terms approved from AI glossaries (Firestore `glossaryTerms`), added at runtime on top of the
+ * versioned packs. They count for every pack: the dictionary grows for all lessons.
+ */
+const extraIndex = new Map<string, Term>();
+let extraVersion = 0;
+
+export function registerTerms(terms: Term[]): void {
+  let changed = false;
+  for (const term of terms) {
+    if (termIndex.has(term.id)) continue; // a pack term always wins
+    extraIndex.set(term.id, term);
+    changed = true;
+  }
+  if (changed) extraVersion++;
+}
+
+/** Changes whenever registered terms change (to rebuild cached matchers). */
+export function dictionaryVersion(): number {
+  return extraVersion;
+}
+
+/** Terms of the given packs plus the registered ones; unknown pack ids are ignored. */
 export function termsFor(packIds: string[] = [DEFAULT_PACK_ID]): Term[] {
   const known = packIds.filter((id) => id in packs);
-  return (known.length ? known : [DEFAULT_PACK_ID]).flatMap((id) => getPack(id).terms);
+  const base = (known.length ? known : [DEFAULT_PACK_ID]).flatMap((id) => getPack(id).terms);
+  return [...base, ...extraIndex.values()];
 }
 
 const termIndex = new Map<string, Term>();
 for (const p of Object.values(packs)) for (const t of p.terms) termIndex.set(t.id, t);
 
 export function getTerm(id: string): Term | undefined {
-  return termIndex.get(id);
+  return termIndex.get(id) ?? extraIndex.get(id);
 }
 
 /** Canonical names the dictionary already explains: the AI glossary skips them. */

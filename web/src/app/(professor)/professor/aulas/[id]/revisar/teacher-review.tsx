@@ -45,6 +45,7 @@ import { getDb } from "@/lib/firebase/client";
 import { getPlain } from "@/lib/firebase/data";
 import { useProfile } from "@/lib/firebase/use-profile";
 import { t } from "@/lib/i18n/pt-BR";
+import { loadAiTerms, publishAiTerms } from "@/lib/terms/ai-terms";
 import { createEsTranslator, esAvailability } from "@/lib/translate/browser";
 import { translateMaterials } from "@/lib/translate/materials";
 import { GlossaryEditor, QuizEditor, ResumoEditor } from "./editors";
@@ -106,6 +107,8 @@ export function TeacherReview() {
 
   useEffect(() => {
     wakeApi();
+    // Terms approved in earlier lessons are "known": the AI glossary skips them.
+    void loadAiTerms(getDb()).catch(() => 0);
   }, []);
 
   useEffect(() => {
@@ -194,12 +197,19 @@ export function TeacherReview() {
       () => null,
       (e: unknown) => e,
     );
-    setBusy(false);
     if (err) {
+      setBusy(false);
       setError(t.common.error);
       return;
     }
-    setMessage(t.review.saved);
+    let saved: string = t.review.saved;
+    if (row.kind === "glossario" && status === "aprovado") {
+      // Approved terms join the shared dictionary: highlighted and explained in next lessons.
+      const added = await publishAiTerms(getDb(), (content as Glossario).termos ?? []).catch(() => null);
+      saved = added === null ? t.review.glossaryPublishError : t.review.glossaryPublished(added);
+    }
+    setBusy(false);
+    setMessage(saved);
     await load();
   }
 

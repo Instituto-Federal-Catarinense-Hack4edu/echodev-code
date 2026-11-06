@@ -1,6 +1,6 @@
 import type { TermSpan } from "@/lib/realtime/schemas";
 import { createMatcher, type Matcher } from "@/lib/terms/matcher";
-import { getTerm, termsFor } from "@/lib/terms/pack";
+import { dictionaryVersion, getTerm, termsFor } from "@/lib/terms/pack";
 import type { Term } from "@/lib/terms/schemas";
 
 type Translate = (text: string) => Promise<string>;
@@ -103,13 +103,23 @@ export async function translateKeepingTerms(
   return restoreJargon(await translate(text), slots);
 }
 
-let exact: Matcher | null = null;
+let exact: { version: number; matcher: Matcher } | null = null;
+
+function exactMatcher(): Matcher {
+  // Rebuilt when approved AI terms are added to the dictionary.
+  if (!exact || exact.version !== dictionaryVersion()) {
+    exact = {
+      version: dictionaryVersion(),
+      matcher: createMatcher(termsFor().map((t) => ({ ...t, fuzzy: false }))),
+    };
+  }
+  return exact.matcher;
+}
 
 /** Same, for text without spans (summary, quiz): terms are found with the exact dictionary. */
 export function keepingTerms(translate: Translate): Translate {
   return async (text) => {
-    exact ??= createMatcher(termsFor().map((t) => ({ ...t, fuzzy: false })));
-    const { text: canonical, terms } = exact.match(text);
+    const { text: canonical, terms } = exactMatcher().match(text);
     return translateKeepingTerms(translate, canonical, terms);
   };
 }

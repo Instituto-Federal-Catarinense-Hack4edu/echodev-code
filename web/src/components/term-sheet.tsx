@@ -185,7 +185,9 @@ export function TermSheet(props: Props) {
                 )}
               </div>
             )}
-            <p className="text-xs text-muted-foreground">{t.termSheet.unreviewed}</p>
+            <p className="text-xs text-muted-foreground">
+              {term.id.startsWith("ia-") ? t.termSheet.aiReviewed : t.termSheet.unreviewed}
+            </p>
           </>
         )}
       </SheetContent>

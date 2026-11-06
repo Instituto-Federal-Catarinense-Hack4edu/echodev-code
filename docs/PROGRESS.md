@@ -111,6 +111,12 @@
 - **Regras do Firestore mudaram** (`glossario` é um tipo de material permitido): rode `npm run deploy:rules` para enviar ao projeto. O caso novo em `web/rules-tests/` **não foi rodado** nesta máquina (os emuladores precisam do Java).
 - **Não testado no navegador nem com o Gemini de verdade.**
 
+## Fase 9: dicionário que cresce com os glossários aprovados (05/11/2026)
+- Ao aprovar o glossário, os termos entram na coleção `glossaryTerms` e passam a ser destacados, corrigidos e explicados em todas as próximas aulas (ficha do termo, legenda traduzida, correção de termo, relatório e PDF), sem chamar a IA durante a aula.
+- `web/src/lib/terms/ai-terms.ts` (conversão com as proteções do corretor, leitura e gravação) e registro de termos em `pack.ts`; 8 testes novos (112 no Vitest). `npm run check` verde.
+- **Regras do Firestore mudaram de novo** (coleção `glossaryTerms`): rode `npm run deploy:rules`. Sem isso, aprovar o glossário mostra "não foi possível adicionar os termos ao dicionário" e a aula segue só com o pacote. O caso novo em `web/rules-tests/` não foi rodado (sem Java).
+- **Não testado no navegador.**
+
 ## Pendências para a equipe
 - **Aprovar o uso do Gemini gratuito** com a instituição: no plano gratuito o Google pode usar a transcrição enviada para melhorar os produtos dele (no plano pago, não).
 - **Revisão humana do conteúdo** dos 40 termos (explicações e traduções) antes da demo. Nada na interface diz "verificado".
@@ -126,3 +132,4 @@ Palavras comuns do português que também são termos: `objeto`, `classe`, `mét
 ## Ideias fora do escopo
 - Ensinar ao corretor plurais automáticos (hoje são listados em `forms`).
 - Painel de curadoria das correções de termos (`term_corrections`) para promovê-las ao pacote versionado.
+- Curadoria dos termos aprovados da IA (`glossaryTerms`): editar ou remover um termo depois de aprovado.

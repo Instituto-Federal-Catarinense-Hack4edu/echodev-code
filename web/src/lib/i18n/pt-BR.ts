@@ -228,6 +228,7 @@ export const t = {
     fallback: "Ainda não temos esta explicação neste idioma; mostrando em português.",
     literal: "Tradução literal",
     unreviewed: "Conteúdo em revisão pela equipe.",
+    aiReviewed: "Explicação escrita por IA e revisada por um professor.",
     helped: "Ajudou",
     notHelped: "Não ajudou",
     doubt: "Ainda tenho dúvida",
@@ -438,7 +439,15 @@ export const t = {
     esDone: "Tradução pronta. Revise e aprove a versão em espanhol.",
     glossary: "Glossário da aula (termos novos)",
     glossaryIntro:
-      "Termos técnicos que apareceram na aula e ainda não estão no dicionário. A IA escreveu as explicações em português e espanhol; corrija o que precisar e aprove. Os alunos veem o glossário aprovado na revisão da aula e no PDF.",
+      "Termos técnicos que apareceram na aula e ainda não estão no dicionário. A IA escreveu as explicações em português e espanhol; corrija o que precisar e aprove. Os alunos veem o glossário aprovado na revisão da aula e no PDF, e os termos aprovados entram no dicionário: nas próximas aulas eles são destacados na legenda e explicados ao toque.",
+    glossaryPublished: (n: number) =>
+      n === 0
+        ? "Glossário aprovado. Os termos dele já estavam no dicionário."
+        : n === 1
+          ? "Glossário aprovado. 1 termo novo entrou no dicionário e será destacado nas próximas aulas."
+          : `Glossário aprovado. ${n} termos novos entraram no dicionário e serão destacados nas próximas aulas.`,
+    glossaryPublishError:
+      "Glossário aprovado, mas não foi possível adicionar os termos ao dicionário agora. Aprove de novo mais tarde.",
     glossaryEmpty: "A IA não encontrou termos novos nesta aula: todos os termos citados já estão no dicionário.",
     termName: "Termo",
     termNameEs: "Como se diz em espanhol",

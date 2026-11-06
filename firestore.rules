@@ -174,6 +174,26 @@ service cloud.firestore {
       allow read: if isOwner(lessonId);
     }
 
+    // Dictionary grown from approved AI glossaries (no author, no lesson on purpose): teachers
+    // add terms, everyone with a profile reads them (students need the explanations). Nobody
+    // edits or deletes from the app: a term approved in one lesson is kept for all.
+    match /glossaryTerms/{termId} {
+      allow read: if hasProfile();
+      allow create: if isTeacher()
+        && termId.matches('^ia-[a-z0-9-]{1,60}$')
+        && request.resource.data.keys().hasOnly(
+          ['id', 'canonical', 'variants', 'category', 'explanations', 'source', 'created_at'])
+        && request.resource.data.id == termId
+        && sizedString(request.resource.data.canonical, 1, 60)
+        && request.resource.data.variants is list
+        && request.resource.data.variants.size() <= 6
+        && request.resource.data.category in ['conceitos', 'git', 'web', 'ferramentas']
+        && request.resource.data.explanations is map
+        && request.resource.data.explanations.keys().hasOnly(['pt', 'es', 'en'])
+        && request.resource.data.source == 'ia'
+        && request.resource.data.created_at == request.time;
+    }
+
     // Term corrections (pairs only, no author on purpose): teachers read and add.
     match /termCorrections/{correctionId} {
       allow read: if isTeacher();

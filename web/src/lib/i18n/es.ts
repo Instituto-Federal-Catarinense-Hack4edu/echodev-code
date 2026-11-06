@@ -74,6 +74,7 @@ export const es: MessageOverrides = {
     fallback: "Todavía no tenemos esta explicación en este idioma; se muestra en portugués.",
     literal: "Traducción literal",
     unreviewed: "Contenido en revisión por el equipo.",
+    aiReviewed: "Explicación escrita por IA y revisada por un profesor.",
     helped: "Me ayudó",
     notHelped: "No me ayudó",
     doubt: "Todavía tengo dudas",

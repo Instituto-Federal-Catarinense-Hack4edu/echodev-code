@@ -26,6 +26,7 @@ import { getDb } from "@/lib/firebase/client";
 import { getPlain } from "@/lib/firebase/data";
 import { fire } from "@/lib/firebase/fire";
 import type { Depth } from "@/lib/terms/schemas";
+import { useAiTerms } from "@/lib/terms/use-ai-terms";
 import { useProfile, type Profile } from "@/lib/firebase/use-profile";
 import { useDebugFlag } from "@/lib/use-debug-flag";
 import { LanguageSelect } from "@/components/language-select";
@@ -61,6 +62,8 @@ export function StudentLesson() {
   const [ended, setEnded] = useState(false);
 
   const [lang, changeLang] = useProfileLang(profile, setProfile);
+  // Terms approved from earlier lessons' AI glossaries: the teacher's corrector marks them too.
+  useAiTerms(!!profile);
 
   const updatePrefs = useCallback(
     (patch: Partial<Pick<Profile, "depth_pref">>) => {
