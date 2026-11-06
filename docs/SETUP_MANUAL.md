@@ -48,3 +48,20 @@ As frases são apagadas pela rota `POST https://SUA-API/cron/purge` (cabeçalho 
 ```bash
 npm run test:rules     # sobe o emulador do Firestore e prova firestore.rules (15 grupos de casos)
 ```
+
+## 8. IA gratuita (Gemini) para resumo e quiz
+Sem isso a API usa o provedor `mock` (resumo e quiz fixos, iguais em toda aula).
+1. Entre em https://aistudio.google.com com uma conta Google e clique em **Get API key** > **Create API key**. Não precisa de cartão nem de faturamento.
+2. No `api/.env`:
+   ```
+   LLM_PROVIDER=gemini
+   LLM_MODEL=gemini-3.6-flash
+   GEMINI_API_KEY=<a chave criada>
+   GEMINI_FALLBACK_MODEL=gemini-3.5-flash-lite
+   ```
+3. Reinicie o `npm run dev` (o `.env` só é lido ao iniciar).
+
+Limites do plano gratuito: o Google não publica os números na documentação, só no AI Studio (**Rate limits**); eles valem por projeto e por modelo e zeram à meia-noite do horário do Pacífico (4h ou 5h da manhã em Brasília, conforme o horário de verão dos EUA). Quando a cota do `LLM_MODEL` acaba, a API passa sozinha para o `GEMINI_FALLBACK_MODEL`. Se os dois acabarem, o professor vê "Cota gratuita do Gemini esgotada" e pode usar **Tentar de novo** mais tarde.
+
+**Privacidade**: no plano gratuito o Google pode usar o texto enviado (a transcrição da aula, já sem e-mails, telefones e links) para melhorar os produtos dele. A instituição precisa aprovar isso antes de usar com turmas reais; com faturamento ativo (plano pago), o texto deixa de ser usado.
+

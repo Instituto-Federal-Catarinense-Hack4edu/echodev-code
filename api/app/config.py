@@ -18,12 +18,17 @@ class Settings(BaseSettings):
     firebase_auth_emulator_host: str = ""
     web_origin: str = "http://localhost:3000"
     cron_secret: str = ""
-    llm_provider: Literal["mock", "anthropic"] = "mock"
+    llm_provider: Literal["mock", "anthropic", "gemini"] = "mock"
     llm_model: str = ""
     anthropic_api_key: str = ""
     llm_timeout_seconds: float = 90.0
+    # Anthropic only: effort level and server-side fallback on a false-positive refusal.
     llm_effort: Literal["low", "medium", "high", "xhigh", "max"] = "medium"
     llm_fallbacks: bool = True
+    # Gemini (free tier, key from Google AI Studio). Free quotas are small and per model, so
+    # when LLM_MODEL runs out (HTTP 429) or is overloaded, the call moves to this model.
+    gemini_api_key: str = ""
+    gemini_fallback_model: str = ""
     environment: Literal["development", "production", "test"] = "development"
 
     @property

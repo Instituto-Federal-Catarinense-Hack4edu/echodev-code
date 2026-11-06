@@ -10,7 +10,7 @@ MVP do Hack4Edu 2026. Legenda ao vivo de aula de programação com termos destac
 - Interface e docs em pt-BR; código, tabelas e comentários em inglês. Textos da interface só em `web/src/lib/i18n/pt-BR.ts`.
 
 ## Stack
-- Servidor = Python (`api/`): FastAPI, Pydantic v2, pydantic-settings, `firebase-admin` (valida o **ID token do usuário** e acessa o Firestore pela camada `app/store.py`), SDK `anthropic` + provedor `mock`. Modelo em `LLM_MODEL`.
+- Servidor = Python (`api/`): FastAPI, Pydantic v2, pydantic-settings, `firebase-admin` (valida o **ID token do usuário** e acessa o Firestore pela camada `app/store.py`), SDKs `google-genai` (Gemini, plano gratuito) e `anthropic` + provedor `mock`. Provedor em `LLM_PROVIDER`, modelo em `LLM_MODEL`.
 - Navegador = TypeScript (`web/`): Next.js App Router, Tailwind, shadcn/ui, Firebase JS SDK (Auth + Firestore, sem Analytics), Zod, Vitest. Web Speech API atrás de `SttProvider`. Corretor de termos roda no navegador do professor (nunca no servidor).
 - Ao vivo não passa por Python nem IA: professor grava `lessons/{id}/utterances` → estudantes recebem por listener do Firestore (`FirestoreTransport`).
 - Banco, regras e índices: `firestore.rules`, `firestore.indexes.json`, `firebase.json` (emuladores). Teste local com `npm run dev:emulators`.

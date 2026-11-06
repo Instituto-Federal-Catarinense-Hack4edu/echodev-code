@@ -70,7 +70,7 @@ Copie os exemplos e preencha (passo a passo em `docs/SETUP_MANUAL.md`):
 | Arquivo | Para quê | Principais variáveis |
 |---|---|---|
 | `web/.env.local` | navegador | `NEXT_PUBLIC_FIREBASE_*` (configuração web pública do Firebase), `NEXT_PUBLIC_FIREBASE_EMULATORS`, `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_GOOGLE_LOGIN` |
-| `api/.env` | API Python | `FIREBASE_PROJECT_ID`, `FIREBASE_CREDENTIALS_FILE` (JSON da conta de serviço, secreto), `WEB_ORIGIN`, `CRON_SECRET`, `LLM_PROVIDER` (`mock` ou `anthropic`), `LLM_MODEL`, `ANTHROPIC_API_KEY`, `LLM_EFFORT`, `LLM_FALLBACKS` |
+| `api/.env` | API Python | `FIREBASE_PROJECT_ID`, `FIREBASE_CREDENTIALS_FILE` (JSON da conta de serviço, secreto), `WEB_ORIGIN`, `CRON_SECRET`, `LLM_PROVIDER` (`mock`, `gemini` gratuito ou `anthropic` pago), `LLM_MODEL`, `GEMINI_API_KEY`, `GEMINI_FALLBACK_MODEL`, `ANTHROPIC_API_KEY`, `LLM_EFFORT`, `LLM_FALLBACKS` |
 | `.env` (raiz) | scripts administrativos | `FIREBASE_PROJECT_ID`, `FIREBASE_CREDENTIALS_FILE`, `DEV_USERS_PASSWORD`, `DEV_TEACHER_EMAIL` |
 
 Banco: `firebase login` e `npm run deploy:rules` (envia `firestore.rules` e `firestore.indexes.json`).

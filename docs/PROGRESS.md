@@ -96,7 +96,13 @@
 ## Escolha de papel no login (05/11/2026)
 - Tela de entrar/criar conta com "Aluno / Professor". Escolher "Professor" com e-mail fora da `teacherAllowlist` mostra "Este e-mail não está autorizado como professor" e sai da sessão, sem criar perfil de aluno. `POST /me/profile` aceita `intent` (opcional); 3 testes novos (60 no `pytest`). `npm run check` verde. **Não testado no navegador ainda.**
 
+## Fase 6: IA gratuita com Gemini (05/11/2026)
+- `LLM_PROVIDER=gemini` gera resumo e quiz com o Gemini (`api/app/llm/gemini_provider.py`); chave gratuita do AI Studio, sem cartão (passo a passo em `docs/SETUP_MANUAL.md`, seção 8). Cota esgotada no modelo principal passa sozinha para o modelo reserva.
+- 17 testes novos com um cliente falso do SDK (sem rede): esquema e modo JSON enviados, troca de modelo na cota e na sobrecarga, erros de chave/modelo/limite de tokens/recusa/rede, fluxo completo de materiais.
+- `npm run check` verde. **Não testado com chamada real** (sem `GEMINI_API_KEY` nesta máquina).
+
 ## Pendências para a equipe
+- **Aprovar o uso do Gemini gratuito** com a instituição: no plano gratuito o Google pode usar a transcrição enviada para melhorar os produtos dele (no plano pago, não).
 - **Revisão humana do conteúdo** dos 40 termos (explicações e traduções) antes da demo. Nada na interface diz "verificado".
 - Variações fonéticas são hipóteses: validar no Teste A (`docs/TESTE_MANUAL.md`).
 - **Textos de consentimento** são marcadores ("texto a ser aprovado pela instituição"); definir o fluxo para menores de 18 anos com a instituição.
