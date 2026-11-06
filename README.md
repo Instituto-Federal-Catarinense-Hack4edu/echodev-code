@@ -1,3 +1,10 @@
+
+# 🚀 EchoDev#Code
+
+[![LGPD Compliant](https://img.shields.io/badge/LGPD-Privacy%20by%20Design-success?style=flat-square)](PRIVACY.md)
+[![PYTHON Version](https://img.shields.io/badge/python-3670A0?style=flat-square&logo=python&logoColor=ffdd54)](https://www.python.org/)
+[![REACT Version](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)](https://react.dev/)
+
 # EchoDev
 
 > Uma mesma explicação que pode servir para todo tipo de estudante, com qualquer ritmo de aprendizado.
