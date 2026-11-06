@@ -5,9 +5,20 @@
 MVP do Hack4Edu 2026. O EchoDev ouve o professor de uma aula de programação e entrega a aula ao estudante como **legenda ao vivo** com **termos técnicos destacados** (toque no termo para ver a explicação curta, com exemplo ou passo a passo, em português, inglês ou espanhol). Ao final, o professor revisa e aprova um **resumo e um quiz** gerados por IA, e vê um **relatório anônimo** de clareza.
 
 
-## Como rodar no localhost:3000
+## Como testar, passo a passo
 
-### 1. Instalar (só na primeira vez)
+### 0. O que você precisa ter
+- **Git**, **Node.js 22** e **Python 3.11 ou mais novo**.
+- **Google Chrome** (ou Edge) no computador. Para testar a legenda em espanhol: Chrome 138 ou mais novo.
+- **Acesso ao projeto Firebase `echodev-eb4fb`**: peça a quem administra para te adicionar em *Configurações do projeto > Usuários e permissões* (papel Editor). Sem acesso, use o modo local da seção [Sem acesso ao Firebase](#sem-acesso-ao-firebase-modo-local).
+
+### 1. Clonar
+```bash
+git clone https://github.com/Instituto-Federal-Catarinense-Hack4edu/echodev-code.git
+cd echodev-code
+```
+
+### 2. Instalar (só na primeira vez)
 ```bash
 npm install
 npm --prefix web install
@@ -17,22 +28,48 @@ python -m venv api\.venv && api\.venv\Scripts\pip install -r api\requirements-de
 python3 -m venv api/.venv && api/.venv/bin/pip install -r api/requirements-dev.txt
 ```
 
-### 2. Configurar (só na primeira vez)
-- Copie `web/.env.example` para `web/.env.local`, `api/.env.example` para `api/.env` e `.env.example` para `.env`, e preencha (veja [Configuração](#configuração)).
-- Salve a chave da conta de serviço do Firebase em `api/firebase-service-account.json` (passo a passo em `docs/SETUP_MANUAL.md`). Ela fica fora do git.
-- Crie os usuários de teste no Firebase:
-  ```bash
-  npm run seed:dev
-  ```
+### 3. Configurar (só na primeira vez)
+Copie os três modelos (ficam fora do git):
 
-### 3. Rodar
+| Copie | Para | O que preencher |
+|---|---|---|
+| `web/.env.example` | `web/.env.local` | Configuração web do Firebase: no console, *Configurações do projeto > Seus apps > app Web* (valores públicos) |
+| `api/.env.example` | `api/.env` | `FIREBASE_PROJECT_ID=echodev-eb4fb` (o resto já vem pronto) |
+| `.env.example` | `.env` | `FIREBASE_PROJECT_ID=echodev-eb4fb` e `DEV_USERS_PASSWORD` (a senha dos usuários de teste, veja o passo 5) |
+
+Depois:
+- **Chave da conta de serviço** (secreta): no console, *Configurações do projeto > Contas de serviço > Gerar nova chave privada*. Salve como `api/firebase-service-account.json`. Nunca mande esse arquivo por chat nem faça commit dele.
+- **IA (opcional, gratuita)**: sem chave, a API usa o modo `mock` (resumo, quiz e glossário fixos, iguais em toda aula). Para a IA de verdade, crie uma chave grátis em https://aistudio.google.com (*Get API key*, sem cartão) e, no `api/.env`, use:
+  ```
+  LLM_PROVIDER=gemini
+  GEMINI_API_KEY=<sua chave>
+  ```
+  Não ative faturamento no projeto da chave: no plano gratuito não há custo.
+
+### 4. Regras do banco
+As regras de acesso e os índices já estão publicados no projeto `echodev-eb4fb`. Só rode isto se alguém mudou `firestore.rules` ou `firestore.indexes.json`:
+```bash
+firebase login            # só na primeira vez (npm install -g firebase-tools)
+npm run deploy:rules
+```
+
+### 5. Usuários de teste
+Os usuários de teste **já existem** no projeto. Use a senha da tabela do passo 7 em `DEV_USERS_PASSWORD` e **não** rode o seed à toa: ele redefine a senha de todos para o valor do seu `.env`.
+Só se eles ainda não existirem (projeto novo):
+```bash
+npm run seed:dev
+```
+
+### 6. Rodar
 ```bash
 npm run dev
 ```
-Espere aparecer `Ready` e abra **http://localhost:3000**. O mesmo comando sobe a API em http://localhost:8000; ela não tem página própria (o site a chama sozinho), mas http://localhost:8000/health deve mostrar `{"status":"ok"}`. Para parar, aperte **Ctrl+C** no terminal.
+Espere aparecer `Ready` e abra **http://localhost:3000**. O mesmo comando sobe a API em http://localhost:8000 (http://localhost:8000/health deve mostrar `{"status":"ok"}`). O comando **fica rodando** enquanto você usa o site; para parar, aperte **Ctrl+C**. Comandos extras (como o `deploy:rules`) vão em outro terminal.
 
-### 4. Entrar com os usuários de teste
-Todos usam a mesma senha:
+Mudou algum `.env`? Pare e rode `npm run dev` de novo (ele só lê os `.env` ao iniciar).
+
+### 7. Entrar com os usuários de teste
+Em http://localhost:3000/entrar, **escolha "Professor" ou "Aluno"** e entre. Todos usam a mesma senha:
 
 | Papel | E-mail | Senha |
 |---|---|---|
@@ -40,23 +77,46 @@ Todos usam a mesma senha:
 | **Aluno** | `estudante1.teste@echodev.test` | `yNOcU_gm3PjPuJ8J` |
 | Outros alunos | `estudante2.teste@echodev.test` … `estudante8.teste@echodev.test` | `yNOcU_gm3PjPuJ8J` |
 
-A senha vem de `DEV_USERS_PASSWORD` no `.env` da raiz. Se trocar o valor lá, rode `npm run seed:dev` de novo para atualizar todos os usuários.
+Contas novas criadas em "Criar conta" viram **aluno**. Quem escolher "Professor" com um e-mail fora da lista de professores recebe um aviso e não entra. Para autorizar um professor de verdade: `npm run teacher:add -- pessoa@escola.br`.
 
-### 5. Roteiro de teste
-Use uma **janela anônima** (Ctrl+Shift+N no Chrome) para o aluno: cada janela guarda um login.
-1. **Professor**: entre em http://localhost:3000/entrar, clique em **Nova aula**, dê um título e crie. Anote o código de 6 caracteres.
-2. **Aluno** (janela anônima): entre, digite o código em **Entrar em uma aula** e aceite os consentimentos.
-3. **Professor**: clique em **Usar aula de demonstração** (frases prontas) ou em **Iniciar transcrição** (microfone, no Chrome ou Edge).
-4. **Aluno**: as frases chegam ao vivo; toque num termo destacado e responda "Essa explicação ajudou?".
-5. **Professor**: **Encerrar aula** → **Revisar e aprovar** → **Aprovar** no resumo e no quiz.
-6. **Aluno**: clique em **Ver resumo e quiz** e responda o quiz.
+### 8. Roteiro de teste
+Use uma **janela anônima** (Ctrl+Shift+N) para o aluno: cada janela guarda um login.
 
+**Aula ao vivo**
+1. **Professor**: clique em **Nova aula**, dê um título e crie. Anote o código de 6 caracteres.
+2. **Aluno** (janela anônima): digite o código em **Entrar em uma aula** e aceite os consentimentos.
+3. *(Opcional, espanhol)* **Aluno**: escolha **Español**. **Professor**: clique em **Ativar tradução para espanhol** (Chrome 138+; ele baixa o idioma uma vez).
+4. **Professor**: clique em **Usar aula de demonstração** (22 frases prontas sobre Git e React) ou em **Iniciar transcrição** (microfone).
+5. **Aluno**: as frases chegam ao vivo, com "comiti" corrigido para **commit**. Toque num termo destacado e responda "Essa explicação ajudou?". Em espanhol, o jargão continua igual: "commit", "push", "pull request".
+
+**Depois da aula (IA)**
+6. **Professor**: **Encerrar aula** (com o Gemini, leva até 1 minuto) → **Revisar e aprovar**.
+7. Revise e **aprove** o resumo, o quiz e o **glossário**: os termos técnicos novos que a IA encontrou na aula (além dos 40 do dicionário), com explicação em português e espanhol. Ao aprovar o glossário, eles entram no dicionário.
+8. **Aluno**: clique em **Ver resumo e quiz**: resumo, quiz, glossário e o PDF.
+
+**O dicionário que aprende**
+9. **Professor**: crie **outra aula** e rode a demonstração de novo. Os termos aprovados no passo 7 (por exemplo, "componente") agora aparecem **destacados** na legenda; toque para ver a explicação.
 
 ### Se algo der errado
-- **"E-mail ou senha incorretos"**: rode `npm run seed:dev`.
-- **"Port 3000 is in use"**: feche outro terminal que esteja rodando o site.
-- **Erro em "Minhas aulas" logo depois do deploy das regras**: os índices do Firestore ainda estão sendo criados; espere alguns minutos.
+- **"E-mail ou senha incorretos"**: confira a senha da tabela; se os usuários não existirem, rode `npm run seed:dev`.
+- **"Este e-mail não está autorizado como professor"**: entre marcando **Aluno**, ou autorize o e-mail com `npm run teacher:add -- email`.
+- **"O login ainda não foi configurado"**: falta o `web/.env.local` (passo 3).
+- **Resumo e quiz sempre iguais**: a API está em `LLM_PROVIDER=mock`; veja a IA no passo 3 e reinicie o `npm run dev`.
+- **"Cota gratuita do Gemini esgotada"**: o limite grátis do dia acabou (a API já tenta um segundo modelo); use **Tentar de novo** mais tarde.
+- **"Não foi possível adicionar os termos ao dicionário"** ou erro ao aprovar o glossário: as regras do banco estão desatualizadas; rode `npm run deploy:rules`.
+- **"Port 3000 is in use"** ou "Another next dev server is already running": já existe um `npm run dev` aberto; use aquele ou feche-o.
+- **Erro em "Minhas aulas" logo depois do deploy das regras**: os índices ainda estão sendo criados; espere alguns minutos.
 - **Outros erros**: veja as linhas `[api]` no terminal e o console do navegador (F12).
+
+### Sem acesso ao Firebase (modo local)
+Tudo roda no seu computador, com usuários de teste próprios e sem tocar no projeto real. Precisa do **Java 21** e do Firebase CLI (`npm install -g firebase-tools`).
+1. Faça os passos 1 e 2.
+2. Copie os três `.env` do passo 3, sem a chave da conta de serviço. No `web/.env.local`, use `NEXT_PUBLIC_FIREBASE_PROJECT_ID=echodev-eb4fb` e qualquer texto em `NEXT_PUBLIC_FIREBASE_API_KEY` e `NEXT_PUBLIC_FIREBASE_APP_ID` (os emuladores não conferem). No `.env` da raiz, preencha `DEV_USERS_PASSWORD` (12+ caracteres): essa será a senha dos usuários de teste locais.
+3. Rode:
+   ```bash
+   npm run dev:emulators
+   ```
+   Ele sobe os emuladores, cria os usuários de teste, a API e o site. Painel dos emuladores: http://127.0.0.1:4000.
 
 ## Demonstração em 2 minutos (sem internet, sem conta)
 1. `npm --prefix web run dev`.
