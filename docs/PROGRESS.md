@@ -101,6 +101,10 @@
 - 17 testes novos com um cliente falso do SDK (sem rede): esquema e modo JSON enviados, troca de modelo na cota e na sobrecarga, erros de chave/modelo/limite de tokens/recusa/rede, fluxo completo de materiais.
 - `npm run check` verde. **Não testado com chamada real** (sem `GEMINI_API_KEY` nesta máquina).
 
+## Fase 7: termos técnicos mantidos na tradução para o espanhol (05/11/2026)
+- Na legenda traduzida e no resumo e quiz em espanhol, jargão como `commit`, `push`, `merge`, `pull request` e `useState` fica como foi dito; variável, função, classe etc. continuam traduzidos (`web/src/lib/translate/keep-terms.ts`).
+- 9 testes novos com um tradutor falso que imita o Chrome (inclusive perdendo as marcas, para o plano B). `npm run check` verde. **Não testado no Chrome de verdade**: o comportamento das marcas no tradutor real precisa ser conferido numa aula de teste (se ele perder as marcas, o plano B entra sozinho).
+
 ## Pendências para a equipe
 - **Aprovar o uso do Gemini gratuito** com a instituição: no plano gratuito o Google pode usar a transcrição enviada para melhorar os produtos dele (no plano pago, não).
 - **Revisão humana do conteúdo** dos 40 termos (explicações e traduções) antes da demo. Nada na interface diz "verificado".
