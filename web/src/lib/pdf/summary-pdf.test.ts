@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { jsPDF } from "jspdf";
-import type { QuizItem } from "@/lib/api/types";
+import type { QuizItem, TermoGlossario } from "@/lib/api/types";
 import { buildSummaryPdf, glossary, pdfFileName, toPdfText } from "./summary-pdf";
 
 const resumo = {
@@ -34,6 +34,24 @@ describe("summary pdf", () => {
     expect(g[0].short).toMatch(/ponto salvo/);
     expect(g[1].term).toBe("pull request");
     expect(g[2]).toEqual({ term: "algo que não é termo", short: null });
+  });
+
+  it("explains new terms with the AI glossary, in the student's language", () => {
+    const docker: TermoGlossario = {
+      termo: "Docker",
+      nome_es: "Docker",
+      categoria: "ferramentas",
+      pt: { curta: "Ferramenta que roda programas em contêineres.", exemplo: "docker run", passos: ["a", "b"] },
+      es: { curta: "Herramienta que ejecuta programas en contenedores.", exemplo: "docker run", passos: ["a", "b"] },
+      en_curta: "",
+      variacoes: [],
+    };
+    const npm = { ...docker, termo: "npm", nome_es: "npm" };
+    const pt = glossary(["commit", "docker"], "pt", [docker, npm]);
+    expect(pt.map((g) => g.term)).toEqual(["commit", "Docker", "npm"]);
+    expect(pt[1].short).toMatch(/contêineres/);
+    expect(glossary(["docker"], "es", [docker])[0].short).toMatch(/contenedores/);
+    expect(glossary(["docker"], "en", [docker])[0].short).toMatch(/contêineres/); // no English: Portuguese
   });
 
   it("embeds the logo image when provided", () => {

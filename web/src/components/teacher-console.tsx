@@ -1,11 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Mic, Pause, Play, RotateCcw } from "lucide-react";
+import { Captions, Gauge, Languages, Mic, Pause, Play, Radio, RotateCcw, ScrollText, Wifi, WifiOff, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CaptionText } from "@/components/caption-text";
 import { MicTest } from "@/components/mic-test";
+import { SectionTitle } from "@/components/page-header";
+import { Notice, Spinner } from "@/components/states";
+import { StatusPill, type PillTone } from "@/components/status-pill";
 import { TermSheet } from "@/components/term-sheet";
 import type { Depth, Lang } from "@/lib/terms/schemas";
 import { controlPhase, type Source } from "@/lib/stt/control-phase";
@@ -173,43 +176,72 @@ export function TeacherConsole(props: Props) {
   const blocked = micTesting;
   const micDisabled = blocked || !supported;
 
-  return (
-    <div className="grid gap-4 lg:grid-cols-[22rem_1fr]">
-      <div className="space-y-4">
-        <MicTest disabled={phase === "live" || phase === "starting"} onTestingChange={setMicTesting} />
+  const tone: PillTone = {
+    idle: "idle",
+    starting: "warn",
+    live: "live",
+    paused: "idle",
+    finished: "ok",
+    error: "error",
+  }[phase] as PillTone;
 
-        <section className="space-y-3 rounded-xl border p-4" aria-labelledby="stt-headline">
-          <div className="flex flex-wrap items-center gap-2" aria-live="polite">
-            <span
-              aria-hidden
-              className={cn(
-                "inline-block size-3 rounded-full",
-                phase === "live" && "bg-red-600 motion-safe:animate-pulse",
-                phase === "starting" && "bg-amber-500",
-                phase === "error" && "bg-destructive",
-                (phase === "idle" || phase === "paused" || phase === "finished") && "bg-muted-foreground",
-              )}
-            />
-            <h2 id="stt-headline" className="font-semibold">
-              {headline}
-            </h2>
-            {source && phase !== "idle" && <Badge variant="outline">{sourceLabel}</Badge>}
-            {phase === "live" && <Badge variant="secondary">{t.teacher.wpm(wpm)}</Badge>}
-          </div>
-          {hint && (
-            <p className={cn("text-sm", phase === "error" ? "text-destructive" : "text-muted-foreground")}>
-              {hint}
-            </p>
+  return (
+    <div className="grid items-start gap-5 lg:grid-cols-[23rem_1fr]">
+      <div className="space-y-4">
+        <section
+          className={cn(
+            "surface space-y-4 p-5 transition-shadow",
+            phase === "live" && "ring-2 ring-live/25",
+            phase === "error" && "ring-2 ring-destructive/25",
           )}
+          aria-labelledby="stt-headline"
+        >
+          <div className="flex items-center gap-3">
+            <span
+              className={cn(
+                "grid size-11 shrink-0 place-items-center rounded-2xl transition-colors",
+                phase === "live" ? "bg-live text-white" : "bg-primary-soft text-primary-soft-foreground",
+              )}
+            >
+              {phase === "starting" ? <Spinner className="text-current" /> : <Radio aria-hidden className="size-5" />}
+            </span>
+            <div className="min-w-0 flex-1" aria-live="polite">
+              <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                {t.teacher.transcription}
+              </p>
+              <h2 id="stt-headline" className="leading-tight font-semibold">
+                {headline}
+              </h2>
+            </div>
+          </div>
 
           <div className="flex flex-wrap gap-2">
+            <StatusPill tone={tone}>{phase === "live" ? t.teacher.listening : headline}</StatusPill>
+            {source && phase !== "idle" && <Badge variant="outline">{sourceLabel}</Badge>}
+            {phase === "live" && (
+              <Badge variant="soft">
+                <Gauge aria-hidden />
+                {t.teacher.wpm(wpm)}
+              </Badge>
+            )}
+          </div>
+
+          {hint &&
+            (phase === "error" ? (
+              <Notice tone="error">{hint}</Notice>
+            ) : (
+              <p className="text-sm text-muted-foreground">{hint}</p>
+            ))}
+
+          <div className="flex flex-col gap-2">
             {phase === "idle" && (
               <>
-                <Button onClick={() => begin("mic")} disabled={micDisabled}>
+                <Button size="lg" onClick={() => begin("mic")} disabled={micDisabled}>
                   <Mic aria-hidden />
                   {t.teacher.start}
                 </Button>
-                <Button variant="outline" onClick={() => begin("demo")} disabled={blocked}>
+                <Button size="lg" variant="outline" onClick={() => begin("demo")} disabled={blocked}>
+                  <ScrollText aria-hidden />
                   {t.teacher.useDemo}
                 </Button>
               </>
@@ -217,15 +249,19 @@ export function TeacherConsole(props: Props) {
 
             {phase === "starting" && (
               <>
-                <Button disabled>{t.teacher.startingButton}</Button>
+                <Button size="lg" disabled>
+                  <Spinner className="text-current" />
+                  {t.teacher.startingButton}
+                </Button>
                 <Button variant="outline" onClick={onCancelStart}>
+                  <X aria-hidden />
                   {t.common.cancel}
                 </Button>
               </>
             )}
 
             {phase === "live" && (
-              <Button variant="secondary" onClick={onPause}>
+              <Button size="lg" variant="secondary" onClick={onPause}>
                 <Pause aria-hidden />
                 {t.teacher.pause}
               </Button>
@@ -233,12 +269,13 @@ export function TeacherConsole(props: Props) {
 
             {(phase === "paused" || phase === "error") && source && (
               <>
-                <Button onClick={() => begin(source)} disabled={source === "mic" ? micDisabled : blocked}>
+                <Button size="lg" onClick={() => begin(source)} disabled={source === "mic" ? micDisabled : blocked}>
                   <Play aria-hidden />
                   {phase === "error" ? t.common.retry : t.teacher.resume}
                 </Button>
                 {source === "mic" ? (
                   <Button variant="outline" onClick={() => begin("demo")} disabled={blocked}>
+                    <ScrollText aria-hidden />
                     {t.teacher.switchToDemo}
                   </Button>
                 ) : (
@@ -252,7 +289,7 @@ export function TeacherConsole(props: Props) {
 
             {phase === "finished" && (
               <>
-                <Button onClick={() => begin("demo", { restartDemo: true })} disabled={blocked}>
+                <Button size="lg" onClick={() => begin("demo", { restartDemo: true })} disabled={blocked}>
                   <RotateCcw aria-hidden />
                   {t.teacher.restartDemo}
                 </Button>
@@ -264,42 +301,101 @@ export function TeacherConsole(props: Props) {
             )}
           </div>
 
-          {!supported && phase !== "error" && <p className="text-sm text-destructive">{t.teacher.unsupported}</p>}
+          {!supported && phase !== "error" && <Notice tone="warning">{t.teacher.unsupported}</Notice>}
           {micTesting && <p className="text-sm text-muted-foreground">{t.teacher.waitMicTest}</p>}
           {props.transport && (
             <p
-              className={cn("text-sm", channel === "connected" ? "text-muted-foreground" : "font-medium text-amber-700")}
+              className={cn(
+                "flex items-start gap-2 border-t pt-3 text-sm",
+                channel === "connected" ? "text-muted-foreground" : "font-medium text-warning",
+              )}
               aria-live="polite"
             >
+              {channel === "connected" ? (
+                <Wifi aria-hidden className="mt-0.5 size-4 shrink-0 text-success" />
+              ) : (
+                <WifiOff aria-hidden className="mt-0.5 size-4 shrink-0" />
+              )}
               {channel === "connected" ? t.teacher.channelOk : t.teacher.channelDown}
             </p>
           )}
-          {persistError && <p className="text-sm text-destructive">{t.teacher.persistError(persistError)}</p>}
+          {persistError && <Notice tone="error">{t.teacher.persistError(persistError)}</Notice>}
         </section>
+
+        <MicTest disabled={phase === "live" || phase === "starting"} onTestingChange={setMicTesting} />
 
         <TranslationPanel translation={translation} />
       </div>
 
-      <section className="flex max-h-[75dvh] min-h-[50dvh] flex-col rounded-xl border">
-        <h2 className="border-b px-4 py-3 font-semibold">{t.teacher.sentencesTitle}</h2>
-        <div ref={list} className="flex-1 space-y-2 overflow-y-auto p-4 text-lg">
-          {sentences.length === 0 && <p className="text-muted-foreground">{t.teacher.noSentences}</p>}
-          {sentences.map((s) => (
-            <p key={s.seq}>
-              <span className="mr-2 font-mono text-xs text-muted-foreground">#{s.seq}</span>
-              <CaptionText text={s.text} terms={s.terms} onTermClick={setOpenTerm} />
-              {s.es && (
-                <span lang="es" className="mt-0.5 block pl-8 text-base text-muted-foreground">
-                  {s.es}
-                </span>
-              )}
-            </p>
-          ))}
+      <section
+        className="surface flex h-[min(78dvh,52rem)] min-h-[28rem] flex-col overflow-hidden"
+        aria-labelledby="sentences-title"
+      >
+        <div className="flex flex-wrap items-center gap-3 border-b px-5 py-3.5">
+          <Captions aria-hidden className="size-5 text-muted-foreground" />
+          <h2 id="sentences-title" className="mr-auto font-semibold">
+            {t.teacher.sentencesTitle}
+          </h2>
+          {sentences.length > 0 && <Badge variant="secondary">{t.teacher.sentencesCount(sentences.length)}</Badge>}
+          {phase === "live" && <StatusPill tone="live">{t.lessons.live}</StatusPill>}
+        </div>
+        <div ref={list} className="nice-scroll flex-1 overflow-y-auto px-3 py-3 text-lg">
+          {sentences.length === 0 ? (
+            <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center text-muted-foreground">
+              <span className="grid size-14 place-items-center rounded-2xl bg-muted">
+                {phase === "live" || phase === "starting" ? (
+                  <span className="typing-dots text-primary" aria-hidden>
+                    <span />
+                    <span />
+                    <span />
+                  </span>
+                ) : (
+                  <Mic aria-hidden className="size-6" />
+                )}
+              </span>
+              <p className="max-w-xs text-base">{t.teacher.noSentences}</p>
+            </div>
+          ) : (
+            <>
+              <p className="px-2 pb-2 text-xs text-muted-foreground">{t.teacher.tapTermHint}</p>
+              <ol className="space-y-1">
+                {sentences.map((s, i) => (
+                  <li
+                    key={s.seq}
+                    className={cn(
+                      "animate-rise flex gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-muted/60",
+                      i === sentences.length - 1 && "bg-primary-soft/40",
+                    )}
+                  >
+                    <span className="mt-1.5 h-fit shrink-0 rounded-md bg-muted px-1.5 py-0.5 font-mono text-[0.7rem] text-muted-foreground tabular-nums">
+                      #{s.seq}
+                    </span>
+                    <span className="min-w-0 leading-relaxed">
+                      <CaptionText text={s.text} terms={s.terms} onTermClick={setOpenTerm} />
+                      {s.es && (
+                        <span lang="es" className="mt-1 flex items-start gap-1.5 text-base text-muted-foreground">
+                          <Languages aria-hidden className="mt-1 size-3.5 shrink-0" />
+                          {s.es}
+                        </span>
+                      )}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </>
+          )}
         </div>
         {partial && (
-          <div className="border-t bg-muted/50 px-4 py-3">
-            <span className="text-sm text-muted-foreground">{t.teacher.partialLabel} </span>
-            <span className="italic">{partial}</span>
+          <div className="flex items-start gap-3 border-t bg-muted/50 px-5 py-3">
+            <span className="typing-dots mt-2 shrink-0 text-xs text-primary" aria-hidden>
+              <span />
+              <span />
+              <span />
+            </span>
+            <p className="min-w-0">
+              <span className="text-sm text-muted-foreground">{t.teacher.partialLabel} </span>
+              <span className="italic">{partial}</span>
+            </p>
           </div>
         )}
       </section>
@@ -330,21 +426,36 @@ function TranslationPanel({ translation }: { translation: ReturnType<typeof useE
   }[state.kind];
 
   return (
-    <section className="space-y-3 rounded-xl border p-4" aria-labelledby="translation-title">
-      <h2 id="translation-title" className="font-semibold">
+    <section className="surface space-y-3 p-5" aria-labelledby="translation-title">
+      <SectionTitle
+        icon={Languages}
+        id="translation-title"
+        action={state.kind === "on" ? <StatusPill tone="ok">ES</StatusPill> : undefined}
+      >
         {tr.title}
-      </h2>
+      </SectionTitle>
       <p className="text-sm text-muted-foreground">{tr.hint}</p>
       {status && (
         <p
           aria-live="polite"
-          className={cn("text-sm", state.kind === "on" ? "font-medium text-emerald-700 dark:text-emerald-400" : "")}
+          className={cn(
+            "flex items-center gap-2 text-sm",
+            state.kind === "on" && "font-medium text-success",
+            (state.kind === "unsupported" || state.kind === "unavailable" || state.kind === "error") && "text-warning",
+          )}
         >
+          {(state.kind === "checking" || state.kind === "downloading") && <Spinner className="size-4" />}
           {status}
         </p>
       )}
+      {state.kind === "downloading" && (
+        <div className="h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden>
+          <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${state.percent}%` }} />
+        </div>
+      )}
       {(state.kind === "off" || state.kind === "error") && (
-        <Button variant="outline" onClick={() => void enable()}>
+        <Button variant="outline" className="w-full" onClick={() => void enable()}>
+          <Languages aria-hidden />
           {tr.enable}
         </Button>
       )}

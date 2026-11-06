@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { BookOpen, CheckCircle2, CircleHelp, Quote, ThumbsDown, ThumbsUp } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { explain, getTerm, literalMeaning } from "@/lib/terms/pack";
@@ -29,15 +30,21 @@ function Segmented<T extends string>({
   value,
   onChange,
   render,
+  size = "md",
 }: {
   label: string;
   options: T[];
   value: T;
   onChange: (v: T) => void;
   render: (v: T) => string;
+  size?: "md" | "sm";
 }) {
   return (
-    <div role="radiogroup" aria-label={label} className="flex flex-wrap gap-2">
+    <div
+      role="radiogroup"
+      aria-label={label}
+      className={cn("grid gap-1 rounded-xl bg-muted p-1", size === "md" ? "grid-cols-3" : "inline-grid grid-cols-3")}
+    >
       {options.map((o) => (
         <button
           key={o}
@@ -46,8 +53,10 @@ function Segmented<T extends string>({
           aria-checked={value === o}
           onClick={() => onChange(o)}
           className={cn(
-            "min-h-11 rounded-full border px-4 text-sm font-medium",
-            value === o ? "border-primary bg-primary text-primary-foreground" : "bg-background",
+            "min-h-11 rounded-lg px-3 text-sm font-semibold transition-all",
+            value === o
+              ? "bg-card text-foreground shadow-sm ring-1 ring-border"
+              : "text-muted-foreground hover:text-foreground",
           )}
         >
           {render(o)}
@@ -65,13 +74,31 @@ export function TermSheet(props: Props) {
   const resolved = term ? explain(term, depth, lang) : null;
   const literal = term ? literalMeaning(term, lang) : undefined;
 
+  const feedback = [
+    ["helped", t.termSheet.helped, ThumbsUp],
+    ["not_helped", t.termSheet.notHelped, ThumbsDown],
+    ["doubt", t.termSheet.doubt, CircleHelp],
+  ] as const;
+
   return (
     <Sheet open={!!term} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent side="bottom" className="max-h-[85dvh] overflow-y-auto rounded-t-2xl p-5">
+      <SheetContent
+        side="bottom"
+        className="nice-scroll max-h-[88dvh] gap-5 overflow-y-auto rounded-t-3xl p-5 pt-3 sm:mx-auto sm:max-w-2xl sm:p-7 sm:pt-4"
+      >
         {term && resolved && (
           <>
-            <SheetHeader className="p-0">
-              <SheetTitle className="font-mono text-2xl">{term.canonical}</SheetTitle>
+            <span aria-hidden className="mx-auto h-1.5 w-12 shrink-0 rounded-full bg-foreground/15" />
+            <SheetHeader className="flex-row items-center gap-3 p-0 pr-10">
+              <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary-soft-foreground">
+                <BookOpen aria-hidden className="size-5" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                  {t.termSheet.termLabel}
+                </p>
+                <SheetTitle className="font-mono text-2xl font-bold">{term.canonical}</SheetTitle>
+              </div>
               <SheetDescription className="sr-only">{t.termSheet.depth}</SheetDescription>
             </SheetHeader>
 
@@ -83,15 +110,24 @@ export function TermSheet(props: Props) {
               render={(d) => t.termSheet.depths[d]}
             />
 
-            <div lang={resolved.lang === "pt" ? "pt-BR" : resolved.lang} className="text-lg leading-relaxed">
+            <div
+              key={`${term.id}-${depth}-${lang}`}
+              lang={resolved.lang === "pt" ? "pt-BR" : resolved.lang}
+              className="animate-rise text-lg leading-relaxed"
+            >
               {Array.isArray(resolved.text) ? (
-                <ol className="list-decimal space-y-1 pl-6">
+                <ol className="space-y-2.5">
                   {resolved.text.map((s, i) => (
-                    <li key={i}>{s}</li>
+                    <li key={i} className="flex gap-3">
+                      <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+                        {i + 1}
+                      </span>
+                      <span>{s}</span>
+                    </li>
                   ))}
                 </ol>
               ) : depth === "exemplo" ? (
-                <p className="rounded-lg bg-muted p-3 font-mono text-base">{resolved.text}</p>
+                <p className="rounded-xl border bg-muted/70 p-4 font-mono text-base leading-relaxed">{resolved.text}</p>
               ) : (
                 <p>{resolved.text}</p>
               )}
@@ -99,47 +135,59 @@ export function TermSheet(props: Props) {
             {resolved.fellBack && <p className="text-sm text-muted-foreground">{t.termSheet.fallback}</p>}
 
             {literal && (
-              <p className="rounded-lg border p-3 text-base">
-                <strong>{t.termSheet.literal}: </strong>
-                {literal}
+              <p className="flex gap-3 rounded-xl border-l-4 border-primary bg-primary-soft/50 p-4 text-base">
+                <Quote aria-hidden className="mt-1 size-4 shrink-0 text-primary" />
+                <span>
+                  <strong>{t.termSheet.literal}: </strong>
+                  {literal}
+                </span>
               </p>
             )}
 
-            <Segmented
-              label={t.termSheet.language}
-              options={LANGS}
-              value={lang}
-              onChange={onLangChange}
-              render={(l) => t.termSheet.langs[l]}
-            />
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">{t.termSheet.language}</p>
+              <Segmented
+                label={t.termSheet.language}
+                options={LANGS}
+                value={lang}
+                onChange={onLangChange}
+                render={(l) => t.termSheet.langs[l]}
+              />
+            </div>
 
             {onFeedback && (
-              <div className="flex flex-wrap gap-2 border-t pt-4">
+              <div className="space-y-3 border-t pt-4">
                 {sentFor === term.id ? (
-                  <p className="text-sm text-muted-foreground">{t.termSheet.thanks}</p>
+                  <p role="status" className="animate-rise flex items-center gap-2 text-sm font-medium text-success">
+                    <CheckCircle2 aria-hidden className="size-5" />
+                    {t.termSheet.thanks}
+                  </p>
                 ) : (
-                  (
-                    [
-                      ["helped", t.termSheet.helped],
-                      ["not_helped", t.termSheet.notHelped],
-                      ["doubt", t.termSheet.doubt],
-                    ] as const
-                  ).map(([kind, label]) => (
-                    <Button
-                      key={kind}
-                      variant="outline"
-                      onClick={() => {
-                        onFeedback(term.id, kind, depth);
-                        setSentFor(term.id);
-                      }}
-                    >
-                      {label}
-                    </Button>
-                  ))
+                  <>
+                    <p className="text-sm font-medium">{t.termSheet.feedbackTitle}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {feedback.map(([kind, label, Icon]) => (
+                        <Button
+                          key={kind}
+                          variant="outline"
+                          className="flex-1 basis-36"
+                          onClick={() => {
+                            onFeedback(term.id, kind, depth);
+                            setSentFor(term.id);
+                          }}
+                        >
+                          <Icon aria-hidden />
+                          {label}
+                        </Button>
+                      ))}
+                    </div>
+                  </>
                 )}
               </div>
             )}
-            <p className="text-xs text-muted-foreground">{t.termSheet.unreviewed}</p>
+            <p className="text-xs text-muted-foreground">
+              {term.id.startsWith("ia-") ? t.termSheet.aiReviewed : t.termSheet.unreviewed}
+            </p>
           </>
         )}
       </SheetContent>

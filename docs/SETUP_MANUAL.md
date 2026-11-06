@@ -1,68 +1,67 @@
-# Configuração manual (só a Vitória pode fazer)
+# Configuração manual (Firebase)
 
-Passos que exigem conta, senha ou painel. Cada um diz como saber que deu certo.
+Passo a passo para ligar o EchoDev ao projeto Firebase **echodev-eb4fb**. O código já está pronto; estes passos só você pode fazer, porque exigem a sua conta Google.
 
-## 1. Criar o projeto no Supabase e copiar as chaves
-1. Em https://supabase.com/dashboard, crie um projeto (região mais próxima, por exemplo São Paulo). Guarde a senha do banco num gerenciador de senhas.
-2. Abra **Project Settings → API Keys** (o nome do menu pode variar um pouco). Copie:
-   - a **URL do projeto** (`https://xxxx.supabase.co`, também aparece no botão "Connect");
-   - a chave **pública** (`publishable` nova, ou `anon` na aba de chaves antigas);
-   - a chave **secreta** (`secret` nova, ou `service_role` antiga). Ela dá acesso total: nunca vai para o navegador nem para o git.
-3. Crie os arquivos a partir dos exemplos e cole os valores:
-   - `web/.env.local` (de `web/.env.example`): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (a pública), `NEXT_PUBLIC_DEV_LOGIN=true` para testes.
-   - `api/.env` (de `api/.env.example`): `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (a secreta), `CRON_SECRET` (qualquer texto longo e aleatório).
-   - `.env` na raiz (de `.env.example`): mesmas três do Supabase e uma `DEV_USERS_PASSWORD` (senha dos usuários de teste).
+> Não rode `firebase init`: os arquivos `firebase.json`, `.firebaserc`, `firestore.rules` e `firestore.indexes.json` já estão no repositório e o `init` pode sobrescrevê-los.
 
-**Deu certo se:** os três arquivos existem e `git status` não mostra nenhum deles.
+## 1. Console do Firebase (console.firebase.google.com)
+1. **Authentication → Começar → Método de login**: ative **E-mail/senha**. O Google é opcional; se ativar, coloque `NEXT_PUBLIC_GOOGLE_LOGIN=true` no `web/.env.local`.
+2. **Authentication → Configurações → Domínios autorizados**: `localhost` já vem incluído. Quando publicar o site, adicione o domínio dele.
+3. **Firestore Database → Criar banco de dados**: modo de produção, região `southamerica-east1` (São Paulo). A região não pode ser trocada depois.
+4. **Configurações do projeto → Contas de serviço → Gerar nova chave privada**. Salve o arquivo como `api/firebase-service-account.json`; o nome já está no `.gitignore`. Nunca mande esse arquivo por chat nem faça commit dele.
+5. (Opcional) **Authentication → Modelos → Redefinição de senha → Personalizar URL de ação**: `http://localhost:3000/redefinir-senha` (troque pelo domínio publicado depois). Sem isso, o link do e-mail abre a página padrão do Firebase, que também funciona.
 
-## 2. Criar as tabelas (depois que a Fase 2 gerar o `supabase/bundle.sql`)
-1. No painel, abra **SQL Editor → New query**.
-2. Cole o conteúdo inteiro de `supabase/bundle.sql` e clique em **Run**.
+## 2. Terminal
+```bash
+firebase login
+npm run deploy:rules        # envia firestore.rules e os índices
+```
+O `deploy:rules` roda `firebase deploy --only firestore`. Os índices levam alguns minutos para ficar prontos; durante esse tempo, a lista "Minhas aulas" pode dar erro.
 
-**Deu certo se:** aparece "Success. No rows returned" e em **Table Editor** aparecem `profiles`, `lessons`, `utterances` etc. (Pode aparecer um aviso sobre `pg_cron`; tudo bem.)
+## 3. Arquivos `.env` (já criados nesta máquina, fora do git)
+| Arquivo | O que conferir |
+|---|---|
+| `web/.env.local` | Configuração web do Firebase (pública). `NEXT_PUBLIC_FIREBASE_EMULATORS=false` usa o projeto real. |
+| `api/.env` | `FIREBASE_PROJECT_ID=echodev-eb4fb` e `FIREBASE_CREDENTIALS_FILE=firebase-service-account.json` (caminho relativo a `api/`). |
+| `.env` (raiz) | `FIREBASE_CREDENTIALS_FILE=api/firebase-service-account.json`, `DEV_USERS_PASSWORD` (senha dos usuários de teste). |
 
-3. Em **Realtime → Settings**, desligue **Allow public access** e salve. Assim só canais privados (com as regras de RLS) funcionam.
-4. Em **Authentication → URL Configuration**: Site URL `http://localhost:3000`; em Redirect URLs adicione `http://localhost:3000/**`.
+Os modelos estão em `web/.env.example`, `api/.env.example` e `.env.example`.
 
-O bundle pode ser colado de novo sem problema se uma migração nova aparecer (as tabelas já existentes dão erro; nesse caso peça ao agente um SQL só com a parte nova).
+## 4. Usuários
+```bash
+npm run seed:dev                          # 1 professor + 8 estudantes de teste, e-mail já confirmado
+npm run teacher:add -- pessoa@escola.br   # autoriza um professor de verdade
+```
+O papel (professor ou aluno) é decidido pela lista `teacherAllowlist`, que só a API e os scripts leem. Quem cria a conta pelo site precisa confirmar o e-mail antes de entrar.
 
-## 3. Cadastrar o e-mail de professor
-No SQL Editor, rode (troque pelo seu e-mail):
+## 5. Rodar
+```bash
+npm run dev            # site (localhost:3000) + API (localhost:8000) no projeto real
+npm run dev:emulators  # tudo local, com emuladores e usuários de teste (não toca no projeto real)
+```
+No modo emulador, o painel dos emuladores fica em http://127.0.0.1:4000.
 
-```sql
-insert into public.teacher_allowlist (email) values ('seu-email@exemplo.com');
+## 6. Limpeza de 24 h
+As frases são apagadas pela rota `POST https://SUA-API/cron/purge` (cabeçalho `X-Cron-Secret: <CRON_SECRET do api/.env>`), que precisa ser chamada a cada hora por um agendador (veja `docs/DEPLOY.md`). A política de TTL do Firestore faria isso sozinha, mas exige o plano Blaze (faturamento ativo); no plano gratuito o deploy recusa o TTL.
+
+## 7. Testes das regras de acesso
+```bash
+npm run test:rules     # sobe o emulador do Firestore e prova firestore.rules (15 grupos de casos)
 ```
 
-**Deu certo se:** ao entrar no EchoDev com esse e-mail, aparece "Minhas aulas" em `/professor`. Se você já tinha entrado antes do insert, rode também:
+## 8. IA gratuita (Gemini) para resumo e quiz
+Sem isso a API usa o provedor `mock` (resumo e quiz fixos, iguais em toda aula).
+1. Entre em https://aistudio.google.com com uma conta Google e clique em **Get API key** > **Create API key**. Não precisa de cartão nem de faturamento.
+2. No `api/.env`:
+   ```
+   LLM_PROVIDER=gemini
+   LLM_MODEL=gemini-3.6-flash
+   GEMINI_API_KEY=<a chave criada>
+   GEMINI_FALLBACK_MODEL=gemini-3.5-flash-lite
+   ```
+3. Reinicie o `npm run dev` (o `.env` só é lido ao iniciar).
 
-```sql
-update public.profiles set role = 'professor'
-where user_id = (select id from auth.users where lower(email) = 'seu-email@exemplo.com');
-```
+Limites do plano gratuito: o Google não publica os números na documentação, só no AI Studio (**Rate limits**); eles valem por projeto e por modelo e zeram à meia-noite do horário do Pacífico (4h ou 5h da manhã em Brasília, conforme o horário de verão dos EUA). Quando a cota do `LLM_MODEL` acaba, a API passa sozinha para o `GEMINI_FALLBACK_MODEL`. Se os dois acabarem, o professor vê "Cota gratuita do Gemini esgotada" e pode usar **Tentar de novo** mais tarde.
 
-Os usuários de teste (1 professor e 8 estudantes) são criados pelo agente com `npm run seed:dev`.
+**Privacidade**: no plano gratuito o Google pode usar o texto enviado (a transcrição da aula, já sem e-mails, telefones e links) para melhorar os produtos dele. A instituição precisa aprovar isso antes de usar com turmas reais; com faturamento ativo (plano pago), o texto deixa de ser usado.
 
-## 3b. Contas com e-mail e senha
-O EchoDev usa conta com e-mail e senha (aba "Criar conta" em `/entrar`), mais "Esqueci minha senha".
-
-- **Professor**: antes de criar a conta, autorize o e-mail:
-
-  ```bash
-  npm run teacher:add -- pessoa@escola.edu.br
-  ```
-  Se a conta já existir, ela vira professor na hora.
-- **Confirmação de e-mail**: hoje o projeto exige confirmar o e-mail ao criar conta. O envio padrão do Supabase tem limite baixo e pode entregar só para e-mails da equipe do projeto. Para o hackathon, escolha um:
-  - desligar em **Authentication → Sign In / Providers → Email → Confirm email** (a conta já entra direto ao ser criada); ou
-  - configurar SMTP próprio (item 4).
-- "Esqueci minha senha" sempre envia e-mail: com o envio padrão, vale o mesmo limite.
-
-## 4. Opcional: login e e-mail
-- **URLs de redirecionamento**: em **Authentication → URL Configuration**, Site URL `http://localhost:3000` e, em Redirect URLs, `http://localhost:3000/**` (e depois a URL da Vercel).
-- **Google**: em **Authentication → Providers → Google**, siga o passo a passo do próprio painel.
-- **SMTP próprio**: o envio padrão de links por e-mail tem limite baixo por hora. Para a demo real, configure em **Authentication → Emails → SMTP Settings** (por exemplo, com um serviço transacional). Para testes, use o login de desenvolvimento por senha.
-
-## 5. Opcional: chave do LLM
-Crie uma chave em https://console.anthropic.com e coloque em `api/.env` (`ANTHROPIC_API_KEY`, `LLM_PROVIDER=anthropic`). Sem ela, deixe `LLM_PROVIDER=mock`: tudo funciona com resumo e quiz fixos.
-
-## 6. Opcional: hospedagem da API Python
-Decisão depois que tudo rodar localmente. Veja `docs/DEPLOY.md` (Fase 5).

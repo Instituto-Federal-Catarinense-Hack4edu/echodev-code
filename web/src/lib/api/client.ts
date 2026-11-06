@@ -1,7 +1,7 @@
 "use client";
 
 import { publicEnv } from "@/lib/env";
-import { getSupabase } from "@/lib/supabase/client";
+import { currentUser } from "@/lib/firebase/client";
 
 export class ApiError extends Error {
   constructor(
@@ -12,14 +12,14 @@ export class ApiError extends Error {
   }
 }
 
-/** Calls the Python API with the user's Supabase access token and a timeout (pitfall 18). */
+/** Calls the Python API with the user's Firebase ID token and a timeout (pitfall 18). */
 export async function apiFetch<T>(
   path: string,
   init: RequestInit & { timeoutMs?: number } = {},
 ): Promise<T> {
   const { timeoutMs = 120_000, ...rest } = init;
-  const { data } = await getSupabase().auth.getSession();
-  const token = data.session?.access_token;
+  // getIdToken() refreshes the token when it is about to expire.
+  const token = await (await currentUser())?.getIdToken();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {

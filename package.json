@@ -4,17 +4,18 @@
   "description": "EchoDev: legenda ao vivo e materiais de aula para estudantes de programação (Hack4Edu 2026).",
   "scripts": {
     "dev": "concurrently -k -n web,api -c cyan,magenta \"npm --prefix web run dev\" \"node scripts/py.mjs --cwd api -m uvicorn app.main:app --reload --port 8000\"",
+    "dev:emulators": "node scripts/dev_emulators.mjs",
+    "emulators": "firebase emulators:start --only auth,firestore",
     "check": "npm run check:web && npm run check:api && npm run check:types",
     "check:web": "npm --prefix web run lint && npm --prefix web run typecheck && npm --prefix web run test && npm --prefix web run build",
     "check:api": "node scripts/py.mjs --cwd api -m ruff check . ../scripts && node scripts/py.mjs --cwd api -m ruff format --check . ../scripts && node scripts/py.mjs --cwd api -m pytest -q",
     "check:types": "node scripts/gen_api_types.mjs --check",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-echodev-rules \"npm --prefix web run test:rules\"",
+    "deploy:rules": "firebase deploy --only firestore",
     "format:api": "node scripts/py.mjs --cwd api -m ruff format . ../scripts && node scripts/py.mjs --cwd api -m ruff check --fix . ../scripts",
-    "db:bundle": "node scripts/db_bundle.mjs",
-    "db:validate": "node scripts/py.mjs scripts/validate_sql_local.py",
     "gen:api-types": "node scripts/gen_api_types.mjs",
     "seed:dev": "node scripts/py.mjs scripts/seed_dev_users.py",
     "teacher:add": "node scripts/py.mjs scripts/add_teacher.py",
-    "check:rls": "node scripts/py.mjs scripts/check_rls.py",
     "load:test": "node scripts/py.mjs scripts/load_test.py"
   },
   "devDependencies": {

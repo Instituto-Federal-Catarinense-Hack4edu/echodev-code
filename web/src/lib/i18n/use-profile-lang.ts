@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
-import { getSupabase } from "@/lib/supabase/client";
-import { fire } from "@/lib/supabase/fire";
-import type { Profile } from "@/lib/supabase/use-profile";
+import { doc, updateDoc } from "firebase/firestore";
+import { getDb } from "@/lib/firebase/client";
+import { fire } from "@/lib/firebase/fire";
+import type { Profile } from "@/lib/firebase/use-profile";
 import type { Lang } from "@/lib/terms/schemas";
 import { setStudentLang, useStudentLang } from "./student-lang";
 
@@ -23,7 +24,7 @@ export function useProfileLang(profile: Profile | null, setProfile: (p: Profile)
       setStudentLang(next);
       if (!profile || profile.lang_pref === next) return;
       setProfile({ ...profile, lang_pref: next });
-      fire(getSupabase().from("profiles").update({ lang_pref: next }).eq("user_id", profile.user_id), "save lang");
+      fire(updateDoc(doc(getDb(), "profiles", profile.user_id), { lang_pref: next }), "save lang");
     },
     [profile, setProfile],
   );

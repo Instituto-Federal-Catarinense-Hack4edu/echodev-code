@@ -9,14 +9,14 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:rules": "vitest run --config vitest.rules.config.mts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
-    "@supabase/ssr": "^0.12.7",
-    "@supabase/supabase-js": "^2.118.0",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.2",
+    "firebase": "^13.2.0",
     "jspdf": "^4.2.1",
     "lucide-react": "^1.66.0",
     "next": "16.4.4",
@@ -31,6 +31,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^6.0.0",
     "@tailwindcss/turbopack": "^4",
     "@types/dom-speech-recognition": "^0.0.12",
     "@types/node": "^22.20.5",

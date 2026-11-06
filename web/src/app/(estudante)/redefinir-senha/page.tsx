@@ -9,9 +9,11 @@ export default function Page() {
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto w-full max-w-md flex-1 space-y-6 p-6">
-        <h1 className="text-2xl font-bold">{t.auth.resetTitle}</h1>
-        <ResetPassword />
+      <main className="bg-glow flex flex-1 items-start justify-center px-4 py-10 sm:py-16">
+        <div className="surface w-full max-w-md space-y-6 p-6 sm:p-8">
+          <h1 className="text-2xl font-bold tracking-tight">{t.auth.resetTitle}</h1>
+          <ResetPassword />
+        </div>
       </main>
     </>
   );

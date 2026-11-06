@@ -3,13 +3,31 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { ArrowLeft, CalendarCheck, CircleAlert, ListChecks, SearchX, UserRound } from "lucide-react";
+import { SiteHeader } from "@/components/brand";
 import { ConsentFlow, OPTIONAL_PURPOSES, REQUIRED_PURPOSES, type Purpose } from "@/components/consent-flow";
+import { LoadingState, MessageCard } from "@/components/states";
 import { StudentView } from "@/components/student-view";
-import { SupabaseTransport, utteranceFetcher } from "@/lib/realtime/supabase";
-import { getSupabase } from "@/lib/supabase/client";
-import { fire } from "@/lib/supabase/fire";
+import { buttonVariants } from "@/components/ui/button";
+import {
+  addDoc,
+  collection,
+  doc,
+  getDocs,
+  query,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+  where,
+} from "firebase/firestore";
+import { ApiError, apiFetch } from "@/lib/api/client";
+import { FirestoreTransport, utteranceFetcher } from "@/lib/realtime/firestore";
+import { getDb } from "@/lib/firebase/client";
+import { getPlain } from "@/lib/firebase/data";
+import { fire } from "@/lib/firebase/fire";
 import type { Depth } from "@/lib/terms/schemas";
-import { useProfile, type Profile } from "@/lib/supabase/use-profile";
+import { useAiTerms } from "@/lib/terms/use-ai-terms";
+import { useProfile, type Profile } from "@/lib/firebase/use-profile";
 import { useDebugFlag } from "@/lib/use-debug-flag";
 import { LanguageSelect } from "@/components/language-select";
 import { useT } from "@/lib/i18n/context";
@@ -44,40 +62,43 @@ export function StudentLesson() {
   const [ended, setEnded] = useState(false);
 
   const [lang, changeLang] = useProfileLang(profile, setProfile);
+  // Terms approved from earlier lessons' AI glossaries: the teacher's corrector marks them too.
+  useAiTerms(!!profile);
 
   const updatePrefs = useCallback(
     (patch: Partial<Pick<Profile, "depth_pref">>) => {
       if (!profile) return;
       setProfile({ ...profile, ...patch });
-      fire(getSupabase().from("profiles").update(patch).eq("user_id", profile.user_id), "save prefs");
+      fire(updateDoc(doc(getDb(), "profiles", profile.user_id), patch), "save prefs");
     },
     [profile, setProfile],
   );
 
+  const pseudonymId = profile?.pseudonym_id ?? null;
   const join = useCallback(async () => {
-    const supabase = getSupabase();
     setPhase({ kind: "joining" });
-    const { data: lessonId, error } = await supabase.rpc("join_lesson", { p_code: code });
-    if (error || typeof lessonId !== "string") {
-      setPhase({ kind: "error", reason: joinError(error?.message ?? "") });
-      return;
+    // Joining checks consents, role and lesson status on the server (API).
+    try {
+      const r = await apiFetch<{ lesson_id: string; title: string }>("/lessons/join", {
+        method: "POST",
+        body: JSON.stringify({ code }),
+      });
+      setPseudonym(pseudonymId);
+      setPhase({ kind: "live", lessonId: r.lesson_id, title: r.title || code });
+    } catch (e) {
+      setPhase({ kind: "error", reason: joinError(e instanceof ApiError ? e.message : "") });
     }
-    const { data: lesson } = await supabase.from("lessons").select("title").eq("id", lessonId).single();
-    const { data: pseudo } = await supabase.rpc("current_pseudonym");
-    setPseudonym(typeof pseudo === "string" ? pseudo : null);
-    setPhase({ kind: "live", lessonId, title: (lesson?.title as string | undefined) ?? code });
-  }, [code]);
+  }, [code, pseudonymId]);
 
   useEffect(() => {
     if (loading || !user) return;
     let cancelled = false;
     (async () => {
-      const { data } = await getSupabase()
-        .from("consents")
-        .select("purpose,revoked_at")
-        .eq("user_id", user.id);
+      const snap = await getDocs(query(collection(getDb(), "consents"), where("user_id", "==", user.id))).catch(
+        () => null,
+      );
       if (cancelled) return;
-      const rows = data ?? [];
+      const rows = (snap?.docs ?? []).map((d) => d.data() as { purpose: string; revoked_at: unknown });
       const active = new Set(rows.filter((r) => !r.revoked_at).map((r) => r.purpose as Purpose));
       const missing = REQUIRED_PURPOSES.filter((p) => !active.has(p));
       if (missing.length) {
@@ -96,10 +117,19 @@ export function StudentLesson() {
   const onConsentDone = async (granted: Purpose[]) => {
     if (!user) return;
     if (granted.length) {
-      const { error } = await getSupabase()
-        .from("consents")
-        .insert(granted.map((purpose) => ({ user_id: user.id, purpose })));
-      if (error && error.code !== "23505") {
+      // One document per purpose ("<uid>_<purpose>"); granting again reuses it.
+      const db = getDb();
+      try {
+        await Promise.all(
+          granted.map((purpose) =>
+            setDoc(
+              doc(db, "consents", `${user.id}_${purpose}`),
+              { user_id: user.id, purpose, granted_at: serverTimestamp(), revoked_at: null },
+              { merge: true },
+            ),
+          ),
+        );
+      } catch {
         setPhase({ kind: "error", reason: "generic" });
         return;
       }
@@ -108,22 +138,22 @@ export function StudentLesson() {
   };
 
   const lessonId = phase.kind === "live" ? phase.lessonId : null;
-  const [transport, setTransport] = useState<SupabaseTransport | null>(null);
+  const [transport, setTransport] = useState<FirestoreTransport | null>(null);
   useEffect(() => {
     if (!lessonId) return;
-    const tr = new SupabaseTransport(getSupabase(), lessonId);
+    const tr = new FirestoreTransport(getDb(), lessonId, { listenUtterances: true });
     // eslint-disable-next-line react-hooks/set-state-in-effect -- channel lives only in the browser
     setTransport(tr);
     return () => tr.close();
   }, [lessonId]);
-  const fetchSince = useMemo(() => (lessonId ? utteranceFetcher(getSupabase(), lessonId) : null), [lessonId]);
+  const fetchSince = useMemo(() => (lessonId ? utteranceFetcher(getDb(), lessonId) : null), [lessonId]);
 
   // Lesson end: instant signal on the channel, plus a status check on every (re)connection
   // and a slow poll, so a student who missed the signal still gets the button.
   useEffect(() => {
     if (!transport || !lessonId) return;
     const check = async () => {
-      const { data } = await getSupabase().from("lessons").select("status").eq("id", lessonId).maybeSingle();
+      const data = await getPlain<{ status: string }>(doc(getDb(), "lessons", lessonId)).catch(() => null);
       if (data?.status === "encerrada") setEnded(true);
     };
     const offControl = transport.onControl((m) => {
@@ -146,9 +176,14 @@ export function StudentLesson() {
     (termId: string, kind: "tap" | "doubt" | "helped" | "not_helped", depth: Depth) => {
       if (!lessonId || !pseudonym) return;
       fire(
-        getSupabase()
-          .from("term_events")
-          .insert({ lesson_id: lessonId, pseudonym_id: pseudonym, term_id: termId, kind, depth }),
+        addDoc(collection(getDb(), "termEvents"), {
+          lesson_id: lessonId,
+          pseudonym_id: pseudonym,
+          term_id: termId,
+          kind,
+          depth,
+          created_at: serverTimestamp(),
+        }),
         "term event",
       );
     },
@@ -158,25 +193,43 @@ export function StudentLesson() {
   if (phase.kind === "consent")
     return (
       <>
-        <div className="flex justify-end px-4 pt-2">
+        <SiteHeader showUser={false}>
           <LanguageSelect value={lang} onChange={changeLang} />
-        </div>
+        </SiteHeader>
         <ConsentFlow purposes={phase.purposes} onDone={onConsentDone} />
       </>
     );
   if (phase.kind === "error")
     return (
-      <main className="mx-auto max-w-md space-y-4 p-6">
-        <p className="text-lg">{phase.reason === "generic" ? t.common.error : t.join[phase.reason]}</p>
-        {phase.reason === "ended" && (
-          <Link className="underline underline-offset-4" href={`/aula/${code}/revisao`}>
-            {t.join.review}
-          </Link>
-        )}
-      </main>
+      <>
+        <SiteHeader />
+        <MessageCard
+          icon={phase.reason === "ended" ? CalendarCheck : phase.reason === "invalidCode" ? SearchX : CircleAlert}
+          tone={phase.reason === "ended" ? "neutral" : "warning"}
+          title={phase.reason === "generic" ? t.common.error : t.join[phase.reason]}
+          action={
+            <>
+              {phase.reason === "ended" && (
+                <Link className={buttonVariants()} href={`/aula/${code}/revisao`}>
+                  <ListChecks aria-hidden />
+                  {t.join.review}
+                </Link>
+              )}
+              <Link className={buttonVariants({ variant: "outline" })} href="/aluno">
+                <ArrowLeft aria-hidden />
+                {t.student_area.title}
+              </Link>
+            </>
+          }
+        />
+      </>
     );
   if (phase.kind !== "live")
-    return <p className="p-6 text-muted-foreground">{phase.kind === "joining" ? t.join.joining : t.common.loading}</p>;
+    return (
+      <div className="flex min-h-dvh flex-col">
+        <LoadingState text={phase.kind === "joining" ? t.join.joining : t.common.loading} />
+      </div>
+    );
 
   return (
     <StudentView
@@ -194,8 +247,14 @@ export function StudentLesson() {
       headerExtra={
         <>
           <LanguageSelect value={lang} onChange={changeLang} />
-          <Link href="/conta" className="inline-flex min-h-11 items-center px-2 text-sm underline underline-offset-4">
-            {t.student.account}
+          <Link
+            href="/conta"
+            aria-label={t.student.account}
+            title={t.student.account}
+            className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-xl px-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <UserRound aria-hidden className="size-5" />
+            <span className="hidden md:inline">{t.student.account}</span>
           </Link>
         </>
       }

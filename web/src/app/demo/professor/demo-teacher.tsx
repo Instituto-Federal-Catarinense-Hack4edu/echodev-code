@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { ExternalLink } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 import { TeacherConsole } from "@/components/teacher-console";
+import { buttonVariants } from "@/components/ui/button";
 import { LocalTransport } from "@/lib/realtime/local";
 import type { UtteranceMessage } from "@/lib/realtime/schemas";
 import { t } from "@/lib/i18n/pt-BR";
@@ -27,18 +30,16 @@ export function DemoTeacher() {
   );
 
   return (
-    <main className="mx-auto w-full max-w-6xl space-y-4 p-4">
-      <header className="flex flex-wrap items-center gap-3">
-        <h1 className="mr-auto text-2xl font-bold">{t.teacher.demoTitle}</h1>
-        <Link
-          href="/demo/estudante"
-          target="_blank"
-          className="inline-flex min-h-11 items-center underline underline-offset-4"
-        >
-          {t.teacher.openStudentDemo}
-        </Link>
-      </header>
-      <p className="text-sm text-muted-foreground">{t.home.demoHint}</p>
+    <main className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:py-8">
+      <PageHeader
+        title={t.teacher.demoTitle}
+        actions={
+          <Link href="/demo/estudante" target="_blank" className={buttonVariants({ variant: "outline" })}>
+            <ExternalLink aria-hidden />
+            {t.teacher.openStudentDemo}
+          </Link>
+        }
+      />
       <TeacherConsole transport={transport} onReady={onReady} />
     </main>
   );

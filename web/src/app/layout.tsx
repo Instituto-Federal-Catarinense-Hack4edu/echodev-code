@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { t } from "@/lib/i18n/pt-BR";
+import { themeScript } from "@/lib/theme";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -22,16 +23,24 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#a5400c",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#a5400c" },
+    { media: "(prefers-color-scheme: dark)", color: "#131210" },
+  ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="pt-BR"
+      // The theme script adds "dark" before React hydrates.
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
+      <body className="flex min-h-full flex-col">{children}</body>
     </html>
   );
 }

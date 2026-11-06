@@ -1,14 +1,24 @@
-"""Shared helpers for admin scripts (reads the root .env; never used by the API)."""
+"""Shared helpers for admin scripts (Firebase Admin SDK; never used by the web app).
+
+Reads the root .env. With `--emulators` (or FIRESTORE_EMULATOR_HOST set) everything goes to
+the local emulators started by `npm run emulators`, never to the real project.
+"""
 
 import os
 import sys
 from pathlib import Path
+from uuid import uuid4
 
-import httpx
+import firebase_admin
+from firebase_admin import auth, credentials
+from google.cloud import firestore
+from google.cloud.firestore_v1.base_query import FieldFilter
 
 ROOT = Path(__file__).resolve().parent.parent
 TEACHER_EMAIL_DEFAULT = "professor.teste@echodev.test"
 STUDENT_EMAILS = [f"estudante{i}.teste@echodev.test" for i in range(1, 9)]
+EMULATOR_FIRESTORE = "127.0.0.1:8080"
+EMULATOR_AUTH = "127.0.0.1:9099"
 
 
 def load_env() -> dict[str, str]:
@@ -21,34 +31,70 @@ def load_env() -> dict[str, str]:
                 continue
             k, _, v = line.partition("=")
             env[k.strip()] = v.strip()
-    env.update({k: v for k, v in os.environ.items() if k.startswith(("SUPABASE_", "DEV_"))})
-    missing = [
-        k
-        for k in ("SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY")
-        if not env.get(k)
-    ]
-    if missing:
-        sys.exit(f"Faltam variáveis no .env da raiz: {', '.join(missing)} (veja .env.example).")
-    env["SUPABASE_URL"] = env["SUPABASE_URL"].rstrip("/")
+    env.update(
+        {k: v for k, v in os.environ.items() if k.startswith(("FIREBASE_", "FIRESTORE_", "DEV_"))}
+    )
+    if "--emulators" in sys.argv:
+        env["FIRESTORE_EMULATOR_HOST"] = EMULATOR_FIRESTORE
+        env["FIREBASE_AUTH_EMULATOR_HOST"] = EMULATOR_AUTH
+    if not env.get("FIREBASE_PROJECT_ID"):
+        sys.exit("Falta FIREBASE_PROJECT_ID no .env da raiz (veja .env.example).")
     return env
 
 
-def service_headers(env: dict[str, str]) -> dict[str, str]:
-    # Secret keys are not JWTs: send them only on the apikey header.
-    return {"apikey": env["SUPABASE_SERVICE_ROLE_KEY"]}
-
-
-def user_headers(env: dict[str, str], token: str) -> dict[str, str]:
-    return {"apikey": env["SUPABASE_ANON_KEY"], "Authorization": f"Bearer {token}"}
-
-
-def sign_in(http: httpx.Client, env: dict[str, str], email: str, password: str) -> dict:
-    res = http.post(
-        f"{env['SUPABASE_URL']}/auth/v1/token",
-        params={"grant_type": "password"},
-        headers={"apikey": env["SUPABASE_ANON_KEY"]},
-        json={"email": email, "password": password},
+def init(env: dict[str, str]):
+    """Initializes the Admin SDK and returns a sync Firestore client."""
+    for key in ("FIRESTORE_EMULATOR_HOST", "FIREBASE_AUTH_EMULATOR_HOST"):
+        if env.get(key):
+            os.environ[key] = env[key]
+    emulators = bool(env.get("FIRESTORE_EMULATOR_HOST"))
+    cred_file = env.get("FIREBASE_CREDENTIALS_FILE", "")
+    if not emulators and not cred_file:
+        sys.exit(
+            "Defina FIREBASE_CREDENTIALS_FILE (JSON da conta de serviço) no .env da raiz, "
+            "ou use --emulators."
+        )
+    cred = credentials.Certificate(str(ROOT / cred_file)) if cred_file and not emulators else None
+    if not firebase_admin._apps:
+        firebase_admin.initialize_app(cred, {"projectId": env["FIREBASE_PROJECT_ID"]})
+    where = "emuladores locais" if emulators else f"projeto {env['FIREBASE_PROJECT_ID']}"
+    print(f"Usando: {where}")
+    # With FIRESTORE_EMULATOR_HOST the client uses anonymous credentials by itself.
+    return firestore.Client(
+        project=env["FIREBASE_PROJECT_ID"], credentials=cred.get_credential() if cred else None
     )
-    if res.status_code != 200:
-        sys.exit(f"Login falhou para {email}: {res.status_code} {res.text[:200]}")
-    return res.json()
+
+
+def find_uid(email: str) -> str | None:
+    try:
+        return auth.get_user_by_email(email).uid
+    except auth.UserNotFoundError:
+        return None
+
+
+def ensure_profile(db, uid: str, role: str) -> dict:
+    """Creates the profile (with a new pseudonym) or updates only its role."""
+    ref = db.collection("profiles").document(uid)
+    snap = ref.get()
+    if snap.exists:
+        ref.update({"role": role})
+        return {**(snap.to_dict() or {}), "role": role}
+    profile = {
+        "role": role,
+        "pseudonym_id": str(uuid4()),
+        "depth_pref": "curta",
+        "lang_pref": "pt",
+        "created_at": firestore.SERVER_TIMESTAMP,
+    }
+    ref.set(profile)
+    return profile
+
+
+def clear_student_traces(db, pseudonym: str | None) -> None:
+    """A teacher account never keeps student traces (memberships, term events)."""
+    if not pseudonym:
+        return
+    for name in ("lessonMembers", "termEvents"):
+        query = db.collection(name).where(filter=FieldFilter("pseudonym_id", "==", pseudonym))
+        for doc in query.stream():
+            doc.reference.delete()

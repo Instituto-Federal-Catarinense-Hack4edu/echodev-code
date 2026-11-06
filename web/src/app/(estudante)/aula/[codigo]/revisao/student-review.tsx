@@ -2,12 +2,20 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { ArrowLeft, BookOpen, FileText, Hourglass, ListChecks, Lock, Sparkles } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
+import { LoadingState, MessageCard, Notice } from "@/components/states";
+import { buttonVariants } from "@/components/ui/button";
+import { GlossaryList } from "@/components/glossary-list";
 import { PdfButton } from "@/components/pdf-button";
 import { QuizPlayer } from "@/components/quiz-player";
-import type { QuizItem, Resumo } from "@/lib/api/types";
-import { isQuiz, isResumo, lessonDate } from "@/lib/materials";
-import { getSupabase } from "@/lib/supabase/client";
-import { useProfile } from "@/lib/supabase/use-profile";
+import type { QuizItem, Resumo, TermoGlossario } from "@/lib/api/types";
+import { isGlossario, isQuiz, isResumo, lessonDate, type LessonDates } from "@/lib/materials";
+import { collection, doc, getDocs, query, where } from "firebase/firestore";
+import { getDb } from "@/lib/firebase/client";
+import { getPlain } from "@/lib/firebase/data";
+import { useProfile } from "@/lib/firebase/use-profile";
 import { LanguageSelect } from "@/components/language-select";
 import { useT } from "@/lib/i18n/context";
 import { useProfileLang } from "@/lib/i18n/use-profile-lang";
@@ -25,6 +33,7 @@ type State =
       quiz: QuizItem[] | null;
       resumoEs: Resumo | null;
       quizEs: QuizItem[] | null;
+      glossario: TermoGlossario[];
     };
 
 /** RLS returns only approved materials to members; drafts never reach this page. */
@@ -36,22 +45,33 @@ export function StudentReview() {
   const [state, setState] = useState<State>({ kind: "loading" });
 
   useEffect(() => {
-    if (loading || !user) return;
+    if (loading || !user || !profile) return;
     let timer: ReturnType<typeof setTimeout> | null = null;
     let cancelled = false;
     const load = async () => {
-      const supabase = getSupabase();
-      const { data: lesson } = await supabase
-        .from("lessons")
-        .select("id,title,started_at,ended_at,created_at")
-        .eq("code", (codigo ?? "").toUpperCase())
-        .maybeSingle();
+      const db = getDb();
+      // The code is resolved through the student's own memberships: lessons the student
+      // never joined stay invisible.
+      const code = (codigo ?? "").toUpperCase();
+      const mine = await getDocs(
+        query(collection(db, "lessonMembers"), where("pseudonym_id", "==", profile.pseudonym_id)),
+      ).catch(() => null);
+      const lessonId = mine?.docs.map((d) => d.data()).find((m) => m.lesson_code === code)?.lesson_id as
+        | string
+        | undefined;
+      const lesson = lessonId
+        ? await getPlain<{ title: string } & LessonDates>(doc(db, "lessons", lessonId)).catch(() => null)
+        : null;
       if (cancelled) return;
       if (!lesson) {
         setState({ kind: "not-member" });
         return;
       }
-      const { data } = await supabase.from("lesson_materials").select("kind,content").eq("lesson_id", lesson.id);
+      // Rules: members read only approved material, so the query must ask for that.
+      const mats = await getDocs(
+        query(collection(db, "lessons", lesson.id, "materials"), where("status", "==", "aprovado")),
+      ).catch(() => null);
+      const data = mats?.docs.map((d) => d.data()) ?? [];
       if (cancelled) return;
       const content = (kind: string) => data?.find((m) => m.kind === kind)?.content;
       const asResumo = (c: unknown) => (isResumo(c) ? c : null);
@@ -64,6 +84,10 @@ export function StudentReview() {
         quiz: asQuiz(content("quiz")),
         resumoEs: asResumo(content("resumo_es")),
         quizEs: asQuiz(content("quiz_es")),
+        glossario: (() => {
+          const g = content("glossario");
+          return isGlossario(g) ? (g.termos ?? []) : [];
+        })(),
       };
       setState(next);
       if (!next.resumo || !next.quiz) timer = setTimeout(load, APPROVAL_POLL_MS);
@@ -73,10 +97,22 @@ export function StudentReview() {
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [loading, user, codigo]);
+  }, [loading, user, profile, codigo]);
 
-  if (state.kind === "loading") return <p className="p-6 text-muted-foreground">{t.common.loading}</p>;
-  if (state.kind === "not-member") return <p className="p-6">{t.review.notMember}</p>;
+  if (state.kind === "loading") return <LoadingState text={t.common.loading} />;
+  if (state.kind === "not-member")
+    return (
+      <MessageCard
+        icon={Lock}
+        title={t.review.notMember}
+        action={
+          <Link href="/aluno" className={buttonVariants({ variant: "outline" })}>
+            <ArrowLeft aria-hidden />
+            {t.student_area.title}
+          </Link>
+        }
+      />
+    );
 
   const spanish = lang === "es";
   const resumo = (spanish && state.resumoEs) || state.resumo;
@@ -84,53 +120,100 @@ export function StudentReview() {
   const fellBack = spanish && ((!!state.resumo && !state.resumoEs) || (!!state.quiz && !state.quizEs));
 
   return (
-    <main className="mx-auto w-full max-w-2xl space-y-8 p-6 text-lg">
-      <header className="flex flex-wrap items-start gap-3">
-        <div className="mr-auto space-y-1">
-          <p className="text-sm text-muted-foreground">{t.review.studentTitle}</p>
-          <h1 className="text-2xl font-bold">{state.title}</h1>
-        </div>
-        <LanguageSelect value={lang} onChange={changeLang} />
-      </header>
-      {fellBack && <p className="text-base text-muted-foreground">{t.review.esFallback}</p>}
+    <main className="mx-auto w-full max-w-3xl space-y-6 px-4 py-8 text-lg">
+      <PageHeader
+        back={{ href: "/aluno", label: t.student_area.title }}
+        eyebrow={t.review.studentTitle}
+        title={state.title}
+        description={<span className="text-base">{t.pdf.date(state.date)}</span>}
+        actions={<LanguageSelect value={lang} onChange={changeLang} />}
+      />
+      {fellBack && (
+        <Notice tone="info" className="text-base">
+          {t.review.esFallback}
+        </Notice>
+      )}
       {(!state.resumo || !state.quiz) && (
-        <p role="status" className="rounded-lg border p-4">
-          {t.review.notApproved}
-        </p>
+        <div role="status" className="surface flex items-center gap-4 p-5">
+          <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-warning-soft text-warning">
+            <Hourglass aria-hidden className="size-6 motion-safe:animate-pulse" />
+          </span>
+          <p className="text-base">{t.review.notApproved}</p>
+        </div>
       )}
       {resumo && (
-        <PdfButton
-          label={t.pdf.download}
-          data={{
-            lessonTitle: state.title,
-            date: state.date,
-            resumo,
-            lang: resumo === state.resumoEs ? "es" : "pt",
-          }}
-        />
-      )}
-      {resumo && (
-        <section className="space-y-3" aria-labelledby="resumo-h">
-          <h2 id="resumo-h" className="text-xl font-semibold">
-            {resumo.titulo}
-          </h2>
-          <ul className="list-disc space-y-2 pl-6">
+        <section className="surface space-y-5 p-5 sm:p-7" aria-labelledby="resumo-h">
+          <div className="flex flex-wrap items-start gap-3">
+            <div className="mr-auto min-w-0 space-y-1">
+              <p className="flex items-center gap-2 text-sm font-semibold text-primary">
+                <FileText aria-hidden className="size-4" />
+                {t.review.summary} · {t.review.topicsCount(resumo.topicos.length)}
+              </p>
+              <h2 id="resumo-h" className="text-2xl font-bold tracking-tight">
+                {resumo.titulo}
+              </h2>
+            </div>
+            <PdfButton
+              label={t.pdf.download}
+              data={{
+                lessonTitle: state.title,
+                date: state.date,
+                resumo,
+                glossario: state.glossario,
+                lang: resumo === state.resumoEs ? "es" : "pt",
+              }}
+            />
+          </div>
+          <ol className="space-y-3">
             {resumo.topicos.map((topic, i) => (
-              <li key={i}>{topic}</li>
+              <li key={i} className="flex gap-3 leading-relaxed">
+                <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-primary-soft text-sm font-bold text-primary-soft-foreground">
+                  {i + 1}
+                </span>
+                <span>{topic}</span>
+              </li>
             ))}
-          </ul>
+          </ol>
           {!!resumo.termos_chave?.length && (
-            <p className="text-base text-muted-foreground">{resumo.termos_chave.join(" · ")}</p>
+            <ul className="flex flex-wrap gap-2 border-t pt-4" aria-label={t.pdf.glossary}>
+              {resumo.termos_chave.map((term) => (
+                <li key={term} className="rounded-full bg-muted px-3 py-1 font-mono text-sm">
+                  {term}
+                </li>
+              ))}
+            </ul>
           )}
         </section>
       )}
       {quiz && (
-        <section className="space-y-3 rounded-xl border p-4" aria-label={t.review.quiz}>
-          <h2 className="text-xl font-semibold">{t.review.quiz}</h2>
+        <section className="surface space-y-4 p-5 sm:p-7" aria-labelledby="quiz-h">
+          <h2 id="quiz-h" className="flex items-center gap-2 text-xl font-bold">
+            <ListChecks aria-hidden className="size-5 text-primary" />
+            {t.review.quiz}
+            <span className="text-sm font-medium text-muted-foreground">· {t.review.questionsCount(quiz.length)}</span>
+          </h2>
           <QuizPlayer key={quiz === state.quizEs ? "es" : "pt"} items={quiz} />
         </section>
       )}
-      <p className="text-sm text-muted-foreground">{t.review.aiNotice}</p>
+      {state.glossario.length > 0 && (
+        <section className="surface space-y-4 p-5 sm:p-7" aria-labelledby="glossario-h">
+          <div className="space-y-1">
+            <h2 id="glossario-h" className="flex items-center gap-2 text-xl font-bold">
+              <BookOpen aria-hidden className="size-5 text-primary" />
+              {t.review.glossaryTitle}
+              <span className="text-sm font-medium text-muted-foreground">
+                · {t.review.termCount(state.glossario.length)}
+              </span>
+            </h2>
+            <p className="text-base text-muted-foreground">{t.review.glossaryStudentIntro}</p>
+          </div>
+          <GlossaryList terms={state.glossario} lang={lang} />
+        </section>
+      )}
+      <p className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Sparkles aria-hidden className="size-4" />
+        {t.review.aiNotice}
+      </p>
     </main>
   );
 }

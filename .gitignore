@@ -9,3 +9,12 @@ __pycache__/
 api/openapi.json
 .DS_Store
 *.log
+
+# Firebase: service account keys, emulator data and CLI cache
+*-firebase-adminsdk-*.json
+serviceAccount*.json
+api/firebase-service-account*.json
+.firebase/
+firebase-debug*.log
+firestore-debug.log
+ui-debug.log

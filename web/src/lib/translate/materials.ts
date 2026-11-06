@@ -1,4 +1,5 @@
 import type { QuizItem, Resumo } from "@/lib/api/types";
+import { keepingTerms } from "./keep-terms";
 
 type Translate = (text: string) => Promise<string>;
 
@@ -15,7 +16,8 @@ export async function translateMaterials(
   resumo: Resumo,
   quiz: QuizItem[],
 ): Promise<{ resumo: Resumo; quiz: QuizItem[] }> {
-  const tr = async (s: string) => (s.trim() ? (await translate(s)).trim() || s : s);
+  const safe = keepingTerms(translate);
+  const tr = async (s: string) => (s.trim() ? (await safe(s)).trim() || s : s);
   const translatedResumo: Resumo = {
     ...resumo,
     titulo: await tr(resumo.titulo),

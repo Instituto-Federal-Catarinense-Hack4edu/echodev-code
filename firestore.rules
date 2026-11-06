@@ -1,0 +1,208 @@
+rules_version = '2';
+
+// EchoDev access rules (replace the Supabase RLS policies).
+// Anything not matched below is denied. The Python API uses the Admin SDK (bypasses these
+// rules) only for: profile creation, joining a lesson, aggregate counts/reports, ending a
+// lesson, account deletion and the 24 h purge. Each of those routes checks ownership itself.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+    function uid() {
+      return request.auth.uid;
+    }
+    function profilePath() {
+      return /databases/$(database)/documents/profiles/$(request.auth.uid);
+    }
+    function myProfile() {
+      return get(profilePath()).data;
+    }
+    function hasProfile() {
+      return signedIn() && exists(profilePath());
+    }
+    function isTeacher() {
+      return hasProfile() && myProfile().role == 'professor';
+    }
+    function isStudent() {
+      return hasProfile() && myProfile().role == 'estudante';
+    }
+    function lessonData(lessonId) {
+      return get(/databases/$(database)/documents/lessons/$(lessonId)).data;
+    }
+    function isOwner(lessonId) {
+      return signedIn() && lessonData(lessonId).teacher_id == uid();
+    }
+    // Membership is keyed by pseudonym, never by user id (the teacher cannot link the two).
+    function isMember(lessonId) {
+      return hasProfile()
+        && exists(/databases/$(database)/documents/lessonMembers/$(lessonId + '_' + myProfile().pseudonym_id));
+    }
+    function onlyChanges(keys) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys);
+    }
+    function isDepth(v) {
+      return v in ['curta', 'exemplo', 'passos'];
+    }
+    function isLang(v) {
+      return v in ['pt', 'en', 'es'];
+    }
+    function sizedString(v, min, max) {
+      return v is string && v.size() >= min && v.size() <= max;
+    }
+
+    // Teacher e-mails: Admin SDK / scripts only.
+    match /teacherAllowlist/{email} {
+      allow read, write: if false;
+    }
+
+    // Own profile only; role and pseudonym are never writable from the app.
+    // Created by the API (POST /me/profile), which decides the role from the allowlist.
+    match /profiles/{userId} {
+      allow get: if signedIn() && userId == uid();
+      allow update: if signedIn() && userId == uid()
+        && onlyChanges(['depth_pref', 'lang_pref'])
+        && isDepth(request.resource.data.depth_pref)
+        && isLang(request.resource.data.lang_pref);
+    }
+
+    // One document per user and purpose ("<uid>_<purpose>"): grant, revoke, grant again.
+    match /consents/{consentId} {
+      function purposeOk(p) {
+        return p in ['termos_uso', 'tratamento_dados', 'doacao_lexico', 'doacao_sinais'];
+      }
+      allow read: if signedIn() && resource.data.user_id == uid();
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['user_id', 'purpose', 'granted_at', 'revoked_at'])
+        && request.resource.data.user_id == uid()
+        && purposeOk(request.resource.data.purpose)
+        && consentId == uid() + '_' + request.resource.data.purpose
+        && request.resource.data.granted_at == request.time
+        && request.resource.data.revoked_at == null;
+      allow update: if signedIn() && resource.data.user_id == uid()
+        && onlyChanges(['granted_at', 'revoked_at'])
+        && (request.resource.data.revoked_at == null
+          ? request.resource.data.granted_at == request.time
+          : request.resource.data.revoked_at == request.time);
+    }
+
+    // Lessons: teachers create their own (with the code reserved in the same batch);
+    // owner and members read; owner updates and deletes.
+    match /lessons/{lessonId} {
+      allow read: if signedIn() && (resource.data.teacher_id == uid() || isMember(lessonId));
+      allow create: if isTeacher()
+        && request.resource.data.keys().hasOnly(
+          ['teacher_id', 'title', 'code', 'status', 'pack_ids', 'started_at', 'ended_at', 'created_at'])
+        && request.resource.data.teacher_id == uid()
+        && request.resource.data.status == 'criada'
+        && sizedString(request.resource.data.title, 1, 120)
+        && request.resource.data.code is string
+        && request.resource.data.code.matches('^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$')
+        && request.resource.data.pack_ids is list
+        && request.resource.data.created_at == request.time
+        && existsAfter(/databases/$(database)/documents/lessonCodes/$(request.resource.data.code));
+      allow update: if signedIn() && resource.data.teacher_id == uid()
+        && onlyChanges(['title', 'status', 'pack_ids', 'started_at', 'ended_at'])
+        && request.resource.data.status in ['criada', 'ao_vivo', 'encerrada'];
+      allow delete: if signedIn() && resource.data.teacher_id == uid();
+
+      // Transcript lines: the owner writes each sentence once (this write is also the live
+      // broadcast); owner and members read. Removed after 24 h by POST /cron/purge.
+      match /utterances/{seqId} {
+        allow read: if isOwner(lessonId) || isMember(lessonId);
+        allow create: if isOwner(lessonId)
+          && request.resource.data.keys().hasOnly(
+            ['seq', 'text', 'text_es', 'terms', 'wpm', 'created_at', 'expires_at'])
+          && request.resource.data.seq is int
+          && request.resource.data.seq > 0
+          && seqId == string(request.resource.data.seq)
+          && sizedString(request.resource.data.text, 0, 5000)
+          && (!('text_es' in request.resource.data) || sizedString(request.resource.data.text_es, 0, 5000))
+          && request.resource.data.terms is list
+          && request.resource.data.wpm is int
+          && request.resource.data.wpm >= 0
+          && request.resource.data.created_at == request.time
+          && request.resource.data.expires_at is timestamp
+          && request.resource.data.expires_at > request.time
+          && request.resource.data.expires_at <= request.time + duration.value(25, 'h');
+      }
+
+      // Summary, quiz and AI glossary: the owner does everything; members read only approved
+      // material.
+      match /materials/{kind} {
+        allow read: if isOwner(lessonId) || (resource.data.status == 'aprovado' && isMember(lessonId));
+        allow create, update: if isOwner(lessonId)
+          && kind in ['resumo', 'quiz', 'glossario', 'resumo_es', 'quiz_es']
+          && request.resource.data.kind == kind
+          && request.resource.data.status in ['rascunho', 'aprovado', 'descartado'];
+        allow delete: if isOwner(lessonId);
+      }
+    }
+
+    // Code -> lesson id. Created together with the lesson; an existing code makes the
+    // batch fail (create on an existing document is an update, which is denied).
+    match /lessonCodes/{code} {
+      allow create: if isTeacher()
+        && request.resource.data.keys().hasOnly(['lesson_id'])
+        && getAfter(/databases/$(database)/documents/lessons/$(request.resource.data.lesson_id)).data.teacher_id == uid()
+        && getAfter(/databases/$(database)/documents/lessons/$(request.resource.data.lesson_id)).data.code == code;
+    }
+
+    // Written only by the API (join). A student reads only their own memberships.
+    match /lessonMembers/{memberId} {
+      allow read: if hasProfile() && resource.data.pseudonym_id == myProfile().pseudonym_id;
+    }
+
+    // Anonymous term events: a member writes with their own pseudonym. Nobody reads them
+    // from the app; the teacher only gets aggregates (minimum 3 students) from the API.
+    match /termEvents/{eventId} {
+      allow create: if isStudent()
+        && request.resource.data.keys().hasOnly(
+          ['lesson_id', 'pseudonym_id', 'term_id', 'kind', 'depth', 'created_at'])
+        && request.resource.data.pseudonym_id == myProfile().pseudonym_id
+        && request.resource.data.lesson_id is string
+        && isMember(request.resource.data.lesson_id)
+        && sizedString(request.resource.data.term_id, 1, 64)
+        && request.resource.data.kind in ['tap', 'doubt', 'helped', 'not_helped']
+        && (request.resource.data.depth == null || isDepth(request.resource.data.depth))
+        && request.resource.data.created_at == request.time;
+    }
+
+    // Report snapshot (numbers and term ids only): written by the API, read by the owner.
+    match /lessonReports/{lessonId} {
+      allow read: if isOwner(lessonId);
+    }
+
+    // Dictionary grown from approved AI glossaries (no author, no lesson on purpose): teachers
+    // add terms, everyone with a profile reads them (students need the explanations). Nobody
+    // edits or deletes from the app: a term approved in one lesson is kept for all.
+    match /glossaryTerms/{termId} {
+      allow read: if hasProfile();
+      allow create: if isTeacher()
+        && termId.matches('^ia-[a-z0-9-]{1,60}$')
+        && request.resource.data.keys().hasOnly(
+          ['id', 'canonical', 'variants', 'category', 'explanations', 'source', 'created_at'])
+        && request.resource.data.id == termId
+        && sizedString(request.resource.data.canonical, 1, 60)
+        && request.resource.data.variants is list
+        && request.resource.data.variants.size() <= 6
+        && request.resource.data.category in ['conceitos', 'git', 'web', 'ferramentas']
+        && request.resource.data.explanations is map
+        && request.resource.data.explanations.keys().hasOnly(['pt', 'es', 'en'])
+        && request.resource.data.source == 'ia'
+        && request.resource.data.created_at == request.time;
+    }
+
+    // Term corrections (pairs only, no author on purpose): teachers read and add.
+    match /termCorrections/{correctionId} {
+      allow read: if isTeacher();
+      allow create: if isTeacher()
+        && request.resource.data.keys().hasOnly(['term_id', 'heard', 'correct', 'created_at'])
+        && sizedString(request.resource.data.term_id, 1, 64)
+        && sizedString(request.resource.data.heard, 1, 80)
+        && sizedString(request.resource.data.correct, 1, 80)
+        && request.resource.data.created_at == request.time;
+    }
+  }
+}

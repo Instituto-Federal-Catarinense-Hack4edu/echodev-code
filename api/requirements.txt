@@ -4,3 +4,5 @@ pydantic==2.14.2
 pydantic-settings==2.16.2
 httpx==0.28.1
 anthropic==2.4.0
+google-genai==2.34.0
+firebase-admin==7.7.0

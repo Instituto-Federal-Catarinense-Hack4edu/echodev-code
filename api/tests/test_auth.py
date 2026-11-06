@@ -1,40 +1,25 @@
-import httpx
-import respx
 from fastapi import Depends
 
-from app.auth import CurrentUser, get_current_user
-from tests.conftest import SUPABASE
-
-USER_URL = f"{SUPABASE}/auth/v1/user"
+from app.auth import CurrentUser, get_current_user, get_token_verifier
 
 
 def _add_probe(app):
     @app.get("/probe")
-    async def probe(user: CurrentUser = Depends(get_current_user)) -> dict[str, str]:
-        return {"id": user.id}
+    async def probe(user: CurrentUser = Depends(get_current_user)) -> dict:
+        return {"id": user.id, "email": user.email, "verified": user.email_verified}
 
 
-@respx.mock
 def test_valid_token(app, client):
     _add_probe(app)
-    route = respx.get(USER_URL).mock(return_value=httpx.Response(200, json={"id": "user-1"}))
-    res = client.get("/probe", headers={"Authorization": "Bearer good"})
+    res = client.get("/probe", headers={"Authorization": "Bearer new-token"})
     assert res.status_code == 200
-    assert res.json() == {"id": "user-1"}
-    sent = route.calls.last.request
-    assert sent.headers["apikey"] == "sb_publishable_test"
-    assert sent.headers["authorization"] == "Bearer good"
-    # cached: a second call does not hit Supabase again
-    client.get("/probe", headers={"Authorization": "Bearer good"})
-    assert route.call_count == 1
+    # e-mail is normalized to lower case (allowlist keys are lower case)
+    assert res.json() == {"id": "newbie", "email": "novo@escola.test", "verified": True}
 
 
-@respx.mock
 def test_invalid_token(app, client):
     _add_probe(app)
-    respx.get(USER_URL).mock(return_value=httpx.Response(401, json={"msg": "bad jwt"}))
-    res = client.get("/probe", headers={"Authorization": "Bearer bad"})
-    assert res.status_code == 401
+    assert client.get("/probe", headers={"Authorization": "Bearer bad"}).status_code == 401
 
 
 def test_missing_token(app, client):
@@ -43,11 +28,14 @@ def test_missing_token(app, client):
     assert client.get("/probe", headers={"Authorization": "Basic x"}).status_code == 401
 
 
-@respx.mock
-def test_auth_server_down(app, client):
+def test_verifier_failure_is_401(app, client):
     _add_probe(app)
-    respx.get(USER_URL).mock(side_effect=httpx.ConnectError("down"))
-    assert client.get("/probe", headers={"Authorization": "Bearer t"}).status_code == 503
+
+    def down(_: str) -> dict:
+        raise ConnectionError("Google keys unavailable")
+
+    app.dependency_overrides[get_token_verifier] = lambda: down
+    assert client.get("/probe", headers={"Authorization": "Bearer t"}).status_code == 401
 
 
 def test_cors_preflight_allows_web_origin(client):

@@ -6,8 +6,9 @@ import { termsFor } from "@/lib/terms/pack";
 import type { SttError, SttProvider, SttStatus } from "@/lib/stt/types";
 import { createWpmMeter } from "@/lib/stt/wpm";
 import { censor } from "@/lib/text/profanity";
+import { translateKeepingTerms } from "@/lib/translate/keep-terms";
 import { persistWithRenumber, type PersistFn } from "./persist";
-import type { UtteranceMessage } from "./schemas";
+import type { TermSpan, UtteranceMessage } from "./schemas";
 import type { RealtimeTransport } from "./types";
 
 export interface TeacherStreamOptions {
@@ -30,10 +31,12 @@ export interface TeacherStreamOptions {
 async function translateText(
   translate: ((text: string) => Promise<string>) | null,
   text: string,
+  terms: TermSpan[],
 ): Promise<string | undefined> {
   if (!translate || !text.trim()) return undefined;
   try {
-    const es = (await translate(text)).trim();
+    // Jargon ("commit", "push") stays as spoken instead of becoming "confirmación", "empujar".
+    const es = (await translateKeepingTerms(translate, text, terms)).trim();
     return es ? censor(es).text.slice(0, 5000) : undefined;
   } catch {
     return undefined;
@@ -89,7 +92,7 @@ export function useTeacherStream(opts: TeacherStreamOptions) {
     // Swear words are masked before anything else, so they never leave this browser.
     const { text, terms } = matcherRef.current.match(censor(raw).text);
     const now = Date.now();
-    const es = await translateText(translateRef.current, text);
+    const es = await translateText(translateRef.current, text, terms);
     let msg: UtteranceMessage = {
       seq: seqRef.current + 1,
       text,

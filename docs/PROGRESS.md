@@ -68,14 +68,57 @@
 
 ## Papéis e painel da aula (04/11/2026)
 - Professor e aluno separados no banco, nas rotas e no menu; área do aluno em `/aluno`; painel da aula após encerrar (PDF, conferir quiz, relatório); termo clicável no console do professor.
-- **Ação manual**: colar `supabase/migrations/20261104000600_roles.sql` no SQL Editor do Supabase (só esse arquivo, não o bundle).
+- (Supabase, já substituído pelo Firebase.)
 
 ## Espanhol (05/11/2026)
 - Legenda traduzida ao vivo (Chrome do professor), telas do aluno, explicações completas dos 40 termos, resumo, quiz e PDF em espanhol.
-- **Ação manual**: colar `supabase/migrations/20261105000100_spanish.sql` no SQL Editor do Supabase (depois da migração de papéis). Sem ela, as frases continuam sendo salvas só em português.
+- (Supabase, já substituído pelo Firebase.)
 - Para traduzir, o professor usa o Google Chrome 138+ no computador e clica em "Ativar tradução para espanhol" (o Chrome baixa o pacote de idioma uma vez).
 
+## Redesenho de UI/UX (05/11/2026)
+- Todas as telas redesenhadas sem mudar funcionalidades: página inicial (com prévia interativa de termo), login, demonstrações, console do professor, legenda do aluno, explicação do termo, minhas aulas, nova aula, aula ao vivo, painel, relatório (gráfico de ritmo), revisão do resumo e quiz, quiz, área do aluno, consentimentos, minha conta e 404.
+- Modo escuro (segue o sistema, com botão de sol/lua), botões e campos maiores, avisos coloridos com ícone, estados de carregamento e vazio.
+- Novos recursos de UX: mostrar senha, copiar código/link, filtro de aulas por status, contadores de caracteres, contagem do teste de microfone, guia de 3 passos na demonstração.
+- Corrigido: a legenda abria no menor tamanho de letra na primeira visita.
+- Tiradas da interface as menções à "demonstração offline" (seção da página inicial, atalhos no login, textos "sem login"). As páginas `/demo/professor` (agora "Painel do professor") e `/demo/estudante` ("Legenda ao vivo") continuam abrindo pelo endereço; o botão "Usar aula de demonstração" do console continua, por ser um recurso.
+- Tirados os selos de privacidade da página inicial e a linha de privacidade do rodapé (pedido do usuário). As mesmas informações seguem nos textos de consentimento e no aviso do relatório.
+- Verificado no navegador (claro e escuro, computador e celular): demonstração professor → estudante, abrir termo, quiz, relatório e editores com dados de exemplo. Telas com Supabase não foram abertas com dados reais (sem `.env` nesta máquina).
+
+## Migração para o Firebase (05/11/2026, branch `firebase`)
+- **Supabase removido.** Login no Firebase Authentication (e-mail/senha com confirmação, Google opcional, redefinição de senha), banco no Cloud Firestore, regras em `firestore.rules`, índices em `firestore.indexes.json`, emuladores em `firebase.json`. Projeto: `echodev-eb4fb`.
+- **Ao vivo**: o professor grava cada frase em `lessons/{id}/utterances` e os alunos recebem por listener do Firestore (`FirestoreTransport`, mesmo contrato `RealtimeTransport`). "Aula encerrada" chega pelo status da aula.
+- **API Python** com `firebase-admin`: valida o ID token; novas rotas `POST /me/profile` (cria o perfil com o papel da `teacherAllowlist`), `POST /lessons/join`, `GET /lessons/{id}/member-count`, `GET /lessons/{id}/term-report` (mínimo de 3 alunos); `end`, `regenerate`, `DELETE /me` e `/cron/purge` adaptadas. 57 testes `pytest` com um Firestore falso em memória.
+- **Regras provadas no emulador**: `npm run test:rules`, 15 grupos de casos (substitui o `check:rls`).
+- **Scripts**: `seed:dev`, `teacher:add` e `load:test` usam o Admin SDK (`--emulators` para rodar local); `npm run dev:emulators` sobe tudo sem tocar no projeto real.
+- `npm run check` verde. Verificado no emulador: as regras (15 grupos) e a criação dos 9 usuários de teste. **O fluxo completo no navegador (criar aula, aluno entrar, legenda, encerrar, aprovar, quiz) ficou para o teste manual da equipe.**
+- **Ação manual**: seguir `docs/SETUP_MANUAL.md` (ativar e-mail/senha, criar o Firestore, gerar a chave da conta de serviço, `firebase login`, `npm run deploy:rules`).
+
+## Escolha de papel no login (05/11/2026)
+- Tela de entrar/criar conta com "Aluno / Professor". Escolher "Professor" com e-mail fora da `teacherAllowlist` mostra "Este e-mail não está autorizado como professor" e sai da sessão, sem criar perfil de aluno. `POST /me/profile` aceita `intent` (opcional); 3 testes novos (60 no `pytest`). `npm run check` verde. **Não testado no navegador ainda.**
+
+## Fase 6: IA gratuita com Gemini (05/11/2026)
+- `LLM_PROVIDER=gemini` gera resumo e quiz com o Gemini (`api/app/llm/gemini_provider.py`); chave gratuita do AI Studio, sem cartão (passo a passo em `docs/SETUP_MANUAL.md`, seção 8). Cota esgotada no modelo principal passa sozinha para o modelo reserva.
+- 17 testes novos com um cliente falso do SDK (sem rede): esquema e modo JSON enviados, troca de modelo na cota e na sobrecarga, erros de chave/modelo/limite de tokens/recusa/rede, fluxo completo de materiais.
+- `npm run check` verde. **Não testado com chamada real** (sem `GEMINI_API_KEY` nesta máquina).
+
+## Fase 7: termos técnicos mantidos na tradução para o espanhol (05/11/2026)
+- Na legenda traduzida e no resumo e quiz em espanhol, jargão como `commit`, `push`, `merge`, `pull request` e `useState` fica como foi dito; variável, função, classe etc. continuam traduzidos (`web/src/lib/translate/keep-terms.ts`).
+- 9 testes novos com um tradutor falso que imita o Chrome (inclusive perdendo as marcas, para o plano B). `npm run check` verde. **Não testado no Chrome de verdade**: o comportamento das marcas no tradutor real precisa ser conferido numa aula de teste (se ele perder as marcas, o plano B entra sozinho).
+
+## Fase 8: glossário da aula feito pela IA (05/11/2026)
+- A IA lista os termos técnicos novos da aula (além do dicionário) com explicações em português e espanhol; o professor revisa e aprova em "Revisar materiais" (editor com nome, nome em espanhol, explicações, exemplos, passos e variações). O aluno vê o glossário aprovado na revisão da aula e no PDF; o painel da aula mostra o estado do glossário.
+- API: `glossario` no esquema, no prompt e no `mock`; `known_terms` opcional em `end`/`regenerate`; 6 testes novos (83 no `pytest`). Web: 1 teste novo do PDF. `npm run check` verde.
+- **Regras do Firestore mudaram** (`glossario` é um tipo de material permitido): rode `npm run deploy:rules` para enviar ao projeto. O caso novo em `web/rules-tests/` **não foi rodado** nesta máquina (os emuladores precisam do Java).
+- **Não testado no navegador nem com o Gemini de verdade.**
+
+## Fase 9: dicionário que cresce com os glossários aprovados (05/11/2026)
+- Ao aprovar o glossário, os termos entram na coleção `glossaryTerms` e passam a ser destacados, corrigidos e explicados em todas as próximas aulas (ficha do termo, legenda traduzida, correção de termo, relatório e PDF), sem chamar a IA durante a aula.
+- `web/src/lib/terms/ai-terms.ts` (conversão com as proteções do corretor, leitura e gravação) e registro de termos em `pack.ts`; 8 testes novos (112 no Vitest). `npm run check` verde.
+- **Regras do Firestore mudaram de novo** (coleção `glossaryTerms`): rode `npm run deploy:rules`. Sem isso, aprovar o glossário mostra "não foi possível adicionar os termos ao dicionário" e a aula segue só com o pacote. O caso novo em `web/rules-tests/` não foi rodado (sem Java).
+- **Não testado no navegador.**
+
 ## Pendências para a equipe
+- **Aprovar o uso do Gemini gratuito** com a instituição: no plano gratuito o Google pode usar a transcrição enviada para melhorar os produtos dele (no plano pago, não).
 - **Revisão humana do conteúdo** dos 40 termos (explicações e traduções) antes da demo. Nada na interface diz "verificado".
 - Variações fonéticas são hipóteses: validar no Teste A (`docs/TESTE_MANUAL.md`).
 - **Textos de consentimento** são marcadores ("texto a ser aprovado pela instituição"); definir o fluxo para menores de 18 anos com a instituição.
@@ -89,3 +132,4 @@ Palavras comuns do português que também são termos: `objeto`, `classe`, `mét
 ## Ideias fora do escopo
 - Ensinar ao corretor plurais automáticos (hoje são listados em `forms`).
 - Painel de curadoria das correções de termos (`term_corrections`) para promovê-las ao pacote versionado.
+- Curadoria dos termos aprovados da IA (`glossaryTerms`): editar ou remover um termo depois de aprovado.

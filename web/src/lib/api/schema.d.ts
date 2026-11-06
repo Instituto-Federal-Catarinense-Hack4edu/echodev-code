@@ -21,6 +21,60 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/lessons/join": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Join Lesson
+         * @description Join by the short code. Error details are codes the web app maps to messages.
+         */
+        post: operations["join_lesson_lessons_join_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/lessons/{lesson_id}/member-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Member Count */
+        get: operations["member_count_lessons__lesson_id__member_count_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/lessons/{lesson_id}/term-report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lesson Term Report */
+        get: operations["lesson_term_report_lessons__lesson_id__term_report_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/lessons/{lesson_id}/end": {
         parameters: {
             query?: never;
@@ -75,6 +129,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ensure Profile
+         * @description Idempotent. The role comes from the teacher allowlist, only for a verified e-mail
+         *     (otherwise anyone could sign up with a teacher's address). A "professor" intent from an
+         *     e-mail outside the allowlist is refused without creating a profile, so the account is not
+         *     locked as a student and becomes a teacher once the e-mail is added.
+         */
+        post: operations["ensure_profile_me_profile_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me": {
         parameters: {
             query?: never;
@@ -85,7 +162,11 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Delete Me */
+        /**
+         * Delete Me
+         * @description Removes the caller's data (and a teacher's lessons), then the auth account. Only ever
+         *     the caller's own id.
+         */
         delete: operations["delete_me_me_delete"];
         options?: never;
         head?: never;
@@ -119,10 +200,45 @@ export interface components {
             materials: components["schemas"]["MaterialOut"][];
             report: components["schemas"]["LessonReportData"];
         };
+        /** ExplicacaoTermo */
+        ExplicacaoTermo: {
+            /** Curta */
+            curta: string;
+            /** Exemplo */
+            exemplo: string;
+            /** Passos */
+            passos: string[];
+        };
+        /**
+         * GenerateRequest
+         * @description Optional body of end/regenerate: the terms the dictionary already knows (canonical
+         *     names), so the glossary only brings new ones.
+         */
+        GenerateRequest: {
+            /** Known Terms */
+            known_terms?: string[];
+        };
+        /** Glossario */
+        Glossario: {
+            /** Termos */
+            termos?: components["schemas"]["TermoGlossario"][];
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** JoinRequest */
+        JoinRequest: {
+            /** Code */
+            code: string;
+        };
+        /** JoinResponse */
+        JoinResponse: {
+            /** Lesson Id */
+            lesson_id: string;
+            /** Title */
+            title: string;
         };
         /** LessonReportData */
         LessonReportData: {
@@ -147,14 +263,19 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "resumo" | "quiz";
+            kind: "resumo" | "quiz" | "glossario";
             /**
              * Status
              * @enum {string}
              */
             status: "rascunho" | "aprovado" | "descartado";
             /** Content */
-            content: components["schemas"]["Resumo"] | components["schemas"]["QuizItem"][];
+            content: components["schemas"]["Resumo"] | components["schemas"]["QuizItem"][] | components["schemas"]["Glossario"];
+        };
+        /** MemberCountResponse */
+        MemberCountResponse: {
+            /** Count */
+            count: number;
         };
         /** PacePoint */
         PacePoint: {
@@ -162,6 +283,33 @@ export interface components {
             minute: number;
             /** Wpm */
             wpm: number;
+        };
+        /** ProfileOut */
+        ProfileOut: {
+            /** User Id */
+            user_id: string;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "professor" | "estudante";
+            /**
+             * Depth Pref
+             * @enum {string}
+             */
+            depth_pref: "curta" | "exemplo" | "passos";
+            /**
+             * Lang Pref
+             * @enum {string}
+             */
+            lang_pref: "pt" | "en" | "es";
+            /** Created */
+            created: boolean;
+        };
+        /** ProfileRequest */
+        ProfileRequest: {
+            /** Intent */
+            intent?: ("professor" | "estudante") | null;
         };
         /** PurgeResponse */
         PurgeResponse: {
@@ -201,6 +349,47 @@ export interface components {
             topicos: string[];
             /** Termos Chave */
             termos_chave?: string[];
+        };
+        /** TermReportRow */
+        TermReportRow: {
+            /** Term Id */
+            term_id: string;
+            /** Taps */
+            taps: number;
+            /** Students */
+            students: number;
+            /** Doubts */
+            doubts: number;
+            /** Helped */
+            helped: number;
+            /** Not Helped */
+            not_helped: number;
+        };
+        /**
+         * TermoGlossario
+         * @description A technical term said in class that the dictionary does not know yet (AI-written,
+         *     reviewed by the teacher before students see it).
+         */
+        TermoGlossario: {
+            /** Termo */
+            termo: string;
+            /** Nome Es */
+            nome_es: string;
+            /**
+             * Categoria
+             * @default conceitos
+             * @enum {string}
+             */
+            categoria: "conceitos" | "git" | "web" | "ferramentas";
+            pt: components["schemas"]["ExplicacaoTermo"];
+            es: components["schemas"]["ExplicacaoTermo"];
+            /**
+             * En Curta
+             * @default
+             */
+            en_curta: string;
+            /** Variacoes */
+            variacoes?: string[];
         };
         /** ValidationError */
         ValidationError: {
@@ -246,7 +435,40 @@ export interface operations {
             };
         };
     };
-    end_lesson_lessons__lesson_id__end_post: {
+    join_lesson_lessons_join_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JoinRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JoinResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    member_count_lessons__lesson_id__member_count_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -256,6 +478,72 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberCountResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    lesson_term_report_lessons__lesson_id__term_report_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lesson_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TermReportRow"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    end_lesson_lessons__lesson_id__end_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lesson_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["GenerateRequest"] | null;
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -286,7 +574,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["GenerateRequest"] | null;
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -326,6 +618,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PurgeResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ensure_profile_me_profile_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ProfileRequest"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileOut"];
                 };
             };
             /** @description Validation Error */

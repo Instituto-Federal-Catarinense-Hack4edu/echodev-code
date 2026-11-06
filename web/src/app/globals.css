@@ -35,6 +35,15 @@
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-soft-foreground: var(--primary-soft-foreground);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-strong: var(--warning-strong);
+  --color-danger-soft: var(--danger-soft);
+  --color-live: var(--live);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -46,76 +55,104 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --shadow-soft: 0 1px 2px rgb(23 24 28 / 0.04), 0 4px 16px -4px rgb(23 24 28 / 0.08);
+  --shadow-lift: 0 2px 4px rgb(23 24 28 / 0.05), 0 12px 32px -8px rgb(23 24 28 / 0.16);
 }
 
+/* EchoDev brand (from the logo): rust #a5400c, peach #e8b697, paper #f4f1e9, ink #17181c */
 :root {
-  --background: oklch(1 0 0);
-  /* EchoDev brand (from the logo): rust #a5400c, peach #e8b697, paper #f4f1e9, ink #17181c */
+  --background: #fbfaf7;
   --foreground: #17181c;
-  --card: oklch(1 0 0);
+  --card: #ffffff;
   --card-foreground: #17181c;
-  --popover: oklch(1 0 0);
+  --popover: #ffffff;
   --popover-foreground: #17181c;
   --primary: #a5400c;
   --primary-foreground: #ffffff;
+  --primary-soft: #fbe9dd;
+  --primary-soft-foreground: #7a2e07;
   --secondary: #f4f1e9;
   --secondary-foreground: #17181c;
   --muted: #f4f1e9;
   --muted-foreground: #5f5a54;
   --accent: #f4f1e9;
   --accent-foreground: #17181c;
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: #e7e1d6;
-  --input: #ddd5c8;
+  --destructive: #b42318;
+  --danger-soft: #fdecea;
+  --success: #15803d;
+  --success-soft: #e7f6ec;
+  --warning: #a35200;
+  --warning-soft: #fdf1df;
+  --warning-strong: #f59e0b;
+  --live: #dc2626;
+  --border: #e9e3d8;
+  --input: #d9d0c2;
   --ring: #a5400c;
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --chart-1: #a5400c;
+  --chart-2: #e8b697;
+  --chart-3: #b45309;
+  --chart-4: #5f5a54;
+  --chart-5: #17181c;
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: #ffffff;
+  --sidebar-foreground: #17181c;
+  --sidebar-primary: #a5400c;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f4f1e9;
+  --sidebar-accent-foreground: #17181c;
+  --sidebar-border: #e9e3d8;
+  --sidebar-ring: #a5400c;
+  --term-bg: #f6dccb; /* light peach */
+  --term-bg-hover: #f0c9ae;
+  --term-fg: #5c2306; /* dark rust, ~10:1 on the peach */
+  color-scheme: light;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #131210;
+  --foreground: #f3efe8;
+  --card: #1b1916;
+  --card-foreground: #f3efe8;
+  --popover: #1f1c19;
+  --popover-foreground: #f3efe8;
+  --primary: #f0915e;
+  --primary-foreground: #1d0d04;
+  --primary-soft: #3a2114;
+  --primary-soft-foreground: #ffcfb2;
+  --secondary: #26231f;
+  --secondary-foreground: #f3efe8;
+  --muted: #24211d;
+  --muted-foreground: #ada59b;
+  --accent: #2a2622;
+  --accent-foreground: #f3efe8;
+  --destructive: #f87171;
+  --danger-soft: #3b1715;
+  --success: #4ade80;
+  --success-soft: #11291a;
+  --warning: #fbbf24;
+  --warning-soft: #33250c;
+  --warning-strong: #fbbf24;
+  --live: #f87171;
+  --border: #2e2a25;
+  --input: #3d3832;
+  --ring: #f0915e;
+  --chart-1: #f0915e;
+  --chart-2: #8a4a28;
+  --chart-3: #fbbf24;
+  --chart-4: #ada59b;
+  --chart-5: #f3efe8;
+  --sidebar: #1b1916;
+  --sidebar-foreground: #f3efe8;
+  --sidebar-primary: #f0915e;
+  --sidebar-primary-foreground: #1d0d04;
+  --sidebar-accent: #26231f;
+  --sidebar-accent-foreground: #f3efe8;
+  --sidebar-border: #2e2a25;
+  --sidebar-ring: #f0915e;
+  --term-bg: #4a2616;
+  --term-bg-hover: #5c301c;
+  --term-fg: #ffdcc6;
+  color-scheme: dark;
 }
 
 @layer base {
@@ -128,14 +165,15 @@
   html {
     @apply font-sans;
   }
-}
-:root {
-  --term-bg: #f6dccb; /* light peach */
-  --term-fg: #5c2306; /* dark rust, ~10:1 on the peach */
-}
-.dark {
-  --term-bg: oklch(0.42 0.09 85);
-  --term-fg: oklch(0.98 0.02 95);
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  ::selection {
+    background: var(--term-bg);
+    color: var(--term-fg);
+  }
 }
 
 @layer base {
@@ -150,6 +188,27 @@
   }
 }
 
+/* Card surface used across screens. */
+@utility surface {
+  background: var(--card);
+  color: var(--card-foreground);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) * 1.8);
+  box-shadow: var(--shadow-soft);
+}
+
+/* Soft warm glow behind hero areas. */
+@utility bg-glow {
+  background-image:
+    radial-gradient(60rem 30rem at 85% -10%, color-mix(in oklab, var(--primary) 14%, transparent), transparent 70%),
+    radial-gradient(40rem 24rem at -10% 10%, color-mix(in oklab, var(--chart-2) 22%, transparent), transparent 70%);
+}
+
+@utility bg-dots {
+  background-image: radial-gradient(color-mix(in oklab, var(--foreground) 9%, transparent) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
 .term-highlight {
   background: var(--term-bg);
   color: var(--term-fg);
@@ -159,10 +218,90 @@
   text-decoration: underline dotted 0.08em;
   text-underline-offset: 0.2em;
   cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    box-shadow 150ms ease;
 }
 button.term-highlight {
   font: inherit;
   font-weight: 600;
+}
+button.term-highlight:hover {
+  background: var(--term-bg-hover);
+  box-shadow: 0 0 0 2px var(--term-bg-hover);
+}
+
+/* New caption line / list item entering. */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-rise {
+  animation: rise-in 280ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+/* Expanding ring around "live" dots. */
+@keyframes live-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+.live-dot {
+  position: relative;
+}
+.live-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: currentColor;
+  animation: live-ring 1.6s ease-out infinite;
+}
+
+/* Three bouncing dots ("listening", "waiting"). */
+@keyframes typing {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+.typing-dots > span {
+  display: inline-block;
+  width: 0.4em;
+  height: 0.4em;
+  margin: 0 0.08em;
+  border-radius: 9999px;
+  background: currentColor;
+  animation: typing 1.2s infinite ease-in-out;
+}
+.typing-dots > span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.typing-dots > span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+/* Thin, warm scrollbars on scrollable panels. */
+.nice-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--input) transparent;
 }
 
 /* Single mode for everyone: follow the OS "reduce motion" setting. */
