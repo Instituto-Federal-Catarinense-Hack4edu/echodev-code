@@ -4,6 +4,7 @@
 [![LGPD Compliant](https://img.shields.io/badge/LGPD-Privacy%20by%20Design-success?style=flat-square)](PRIVACY.md)
 [![PYTHON Version](https://img.shields.io/badge/python-3670A0?style=flat-square&logo=python&logoColor=ffdd54)](https://www.python.org/)
 [![REACT Version](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)](https://react.dev/)
+[![GEMINI Version](https://img.shields.io/badge/Google-Gemini-yellow?style=for-the-badge&logo=google)](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/2-5-flash?hl=pt-br)
 
 # EchoDev
 
