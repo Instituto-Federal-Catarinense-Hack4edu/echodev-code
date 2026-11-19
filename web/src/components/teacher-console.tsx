@@ -190,6 +190,8 @@ export function TeacherConsole(props: Props) {
   return (
     <div className="grid items-start gap-5 lg:grid-cols-[23rem_1fr]">
       <div className="space-y-4">
+        <MicTest disabled={phase === "live" || phase === "starting"} onTestingChange={setMicTesting} />
+
         <section
           className={cn(
             "surface space-y-4 p-5 transition-shadow",
@@ -323,8 +325,6 @@ export function TeacherConsole(props: Props) {
           )}
           {persistError && <Notice tone="error">{t.teacher.persistError(persistError)}</Notice>}
         </section>
-
-        <MicTest disabled={phase === "live" || phase === "starting"} onTestingChange={setMicTesting} />
 
         <TranslationPanel translation={translation} />
       </div>
