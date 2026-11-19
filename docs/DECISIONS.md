@@ -4,7 +4,7 @@ Registro de escolhas tomadas durante a construção (o que, por quê).
 
 ## Fase 0
 - **Ambiente Windows.** A máquina de desenvolvimento é Windows 11; o venv fica em `api/.venv/Scripts/`. Criei `scripts/py.mjs`, que encontra o Python do venv em Windows (`Scripts/python.exe`) ou macOS/Linux (`bin/python`), para os scripts da raiz funcionarem nos dois.
-- **Next.js 16.4.4** (o que `create-next-app` entregou). Nesta versão `middleware.ts` foi renomeado para `proxy.ts`; uso `proxy.ts` para renovar a sessão do Supabase.
+- **Next.js 16.4.4** (o que `create-next-app` entregou). Nesta versão `middleware.ts` foi renomeado para `proxy.ts`.
 - **shadcn 4.23 com preset padrão `base-nova`** (componentes sobre `@base-ui/react`, não Radix). Mantido, sem downgrade.
 - **Sem `@vitejs/plugin-react` nem Testing Library**: conflitavam com dependências do shadcn, e os testes do MVP são de lógica pura (corretor, transporte, estado do cliente). Vitest roda em ambiente `node` (que já tem `BroadcastChannel`).
 - **`@types/node` na linha 22** (exigência do Vitest 5 e igual ao Node instalado).
@@ -16,15 +16,13 @@ Registro de escolhas tomadas durante a construção (o que, por quê).
 - **Correspondência por tokens colados**: além de "use state" literal, o corretor compara a junção dos tokens ("usestate") com a junção do termo, então "use state" vira "useState" mesmo sem a variação escrita. Tokens só se juntam se entre eles houver espaço ou hífen (nunca vírgula).
 - **Maiúscula inicial preservada**: se o termo canônico é minúsculo e só a caixa difere ("Commit" no início da frase), o texto falado fica como está.
 - **Categorias** do pacote: `conceitos`, `git`, `web`, `ferramentas`.
-- **Histórico no modo offline**: o `LocalTransport` tem um pedido/resposta de histórico pelo próprio BroadcastChannel; a aba do professor responde. Assim a aba do estudante aberta depois recupera as frases, como a recuperação por `seq` do Supabase.
+- **Histórico no modo offline**: o `LocalTransport` tem um pedido/resposta de histórico pelo próprio BroadcastChannel; a aba do professor responde. Assim a aba do estudante aberta depois recupera as frases, como a recuperação por `seq` do Firestore.
 - **`lastSeq`** = maior `seq` tal que todos de 1 até ele estão presentes. Mensagens além de uma lacuna já aparecem na tela; a recuperação preenche o buraco.
 - **Palavras por minuto**: janela móvel de 60 s, com mínimo de 10 s de janela para não explodir na primeira frase.
 - **Folha inferior sem desfoque** do fundo (alterado em `components/ui/sheet.tsx`) para a legenda continuar legível com a explicação aberta.
 - **Alvos de toque**: todo `[data-slot=button]` tem no mínimo 44×44 px (em `globals.css`).
 
 ## Fase 2
-- **Chaves novas do Supabase** (`sb_publishable_`/`sb_secret_`): conforme a documentação, a chave vai no cabeçalho `apikey` e nunca como `Authorization: Bearer` (não são JWTs). A chave secreta é recusada por navegadores. Requisições de usuário usam `apikey` = publicável + `Authorization: Bearer <token do usuário>`.
-- **Scripts administrativos com `httpx`** (Auth Admin e PostgREST) em vez do `supabase-py`, que fica só como dependência da biblioteca `realtime` usada no `check_rls`. Menos camadas, mesmo comportamento.
 - **`literal_mode` no perfil** (coluna extra) para guardar o "modo literal" da Fase 4. _Atualização 03/11/2026: o modo foi retirado; a coluna (e `mode`) ficam no banco sem uso, para não exigir migração._
 - **`join_lesson` exige os dois consentimentos obrigatórios** no próprio banco (defesa em profundidade, além da tela).
 - **Mínimo de 3 estudantes no relatório é um piso**: `lesson_term_report` usa `greatest(p_min_students, 3)`, então ninguém consegue pedir 1 e desanonimizar.
@@ -106,11 +104,10 @@ Riscos conhecidos que ficaram (sem mudança no banco, para não exigir SQL novo)
 - **Início do reconhecimento à prova de travamento** (04/11/2026): antes de ligar o reconhecimento, o EchoDev pede o microfone diretamente (e fecha na hora), o que mostra a pergunta de permissão e distingue "negado", "sem microfone" e "microfone em uso". Se o navegador não começar a ouvir em 8 s (Brave, Opera, navegadores embutidos sem serviço de voz), a tela para de esperar e explica. `audio-capture` virou erro definitivo (antes ficava tentando de novo em silêncio) e uma exceção em `start()` não é mais engolida.
 
 ## Contas de verdade (04/11/2026)
-- Login principal por **e-mail e senha**, com abas "Entrar" e "Criar conta", "Esqueci minha senha" (`/redefinir-senha`) e mensagens claras por código de erro do Supabase. O link mágico e o quadro "Login de desenvolvimento" saíram; os usuários de teste entram pelo formulário normal.
+- Login principal por **e-mail e senha**, com abas "Entrar" e "Criar conta", "Esqueci minha senha" (`/redefinir-senha`) e mensagens claras por código de erro do login. O link mágico e o quadro "Login de desenvolvimento" saíram; os usuários de teste entram pelo formulário normal.
 - **Menu do usuário** no cabeçalho de todas as páginas: e-mail conectado, "Minhas aulas" (só para professor), "Minha conta" e "Sair".
 - **Página inicial** separa estudante (código da aula), professor (entrar ou criar conta) e a demonstração offline (recolhida).
 - **Quem é professor** continua definido pela `teacher_allowlist`; novo `npm run teacher:add -- email` autoriza e promove contas existentes.
-- O projeto Supabase exige confirmação de e-mail (`mailer_autoconfirm: false`): ver `docs/SETUP_MANUAL.md` 3b.
 
 ## Papéis separados e painel da aula (04/11/2026)
 - **Um e-mail é professor ou aluno, nunca os dois.** Migração `20261104000600_roles.sql`: `join_lesson` recusa conta de professor (`teacher_cannot_join`); promover uma conta a professor apaga os rastros de aluno dela (matrículas e eventos de termo), por gatilho.
@@ -135,7 +132,7 @@ Riscos conhecidos que ficaram (sem mudança no banco, para não exigir SQL novo)
 - **Novos recursos de UX**: mostrar/esconder senha; copiar código da aula e link do aluno; filtro por status em "Minhas aulas"; contador de caracteres no código e no título da aula; contagem regressiva no teste de microfone; indicador do tamanho da letra; "Essa explicação ajudou?" com ícones; prévia interativa de termo na página inicial; página 404; esqueletos de carregamento.
 - **Menu do usuário** com ícones e link ativo destacado; como lê a URL (`usePathname`), fica dentro de `<Suspense>` no `SiteHeader` para as rotas dinâmicas continuarem pré-renderizando (exigência do `cacheComponents`).
 - **Bug corrigido**: sem preferência salva, a legenda abria no menor tamanho (18 px), porque `Number(null)` é 0; agora abre no padrão (26 px).
-- **Sem menções à demonstração offline na interface** (pedido do usuário em 05/11/2026): a página inicial e o login não levam mais às páginas `/demo/*`, que continuam existindo pelo endereço e no README. Sem Supabase, o login só avisa que não está configurado.
+- **Sem menções à demonstração offline na interface** (pedido do usuário em 05/11/2026): a página inicial e o login não levam mais às páginas `/demo/*`, que continuam existindo pelo endereço e no README. Sem o Firebase configurado, o login só avisa que não está configurado.
 
 ## Migração para o Firebase (05/11/2026, pedido do usuário)
 - **Firestore em vez de Postgres; regras em vez de RLS.** `firestore.rules` nega tudo que não está explícito e reproduz as políticas antigas (dono, membro, só aprovado, ninguém lê eventos). Provado por `web/rules-tests/` no emulador.
@@ -148,7 +145,7 @@ Riscos conhecidos que ficaram (sem mudança no banco, para não exigir SQL novo)
 - **Consentimento**: um documento por usuário e finalidade (`{uid}_{finalidade}`); conceder de novo reaproveita o documento (perde-se o histórico de concessões antigas).
 - **E-mail confirmado obrigatório**: o Firebase deixa entrar sem confirmar; o site sai da sessão e mostra "confirme seu e-mail", e a API só cria perfil (e só dá papel de professor) para e-mail confirmado.
 - **Sem `proxy.ts` nem `/auth/callback`**: o Firebase guarda a sessão no navegador, então a proteção das páginas fica no `useProfile`/`RoleGate` (redireciona para `/entrar?next=`). O link de redefinir senha usa a página do Firebase, ou `/redefinir-senha` se a URL de ação for personalizada.
-- **Sem Analytics**: o trecho sugerido pelo console (`getAnalytics`) não foi usado, por privacidade (alunos menores, consentimento por finalidade).
+- **Sem Analytics**: o trecho sugerido pelo console (`getAnalytics`) não foi usado, por privacidade (consentimento por finalidade).
 
 ## Escolha de papel no login (05/11/2026)
 - **Professor fora da lista é recusado, não vira aluno.** A tela de entrar e de criar conta tem a escolha "Aluno / Professor" (o valor inicial vem do botão de onde a pessoa veio). Com "Professor", `POST /me/profile` recebe `intent: "professor"` e, se o e-mail não está na `teacherAllowlist`, responde 403 `not_teacher` **sem criar perfil**; o site sai da sessão e explica. Antes, a conta virava aluno em silêncio e ficava presa assim (o papel é gravado uma vez). Agora, quando a coordenação inclui o e-mail, basta entrar de novo.
@@ -192,4 +189,9 @@ Riscos conhecidos que ficaram (sem mudança no banco, para não exigir SQL novo)
 ## Fase 10 (18/11/2026)
 - **Quem liga o espanhol é o aluno**, não o professor: o aluno decide no próprio aparelho; o Chrome do professor traduz sempre que o tradutor existir. O download do pacote precisa de um clique, então acontece no "Iniciar transcrição".
 - **Variações de commit** a partir do teste real: "comitê", "comite" e "convite" viram commit, aceitando trocar o "convite" de verdade numa aula de programação.
-- **Modelo do Gemini**: mantido `gemini-3.6-flash` (escolha da equipe). No teste de 18/11 ele respondeu 503 ("alta demanda") uma vez e o `gemini-3.5-flash-lite` respondeu; a troca automática para o reserva cobre isso.
+- **Modelo do Gemini** (atualizado em 19/11): principal `gemini-3.1-flash-lite`, reservas `gemini-3.5-flash-lite` e `gemini-3.6-flash` (lista em `GEMINI_FALLBACK_MODEL`). Nos testes de 18 e 19/11 o 3.6-flash respondeu 503 ("alta demanda") três vezes e passou de 60 s sem responder uma vez; o 3.5-flash-lite falhou junto numa delas; o 3.1-flash-lite respondeu todas. A API agora troca de modelo também quando um deles demora demais e, se todos estiverem sobrecarregados, faz uma segunda rodada depois de 3 s.
+- **Piloto só com alunos maiores de idade** (19/11/2026, pedido do usuário): saiu da tela de consentimento o aviso para menores de 18 anos. Se um dia houver menores, a instituição define o fluxo de autorização dos responsáveis antes.
+- **Pasta única no Firebase** (19/11/2026): o projeto fica só em `C:\Projetos\echodev`, na versão Firebase; a versão antiga com Supabase foi descartada (pasta, histórico local e pacotes Python).
+- **`firebase-tools` como dependência de desenvolvimento** (versão 15.35.0, fixa): `npm run test:rules`, `npm run emulators` e `npm run dev:emulators` funcionam depois do `npm install`, sem instalação global.
+- **Páginas do professor com `instant = false`**: no Next 16.4.6, em desenvolvimento, cada página é validada sozinha e o `false` no layout não vale para as páginas abaixo dele; as páginas do professor seguem o mesmo padrão das do aluno.
+- **`dev:emulators` sem `--reload` na API no Windows**: lá, o recarregamento automático derrubava o script inteiro (e os emuladores, com os dados de teste). Depois de mudar a API, reinicie o comando.

@@ -1,6 +1,6 @@
 rules_version = '2';
 
-// EchoDev access rules (replace the Supabase RLS policies).
+// EchoDev access rules.
 // Anything not matched below is denied. The Python API uses the Admin SDK (bypasses these
 // rules) only for: profile creation, joining a lesson, aggregate counts/reports, ending a
 // lesson, account deletion and the 24 h purge. Each of those routes checks ownership itself.

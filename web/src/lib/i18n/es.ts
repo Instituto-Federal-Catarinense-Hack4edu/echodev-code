@@ -116,8 +116,6 @@ export const es: MessageOverrides = {
         body: "Permitir que tus valoraciones (\"me ayudó\", \"todavía tengo dudas\") se usen, de forma anónima, en investigaciones para mejorar las explicaciones.",
       },
     },
-    minors:
-      "Si tienes menos de 18 años, usa EchoDev solo con la autorización de tu responsable, según el proceso de tu institución.",
   },
   join: {
     joining: "Entrando a la clase…",

@@ -20,6 +20,7 @@
     "load:test": "node scripts/py.mjs scripts/load_test.py"
   },
   "devDependencies": {
-    "concurrently": "10.0.6"
+    "concurrently": "10.0.6",
+    "firebase-tools": "15.35.0"
   }
 }

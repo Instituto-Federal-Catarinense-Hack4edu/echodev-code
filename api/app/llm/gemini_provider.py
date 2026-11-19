@@ -1,11 +1,12 @@
 """Gemini via the official google-genai SDK (the free tier needs no billing account).
 
 Free quotas are small and counted per model and per day, so a quota error (HTTP 429) or an
-overloaded model moves the call to GEMINI_FALLBACK_MODEL, and the exhausted model is skipped
-for a while instead of being asked again on every call. No SDK retries: retrying a daily
-quota only adds waiting.
+overloaded model moves the call to the next model of GEMINI_FALLBACK_MODEL (comma-separated),
+and the exhausted model is skipped for a while instead of being asked again on every call.
+When every model is overloaded, the whole list is tried once more after a short pause.
 """
 
+import asyncio
 import time
 from typing import Any
 
@@ -20,6 +21,8 @@ MAX_OUTPUT_TOKENS = 16000
 # Quota (429) or overloaded (5xx): try the next model. Only a quota error parks the model.
 SWITCH_CODES = {429, 500, 503, 504}
 COOLDOWN_SECONDS = 600.0
+# Overload on the free tier usually passes in seconds: one more round after this pause.
+OVERLOAD_PAUSE_SECONDS = 3.0
 REFUSED = {
     types.FinishReason.SAFETY,
     types.FinishReason.PROHIBITED_CONTENT,
@@ -67,10 +70,8 @@ class GeminiProvider:
             raise LLMError("GEMINI_API_KEY ausente (ou use LLM_PROVIDER=mock).")
         if not settings.llm_model:
             raise LLMError("LLM_MODEL ausente no api/.env.")
-        reserve = settings.gemini_fallback_model.strip()
-        self._models = [settings.llm_model] + (
-            [reserve] if reserve and reserve != settings.llm_model else []
-        )
+        reserves = [m.strip() for m in settings.gemini_fallback_model.split(",") if m.strip()]
+        self._models = list(dict.fromkeys([settings.llm_model, *reserves]))
         self._cooldown_until: dict[str, float] = {}
         self._client = client or genai.Client(
             api_key=settings.gemini_api_key,
@@ -95,21 +96,34 @@ class GeminiProvider:
             response_json_schema=schema,
             max_output_tokens=MAX_OUTPUT_TOKENS,
         )
-        models = self._candidates()
-        for i, model in enumerate(models):
-            try:
-                response = await self._client.aio.models.generate_content(
-                    model=model, contents=user, config=config
-                )
-            except errors.APIError as exc:
-                if exc.code == 429:
-                    self._cooldown_until[model] = time.monotonic() + COOLDOWN_SECONDS
-                if exc.code in SWITCH_CODES and i + 1 < len(models):
+        error: LLMError | None = None
+        for attempt in range(2):
+            if attempt:
+                await asyncio.sleep(OVERLOAD_PAUSE_SECONDS)
+            overloaded = timed_out = False
+            for model in self._candidates():
+                try:
+                    response = await self._client.aio.models.generate_content(
+                        model=model, contents=user, config=config
+                    )
+                except errors.APIError as exc:
+                    if exc.code == 429:
+                        self._cooldown_until[model] = time.monotonic() + COOLDOWN_SECONDS
+                    if exc.code not in SWITCH_CODES:
+                        raise _api_error(exc) from exc
+                    overloaded = overloaded or exc.code != 429
+                    error = _api_error(exc)
                     continue
-                raise _api_error(exc) from exc
-            except httpx.TimeoutException as exc:
-                raise LLMError("O modelo demorou demais para responder.") from exc
-            except httpx.TransportError as exc:
-                raise LLMError("Sem conexão com o provedor de IA.") from exc
-            return _text_of(response)
-        raise LLMError("Nenhum modelo do Gemini configurado.")  # unreachable: models is never empty
+                except httpx.TimeoutException:
+                    # A slow model is usually an overloaded one: the next model may answer.
+                    timed_out = True
+                    error = LLMError("O modelo demorou demais para responder.")
+                    continue
+                except httpx.TransportError as exc:
+                    raise LLMError("Sem conexão com o provedor de IA.") from exc
+                return _text_of(response)
+            # Quota does not come back in seconds and timeouts already took long: only a quick
+            # overload earns a second round.
+            if not overloaded or timed_out:
+                break
+        raise error or LLMError("Nenhum modelo do Gemini configurado.")

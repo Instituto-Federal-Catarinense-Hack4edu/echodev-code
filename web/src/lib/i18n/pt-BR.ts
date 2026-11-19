@@ -319,8 +319,6 @@ export const t = {
         body: "Permitir que suas avaliações (\"ajudou\", \"ainda tenho dúvida\") sejam usadas, de forma anônima, em pesquisas sobre como melhorar as explicações.",
       },
     },
-    minors:
-      "Se você tem menos de 18 anos, use o EchoDev somente com a autorização do seu responsável, conforme o processo da sua instituição.",
   },
   join: {
     joining: "Entrando na aula…",

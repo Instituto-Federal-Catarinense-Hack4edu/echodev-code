@@ -1,6 +1,6 @@
 // Local development without touching the real project: Firebase emulators (Auth + Firestore),
 // test users, the Python API and the web app, all wired to the emulators.
-// Usage: npm run dev:emulators   (needs the Firebase CLI: npm install -g firebase-tools)
+// Usage: npm run dev:emulators   (the Firebase CLI comes with npm install)
 import { spawn } from "node:child_process";
 import { connect } from "node:net";
 import { dirname, join, resolve } from "node:path";
@@ -64,7 +64,10 @@ const py = join(root, "scripts", "py.mjs");
 const seed = start("seed", "node", [py, join("scripts", "seed_dev_users.py"), "--emulators"]);
 await new Promise((ok) => seed.on("exit", ok));
 
-start("api", "node", [py, "--cwd", "api", "-m", "uvicorn", "app.main:app", "--reload", "--port", "8000"], {
+// On Windows the reloader restart also stops this script (and the emulators with their data),
+// so there the API runs without --reload: restart `npm run dev:emulators` after API changes.
+const reload = process.platform === "win32" ? [] : ["--reload"];
+start("api", "node", [py, "--cwd", "api", "-m", "uvicorn", "app.main:app", ...reload, "--port", "8000"], {
   ...EMULATOR_ENV,
   FIREBASE_CREDENTIALS_FILE: "",
 });
