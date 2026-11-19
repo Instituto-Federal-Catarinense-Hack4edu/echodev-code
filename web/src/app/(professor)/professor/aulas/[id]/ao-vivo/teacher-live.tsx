@@ -24,6 +24,7 @@ import { useProfile } from "@/lib/firebase/use-profile";
 import { t } from "@/lib/i18n/pt-BR";
 import { generateBody } from "@/lib/materials";
 import { useAiTerms } from "@/lib/terms/use-ai-terms";
+import { useWakeLock } from "@/lib/use-wake-lock";
 
 /** Long lessons are summarized in several LLM calls; give the API time before giving up. */
 const END_TIMEOUT_MS = 300_000;
@@ -51,6 +52,7 @@ export function TeacherLive() {
   const [corrections, setCorrections] = useState<Corrections>({});
   // Approved AI terms join the corrector, so it is built only after they load.
   const dictionaryReady = useAiTerms(!!user);
+  useWakeLock(lesson?.status === "ao_vivo");
 
   useEffect(() => {
     // Free hosts sleep after ~15 min idle; keep the API awake so "end" is fast later.

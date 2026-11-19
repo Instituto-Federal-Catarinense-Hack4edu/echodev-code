@@ -188,3 +188,8 @@ Riscos conhecidos que ficaram (sem mudança no banco, para não exigir SQL novo)
 - **Espanhol**: `es.names` do termo é só o `nome_es` aprovado, então a regra da fase 7 decide sozinha: se o nome em espanhol é o próprio termo ("Docker"), ele é mantido na legenda traduzida; se não ("bucle"), é traduzido.
 - **Carregamento**: uma leitura da coleção por página (até 1.000 termos), na aula ao vivo do professor (antes de montar o corretor; se a leitura falhar, a aula segue só com o pacote), na aula do aluno, na revisão e no painel do professor (o relatório mostra toques em termos da IA). Os termos aprovados também vão no `known_terms`, então a IA não os propõe de novo.
 - **Na ficha do termo**, termos da IA dizem "Explicação escrita por IA e revisada por um professor" no lugar de "Conteúdo em revisão pela equipe".
+
+## Fase 10 (18/11/2026)
+- **Quem liga o espanhol é o aluno**, não o professor: o aluno decide no próprio aparelho; o Chrome do professor traduz sempre que o tradutor existir. O download do pacote precisa de um clique, então acontece no "Iniciar transcrição".
+- **Variações de commit** a partir do teste real: "comitê", "comite" e "convite" viram commit, aceitando trocar o "convite" de verdade numa aula de programação.
+- **Modelo do Gemini**: mantido `gemini-3.6-flash` (escolha da equipe). No teste de 18/11 ele respondeu 503 ("alta demanda") uma vez e o `gemini-3.5-flash-lite` respondeu; a troca automática para o reserva cobre isso.

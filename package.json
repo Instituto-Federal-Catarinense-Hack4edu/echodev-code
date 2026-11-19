@@ -4,6 +4,7 @@
   "description": "EchoDev: legenda ao vivo e materiais de aula para estudantes de programação (Hack4Edu 2026).",
   "scripts": {
     "dev": "concurrently -k -n web,api -c cyan,magenta \"npm --prefix web run dev\" \"node scripts/py.mjs --cwd api -m uvicorn app.main:app --reload --port 8000\"",
+    "aula": "node scripts/aula.mjs",
     "dev:emulators": "node scripts/dev_emulators.mjs",
     "emulators": "firebase emulators:start --only auth,firestore",
     "check": "npm run check:web && npm run check:api && npm run check:types",

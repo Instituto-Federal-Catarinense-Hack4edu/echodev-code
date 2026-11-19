@@ -64,6 +64,8 @@ export interface ResolvedExplanation {
   /** True when the requested language/depth was missing and Portuguese was used. */
   fellBack: boolean;
   text: string | string[];
+  /** Only for the example depth: what the example shows, in plain words. */
+  note?: string;
 }
 
 export function literalMeaning(term: Term, lang: Lang): string | undefined {
@@ -75,6 +77,11 @@ export function explain(term: Term, depth: Depth, lang: Lang): ResolvedExplanati
   const key = depth === "curta" ? "short" : depth === "exemplo" ? "example" : "steps";
   const wanted = term.explanations[lang];
   const value = wanted?.[key];
-  if (value !== undefined) return { lang, fellBack: false, text: value };
-  return { lang: "pt", fellBack: lang !== "pt", text: term.explanations.pt[key] };
+  if (value !== undefined) {
+    const note = key === "example" ? wanted?.exampleNote : undefined;
+    return { lang, fellBack: false, text: value, ...(note ? { note } : {}) };
+  }
+  const pt = term.explanations.pt;
+  const note = key === "example" ? pt.exampleNote : undefined;
+  return { lang: "pt", fellBack: lang !== "pt", text: pt[key], ...(note ? { note } : {}) };
 }

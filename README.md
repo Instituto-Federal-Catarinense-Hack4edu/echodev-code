@@ -94,7 +94,7 @@ Use uma **janela anônima** (Ctrl+Shift+N) para o aluno: cada janela guarda um l
 **Aula ao vivo**
 1. **Professor**: clique em **Nova aula**, dê um título e crie. Anote o código de 6 caracteres.
 2. **Aluno** (janela anônima): digite o código em **Entrar em uma aula** e aceite os consentimentos.
-3. *(Opcional, espanhol)* **Aluno**: escolha **Español**. **Professor**: clique em **Ativar tradução para espanhol** (Chrome 138+; ele baixa o idioma uma vez).
+3. *(Opcional, espanhol)* **Aluno**: toque em **Ver em espanhol** na barra da legenda. O Chrome do professor (138+) traduz sozinho; na primeira vez ele baixa o pacote de espanhol ao iniciar a transcrição.
 4. **Professor**: clique em **Usar aula de demonstração** (22 frases prontas sobre Git e React) ou em **Iniciar transcrição** (microfone).
 5. **Aluno**: as frases chegam ao vivo, com "comiti" corrigido para **commit**. Toque num termo destacado e responda "Essa explicação ajudou?". Em espanhol, o jargão continua igual: "commit", "push", "pull request".
 

@@ -73,7 +73,7 @@
 ## Espanhol (05/11/2026)
 - Legenda traduzida ao vivo (Chrome do professor), telas do aluno, explicações completas dos 40 termos, resumo, quiz e PDF em espanhol.
 - (Supabase, já substituído pelo Firebase.)
-- Para traduzir, o professor usa o Google Chrome 138+ no computador e clica em "Ativar tradução para espanhol" (o Chrome baixa o pacote de idioma uma vez).
+- Para traduzir, o professor usa o Google Chrome 138+ no computador; desde a fase 10 é o aluno quem escolhe ver em espanhol.
 
 ## Redesenho de UI/UX (05/11/2026)
 - Todas as telas redesenhadas sem mudar funcionalidades: página inicial (com prévia interativa de termo), login, demonstrações, console do professor, legenda do aluno, explicação do termo, minhas aulas, nova aula, aula ao vivo, painel, relatório (gráfico de ritmo), revisão do resumo e quiz, quiz, área do aluno, consentimentos, minha conta e 404.
@@ -116,6 +116,18 @@
 - `web/src/lib/terms/ai-terms.ts` (conversão com as proteções do corretor, leitura e gravação) e registro de termos em `pack.ts`; 8 testes novos (112 no Vitest). `npm run check` verde.
 - **Regras do Firestore mudaram de novo** (coleção `glossaryTerms`): rode `npm run deploy:rules`. Sem isso, aprovar o glossário mostra "não foi possível adicionar os termos ao dicionário" e a aula segue só com o pacote. O caso novo em `web/rules-tests/` não foi rodado (sem Java).
 - **Não testado no navegador.**
+
+## Fase 10: pronto para o piloto em sala (18/11/2026)
+- **Next.js 16.4.4 → 16.4.6**: a 16.4.4 tem 2 falhas moderadas de vazamento no cache (GHSA-mfr8-8qww-v76h, GHSA-vc7v-qv4w-wrv8) e o `next build` passou a parar com erro por causa delas. Restam avisos do `npm audit` em `@grpc/grpc-js` (parte de servidor que o navegador não usa) e no `shadcn` (ferramenta de instalação de componentes), sem efeito na aula.
+- **`npm run check` num clone novo**: o `typecheck` agora roda `next typegen` antes do `tsc` (sem isso, `LayoutProps` não existia e a checagem falhava).
+- **Reconhecimento não para com a aba escondida**: depois de uma pausa normal o reconhecimento reinicia na hora (o Chrome atrasa timers de abas escondidas em até 1 min); ao voltar para a aba, um reinício pendente acontece na hora. 2 testes novos.
+- **Tela do professor acesa** durante a aula ao vivo (Wake Lock).
+- **Aluno decide o espanhol**: botão "Ver em espanhol" / "Ver em português" na barra da legenda. O professor não tem mais botão: o Chrome dele prepara o tradutor sozinho (ou no clique de "Iniciar transcrição", quando precisa baixar o pacote) e traduz todas as frases, mantendo os termos técnicos (fase 7).
+- **Commit reconhecido** quando o Chrome escreve "comitê", "comite" ou "convite" (visto em teste real). "commitê" ficou de fora porque juntava "commit e" numa palavra só.
+- **Dicionário**: explicação "Definição" com duas frases nos 40 termos; Git, repositório, commit, branch, merge, GitHub e push com definição longa e exemplo em bloco de código com explicação (pt e es). A aba "Curta" virou "Definição".
+- **`npm run aula`**: gera a versão final e liga site + API, com a API servida pelo site em `/py` (um endereço só, bom para túnel); `API_PROXY_TARGET` em `next.config.ts`.
+- **Gemini testado com chamada real** (gemini-3.6-flash): resumo, quiz e glossário de 7 termos em pt/es em ~19 s.
+- `npm run check` verde (115 Vitest, 83 pytest). **Ainda não feitos**: `npm run test:rules` (precisa do `firebase-tools`) e o fluxo completo no navegador com o projeto Firebase.
 
 ## Pendências para a equipe
 - **Aprovar o uso do Gemini gratuito** com a instituição: no plano gratuito o Google pode usar a transcrição enviada para melhorar os produtos dele (no plano pago, não).

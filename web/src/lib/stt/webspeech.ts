@@ -17,6 +17,8 @@ export const START_TIMEOUT_MS = 8000;
 const BACKOFF_START_MS = 250;
 const BACKOFF_MAX_MS = 3000;
 const MAX_CONSECUTIVE_ERRORS = 8;
+/** Sessions shorter than this restart with backoff, so a failing recognizer never spins. */
+const QUICK_END_MS = 1000;
 
 /**
  * Web Speech API (Chrome/Edge). Recognition stops by itself after silence, so we
@@ -34,6 +36,11 @@ export class WebSpeechProvider implements SttProvider {
   private watchdog: ReturnType<typeof setTimeout> | null = null;
   private session = 0;
   private dedupe = createFinalDeduper();
+  private lastEndFailed = false;
+  private startedAt = 0;
+  private onVisible = () => {
+    if (document.visibilityState === "visible") this.kick();
+  };
 
   constructor(private readonly lang = "pt-BR") {}
 
@@ -103,6 +110,7 @@ export class WebSpeechProvider implements SttProvider {
     rec.maxAlternatives = 1;
 
     rec.onstart = () => {
+      this.startedAt = Date.now();
       this.clearWatchdog();
       this.handlers?.onStatus?.("listening");
     };
@@ -132,7 +140,10 @@ export class WebSpeechProvider implements SttProvider {
         return;
       }
       // "no-speech" is normal during pauses; only count real failures.
-      if (ev.error !== "no-speech") this.errors++;
+      if (ev.error !== "no-speech") {
+        this.errors++;
+        this.lastEndFailed = true;
+      }
       if (this.errors >= MAX_CONSECUTIVE_ERRORS) {
         this.fail("too-many-errors", ev.error);
         return;
@@ -147,6 +158,17 @@ export class WebSpeechProvider implements SttProvider {
         return;
       }
       this.handlers?.onStatus?.("restarting");
+      // A normal end (silence) restarts right away: timers in a hidden tab (teacher on the
+      // Meet tab) can be delayed by up to a minute, and the caption would stop meanwhile.
+      if (!this.lastEndFailed && Date.now() - this.startedAt > QUICK_END_MS) {
+        try {
+          rec.start();
+          return;
+        } catch {
+          /* fall back to the delayed restart */
+        }
+      }
+      this.lastEndFailed = false;
       const wait = this.backoff;
       this.backoff = Math.min(this.backoff * 2, BACKOFF_MAX_MS);
       this.timer = setTimeout(() => {
@@ -161,6 +183,7 @@ export class WebSpeechProvider implements SttProvider {
     };
 
     this.rec = rec;
+    if (typeof document !== "undefined") document.addEventListener("visibilitychange", this.onVisible);
     // Some browsers expose the API but never start (no speech service): don't wait forever.
     this.watchdog = setTimeout(() => {
       this.watchdog = null;
@@ -173,6 +196,19 @@ export class WebSpeechProvider implements SttProvider {
     } catch (e) {
       this.detach(rec);
       this.fail("no-response", e instanceof DOMException ? e.name : "start-failed");
+    }
+  }
+
+  /** Back on this tab while a restart is still waiting: restart now. */
+  private kick() {
+    const rec = this.rec;
+    if (!this.active || !rec || !this.timer) return;
+    clearTimeout(this.timer);
+    this.timer = null;
+    try {
+      rec.start();
+    } catch {
+      /* already running */
     }
   }
 
@@ -191,6 +227,7 @@ export class WebSpeechProvider implements SttProvider {
 
   stop(): void {
     this.active = false;
+    if (typeof document !== "undefined") document.removeEventListener("visibilitychange", this.onVisible);
     this.session++;
     this.clearWatchdog();
     if (this.timer) clearTimeout(this.timer);
