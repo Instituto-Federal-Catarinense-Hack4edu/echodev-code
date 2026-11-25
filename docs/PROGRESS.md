@@ -92,12 +92,17 @@
 - Novo **`npm run e2e:lesson`**: com a API ligada, faz uma aula inteira no projeto real **pelas regras de acesso**, como o site (usuários de teste entram com token criado pela conta de serviço, sem senha), e apaga tudo no fim. Resultado em 25/11: **15/15** (criar aula com código reservado, lista "Minhas aulas" com o índice, consentimentos, entrar pelo código, contador de alunos, aula ao vivo, frases gravadas e lidas pelo aluno, aluno de fora recusado, encerrar com o Gemini em ~10 s, rascunho escondido do aluno, aprovação, aluno lê resumo e quiz).
 - **Ainda não testado no projeto real**: login pelo navegador (só pelo emulador), celulares e microfone de verdade.
 
+## Fase 14: publicação na Vercel (25/11/2026)
+- Site e API preparados para a Vercel (`api/vercel.json`, chave em `FIREBASE_CREDENTIALS_JSON`, passo a passo em `docs/DEPLOY.md`).
+- Chave da conta de serviço trocada (a anterior passou a ser recusada pelo Google). Com a chave nova lida **só pela variável**, como na Vercel: `npm run e2e:lesson` **15/15** no projeto real (Gemini em ~9 s).
+- Ainda não publicado: depende do envio da branch ao GitHub e dos projetos na Vercel.
+
 ## Pendências para a equipe
 - **Aprovar o uso do Gemini gratuito** com a instituição: no plano gratuito o Google pode usar a transcrição enviada para melhorar os produtos dele (no plano pago, não).
 - **Revisão humana do conteúdo** dos 40 termos (explicações e traduções) antes da demo. Nada na interface diz "verificado".
 - Variações fonéticas são hipóteses: validar no Teste A (`docs/TESTE_MANUAL.md`).
 - **Textos de consentimento** são marcadores ("texto a ser aprovado pela instituição"). O piloto considera só alunos maiores de idade.
-- **Publicar** seguindo `docs/DEPLOY.md` (Render para a API com o `render.yaml`, Vercel para o site, limpeza de 24 h pelo GitHub Actions).
+- **Publicar** seguindo `docs/DEPLOY.md` (site e API na Vercel, limpeza de 24 h pelo GitHub Actions).
 - **Trocar a chave do Gemini** depois do hackathon (ela passou pelo chat durante o desenvolvimento) e apagar o projeto Supabase antigo no painel dele, se ainda existir.
 
 ### Termos propensos a falso positivo (curadoria)

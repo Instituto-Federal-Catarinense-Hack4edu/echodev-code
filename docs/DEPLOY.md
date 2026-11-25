@@ -1,6 +1,6 @@
 # Hospedagem
 
-Caminho escolhido: **site na Vercel e API no Render, os dois no plano gratuito** (passo a passo abaixo). Este documento também compara as outras opções. Os limites de planos gratuitos mudam com frequência e as fontes consultadas em 03/11/2026 nem sempre concordam: **confira a página oficial de preços antes de decidir.**
+Caminho escolhido: **tudo na Vercel, plano gratuito (Hobby)**: dois projetos do mesmo repositório, um para o site (pasta `web`) e outro para a API (pasta `api`). Passo a passo abaixo; o resto do documento compara as outras opções. Os limites de planos gratuitos mudam com frequência e as fontes consultadas em 03/11/2026 nem sempre concordam: **confira a página oficial de preços antes de decidir.**
 
 ## O que precisa ser hospedado
 | Parte | Onde | Observação |
@@ -26,41 +26,55 @@ Caminho escolhido: **site na Vercel e API no Render, os dois no plano gratuito**
   - se o LLM falhar, a aula continua encerrada e o botão "Tentar de novo" chama `regenerate`.
 - **Limpeza de 24 h** (obrigatória: no plano gratuito do Firebase não há TTL): configure um agendador externo (por exemplo, um cron job do próprio Render ou do GitHub Actions) para `POST https://SUA-API/cron/purge` com o cabeçalho `X-Cron-Secret: <CRON_SECRET>` a cada hora.
 
-## Passo a passo (Render + Vercel)
-Antes: o código precisa estar no GitHub, na branch que será publicada. Faça os passos na ordem, porque cada serviço precisa do endereço do outro.
+## Passo a passo (tudo na Vercel)
+Antes: o código precisa estar no GitHub, na branch que será publicada (de preferência o `main`). Faça na ordem: a API primeiro, porque o site precisa do endereço dela.
 
-### 1. API no Render (render.com)
-1. Entre com a conta do GitHub e autorize o acesso ao repositório `echodev-code`.
-2. **New → Blueprint**, escolha o repositório e a branch. O Render lê o `render.yaml` da raiz e cria o serviço `echodev-api` (plano gratuito, pasta `api`).
-3. Ele pede os valores secretos: `GEMINI_API_KEY` (a chave do AI Studio) e `WEB_ORIGIN` (por enquanto `http://localhost:3000`; troque no passo 3). O `CRON_SECRET` é gerado sozinho.
-4. No serviço criado: **Environment → Secret Files → Add Secret File**, nome `firebase-service-account.json`, conteúdo = o arquivo `api/firebase-service-account.json` inteiro. Salve; o Render publica de novo.
-5. Anote o endereço do serviço (ex.: `https://echodev-api.onrender.com`) e confira que `https://…/health` responde `{"status":"ok"}`.
+### 1. API (projeto `echodev-api` na Vercel)
+1. Entre em vercel.com com a conta do GitHub → **Add New → Project** → importe `echodev-code`. Se a organização do GitHub pedir, um dono dela precisa aprovar o acesso da Vercel.
+2. **Project Name** = `echodev-api`, **Root Directory** = `api`. A Vercel reconhece o FastAPI sozinha (`app/main.py`, variável `app`); o `api/vercel.json` dá até 300 s por pedido e deixa testes e arquivos locais de fora.
+3. **Environment Variables** (os valores secretos nunca vão para o GitHub):
 
-### 2. Site na Vercel (vercel.com)
-1. Entre com a conta do GitHub, **Add New → Project**, importe o repositório.
-2. **Root Directory = `web`** (o resto a Vercel detecta: Next.js).
-3. Em **Environment Variables**, copie do `web/.env.local`: `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, `NEXT_PUBLIC_FIREBASE_APP_ID`, `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`, `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`, e acrescente `NEXT_PUBLIC_FIREBASE_EMULATORS=false` e `NEXT_PUBLIC_API_URL=<endereço do Render>`.
+   | Nome | Valor |
+   |---|---|
+   | `FIREBASE_PROJECT_ID` | `echodev-eb4fb` |
+   | `FIREBASE_CREDENTIALS_JSON` | o conteúdo inteiro do arquivo da conta de serviço (abra o JSON no Bloco de Notas, copie tudo e cole) |
+   | `WEB_ORIGIN` | por enquanto `http://localhost:3000` (troque no passo 3) |
+   | `CRON_SECRET` | um texto aleatório comprido (por exemplo, gere com um gerador de senhas, 32 caracteres) |
+   | `LLM_PROVIDER` | `gemini` |
+   | `LLM_MODEL` | `gemini-3.1-flash-lite` |
+   | `GEMINI_FALLBACK_MODEL` | `gemini-3.5-flash-lite,gemini-3.6-flash` |
+   | `GEMINI_API_KEY` | a chave do aistudio.google.com |
+   | `ENVIRONMENT` | `production` |
+
+4. **Deploy**. Anote o endereço (ex.: `https://echodev-api.vercel.app`) e confira que `https://…/health` responde `{"status":"ok"}`.
+
+### 2. Site (projeto `echodev` na Vercel)
+1. **Add New → Project** → importe o mesmo repositório de novo.
+2. **Project Name** = `echodev`, **Root Directory** = `web` (Next.js é detectado).
+3. **Environment Variables**: copie do `web/.env.local` os `NEXT_PUBLIC_FIREBASE_*` (API key, auth domain, project id, app id, storage bucket, messaging sender id), mais `NEXT_PUBLIC_FIREBASE_EMULATORS=false` e `NEXT_PUBLIC_API_URL=<endereço da API, sem barra no fim>`.
 4. **Deploy**. Anote o endereço (ex.: `https://echodev.vercel.app`).
 
 ### 3. Ligar um ao outro
-1. Render → `echodev-api` → **Environment**: troque `WEB_ORIGIN` pelo endereço da Vercel (sem barra no fim).
-2. Firebase → **Authentication → Configurações → Domínios autorizados → Adicionar domínio**: o domínio da Vercel (sem `https://`).
+1. Vercel → projeto `echodev-api` → **Settings → Environment Variables**: troque `WEB_ORIGIN` pelo endereço do site (sem barra no fim) e depois **Deployments → ⋯ → Redeploy** (variável nova só vale num deploy novo).
+2. Firebase → **Authentication → Configurações → Domínios autorizados → Adicionar domínio**: o domínio do site (sem `https://`).
 
 ### 4. Limpeza de 24 h (GitHub Actions)
 No GitHub: **Settings → Secrets and variables → Actions → New repository secret**:
-- `ECHODEV_API_URL` = endereço do Render;
-- `ECHODEV_CRON_SECRET` = o `CRON_SECRET` que o Render gerou (Render → Environment).
+- `ECHODEV_API_URL` = endereço da API;
+- `ECHODEV_CRON_SECRET` = o mesmo `CRON_SECRET` do passo 1.
 
 O workflow `.github/workflows/purge.yml` chama `POST /cron/purge` a cada hora. Para testar na hora: **Actions → Limpeza de 24 h → Run workflow**.
 
 ### 5. Testar
-1. No celular, abra o endereço da Vercel, entre como aluno numa aula e confira `?debug=1`.
-2. Do computador, com a API publicada: `node scripts/py.mjs scripts/e2e_lesson.py --api https://echodev-api.onrender.com`.
-3. A primeira requisição depois de 15 min parada leva até ~1 min (o Render acorda o serviço). Abra a tela da aula uns minutos antes de começar: ela mantém a API acordada.
+1. No celular, abra o endereço do site, entre como aluno numa aula e confira `?debug=1`.
+2. Do computador: `node scripts/py.mjs scripts/e2e_lesson.py --api https://echodev-api.vercel.app` (aula completa pelas regras, apagada no fim).
 
-### Heroku (alternativa)
-Não tem mais plano gratuito: o plano Eco custa US$ 5/mês (1.000 horas divididas entre os apps da conta, que também dormem). Com o GitHub Student Developer Pack, o Heroku dá US$ 13/mês em créditos. Funciona, mas pede mais configuração (dois apps, um por pasta) e não traz vantagem sobre Render + Vercel para este projeto.
-## Fontes consultadas (03/11/2026)
+### Por que Vercel e não Render ou Heroku
+- **Render** gratuito "dorme" depois de 15 min sem uso e leva até ~1 min para acordar; na Vercel a função da API acorda em segundos.
+- **Heroku** não tem plano gratuito (Eco: US$ 5/mês; estudantes do GitHub Student Pack ganham crédito mensal).
+- Limites da Vercel Hobby que importam aqui: 300 s por pedido (encerrar a aula leva ~10–30 s), 500 MB para a API em Python (as dependências medem ~114 MB), uso não comercial.
+## Fontes consultadas (03/11/2026 e 25/11/2026)
+- Vercel: [FastAPI na Vercel](https://vercel.com/docs/frameworks/backend/fastapi), [Python nas Functions](https://vercel.com/docs/functions/runtimes/python), [limites](https://vercel.com/docs/functions/limitations)
 - Render: [changelog sobre WebSocket e spin-down](https://render-www.onrender.com/changelog/free-web-services-now-remain-active-while-receiving-websocket-messages), [discussão sobre sleep](https://github.com/orgs/community/discussions/197645)
 - Vercel: [limites de Functions](https://vercel.com/docs/functions/limitations)
 - Railway: [planos](https://docs.railway.com/pricing/plans.md), [fórum sobre Hobby](https://station.railway.com/questions/hobby-plan-1048ca8f)
