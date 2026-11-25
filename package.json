@@ -17,6 +17,7 @@
     "gen:api-types": "node scripts/gen_api_types.mjs",
     "seed:dev": "node scripts/py.mjs scripts/seed_dev_users.py",
     "teacher:add": "node scripts/py.mjs scripts/add_teacher.py",
+    "e2e:lesson": "node scripts/py.mjs scripts/e2e_lesson.py",
     "load:test": "node scripts/py.mjs scripts/load_test.py"
   },
   "devDependencies": {

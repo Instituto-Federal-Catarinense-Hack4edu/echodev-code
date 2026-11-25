@@ -87,6 +87,11 @@
 - Tela de consentimento sem o aviso para menores (piloto só com maiores de idade).
 - `npm run check` verde (115 Vitest, 88 pytest).
 
+## Fase 12: aula completa no Firebase de verdade (25/11/2026)
+- Projeto `echodev-eb4fb` configurado: configuração web no `web/.env.local`, chave da conta de serviço em `api/`, regras e índices publicados (`npm run deploy:rules`), usuários de teste (`npm run seed:dev`) e o professor `vmcdm0902@gmail.com` na `teacherAllowlist`.
+- Novo **`npm run e2e:lesson`**: com a API ligada, faz uma aula inteira no projeto real **pelas regras de acesso**, como o site (usuários de teste entram com token criado pela conta de serviço, sem senha), e apaga tudo no fim. Resultado em 25/11: **15/15** (criar aula com código reservado, lista "Minhas aulas" com o índice, consentimentos, entrar pelo código, contador de alunos, aula ao vivo, frases gravadas e lidas pelo aluno, aluno de fora recusado, encerrar com o Gemini em ~10 s, rascunho escondido do aluno, aprovação, aluno lê resumo e quiz).
+- **Ainda não testado no projeto real**: login pelo navegador (só pelo emulador), celulares e microfone de verdade.
+
 ## Pendências para a equipe
 - **Aprovar o uso do Gemini gratuito** com a instituição: no plano gratuito o Google pode usar a transcrição enviada para melhorar os produtos dele (no plano pago, não).
 - **Revisão humana do conteúdo** dos 40 termos (explicações e traduções) antes da demo. Nada na interface diz "verificado".
