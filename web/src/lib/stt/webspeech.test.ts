@@ -73,6 +73,27 @@ describe("WebSpeechProvider", () => {
     expect(rec.starts).toBe(2);
   });
 
+  it("restarts at once after a normal pause, without waiting for a timer", async () => {
+    const p = new WebSpeechProvider();
+    await startAndFlush(p, { onFinal: () => {} });
+    const rec = FakeRecognition.instances[0];
+    await vi.advanceTimersByTimeAsync(5000);
+    rec.onend?.();
+    expect(rec.starts).toBe(2);
+  });
+
+  it("after an error the restart waits (no tight loop)", async () => {
+    const p = new WebSpeechProvider();
+    await startAndFlush(p, { onFinal: () => {} });
+    const rec = FakeRecognition.instances[0];
+    await vi.advanceTimersByTimeAsync(5000);
+    rec.onerror?.({ error: "network" });
+    rec.onend?.();
+    expect(rec.starts).toBe(1);
+    await vi.advanceTimersByTimeAsync(300);
+    expect(rec.starts).toBe(2);
+  });
+
   it("an old recognizer never restarts after pause + resume (no duplicate captions)", async () => {
     const finals: string[] = [];
     const p = new WebSpeechProvider();

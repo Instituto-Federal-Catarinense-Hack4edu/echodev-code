@@ -28,7 +28,7 @@ const PublicEnvSchema = z.object({
   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: z.string().optional(),
   /** Use the local emulators (firebase emulators:start) instead of the real project. */
   NEXT_PUBLIC_FIREBASE_EMULATORS: flag,
-  NEXT_PUBLIC_API_URL: z.url().default("http://localhost:8000"),
+  NEXT_PUBLIC_API_URL: z.union([z.url(), z.string().regex(/^\/[\w-]+$/)]).default("http://localhost:8000"),
   NEXT_PUBLIC_GOOGLE_LOGIN: flag,
 });
 export type PublicEnv = z.infer<typeof PublicEnvSchema>;

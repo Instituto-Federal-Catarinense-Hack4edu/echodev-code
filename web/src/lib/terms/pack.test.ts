@@ -61,7 +61,7 @@ describe("programacao-geral pack", () => {
       "principal", "valor", "aluno", "exemplo", "código", "depois", "primeiro", "mudanças",
       "comando", "computador", "programa", "dados", "lista", "número", "texto", "página",
       "servidor", "teste", "problema", "estrutura", "resultado", "condição", "verdade",
-      "falso", "pergunta", "resposta", "comida", "comitê", "retorno", "objetivo", "clássico",
+      "falso", "pergunta", "resposta", "comida", "retorno", "objetivo", "clássico",
       "métrica", "biblioteca", "repositórios", "parâmetros", "algoritmos", "funções",
       "variáveis", "objetos", "métodos", "classes", "string", "strings", "comentário",
       "consola", "consolo", "debate", "débito", "reage", "reação", "arroba", "merece",
@@ -79,6 +79,13 @@ describe("programacao-geral pack", () => {
       return r.text !== w && normalizeKey(r.text) !== normalizeKey(w);
     });
     expect(changed).toEqual([]);
+  });
+
+  it("turns the way Chrome writes commit in Portuguese into commit", () => {
+    const m = matcherFor();
+    expect(m.match("eu faço um comitê com uma mensagem curta").text).toBe("eu faço um commit com uma mensagem curta");
+    expect(m.match("faça o commit e o push").text).toBe("faça o commit e o push");
+    expect(m.match("eu faço um convite com uma mensagem curta").text).toBe("eu faço um commit com uma mensagem curta");
   });
 
   it("ignores unknown pack ids instead of crashing", () => {

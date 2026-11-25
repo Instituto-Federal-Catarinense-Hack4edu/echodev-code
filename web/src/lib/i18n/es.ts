@@ -61,7 +61,9 @@ export const es: MessageOverrides = {
     ended: "La clase terminó. El resumen y el quiz estarán disponibles cuando el profesor los apruebe.",
     account: "Mi cuenta",
     language: "Idioma",
-    noTranslation: "El profesor no activó la traducción; se muestra en portugués.",
+    noTranslation: "La traducción no está disponible en esta clase ahora; se muestra en portugués.",
+    showSpanish: "Ver en español",
+    showOriginal: "Ver en portugués",
     termsInSentence: "Términos:",
     live: "En vivo",
     fontLevel: (i: number, n: number) => `Tamaño ${i} de ${n}`,
@@ -69,7 +71,7 @@ export const es: MessageOverrides = {
   },
   termSheet: {
     depth: "Explicación",
-    depths: { curta: "Corta", exemplo: "Ejemplo", passos: "Paso a paso" },
+    depths: { curta: "Definición", exemplo: "Ejemplo", passos: "Paso a paso" },
     language: "Idioma",
     fallback: "Todavía no tenemos esta explicación en este idioma; se muestra en portugués.",
     literal: "Traducción literal",
@@ -114,8 +116,6 @@ export const es: MessageOverrides = {
         body: "Permitir que tus valoraciones (\"me ayudó\", \"todavía tengo dudas\") se usen, de forma anónima, en investigaciones para mejorar las explicaciones.",
       },
     },
-    minors:
-      "Si tienes menos de 18 años, usa EchoDev solo con la autorización de tu responsable, según el proceso de tu institución.",
   },
   join: {
     joining: "Entrando a la clase…",

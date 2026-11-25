@@ -127,7 +127,12 @@ export function TermSheet(props: Props) {
                   ))}
                 </ol>
               ) : depth === "exemplo" ? (
-                <p className="rounded-xl border bg-muted/70 p-4 font-mono text-base leading-relaxed">{resolved.text}</p>
+                <div className="space-y-3">
+                  <pre className="overflow-x-auto whitespace-pre-wrap rounded-xl border bg-muted/70 p-4 font-mono text-sm leading-relaxed">
+                    <code>{resolved.text}</code>
+                  </pre>
+                  {resolved.note && <p>{resolved.note}</p>}
+                </div>
               ) : (
                 <p>{resolved.text}</p>
               )}

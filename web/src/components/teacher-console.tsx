@@ -133,6 +133,8 @@ export function TeacherConsole(props: Props) {
       if (opts.restartDemo) demo.current.reset();
       provider = demo.current;
     }
+    // Inside the click: Chrome only downloads the Spanish pack after a user gesture.
+    if (translation.needsPrepare) void translation.prepare();
     onFirstStart?.();
     setSource(kind);
     setPausedByUser(false);
@@ -188,6 +190,8 @@ export function TeacherConsole(props: Props) {
   return (
     <div className="grid items-start gap-5 lg:grid-cols-[23rem_1fr]">
       <div className="space-y-4">
+        <MicTest disabled={phase === "live" || phase === "starting"} onTestingChange={setMicTesting} />
+
         <section
           className={cn(
             "surface space-y-4 p-5 transition-shadow",
@@ -322,8 +326,6 @@ export function TeacherConsole(props: Props) {
           {persistError && <Notice tone="error">{t.teacher.persistError(persistError)}</Notice>}
         </section>
 
-        <MicTest disabled={phase === "live" || phase === "starting"} onTestingChange={setMicTesting} />
-
         <TranslationPanel translation={translation} />
       </div>
 
@@ -413,13 +415,13 @@ export function TeacherConsole(props: Props) {
 }
 
 function TranslationPanel({ translation }: { translation: ReturnType<typeof useEsTranslation> }) {
-  const { state, enable, disable } = translation;
+  const { state, prepare } = translation;
   const tr = t.teacher.translation;
   const status = {
     checking: tr.checking,
     unsupported: tr.unsupported,
     unavailable: tr.unavailable,
-    off: null,
+    idle: tr.idle,
     downloading: state.kind === "downloading" ? tr.downloading(state.percent) : null,
     on: tr.on,
     error: tr.error,
@@ -453,15 +455,10 @@ function TranslationPanel({ translation }: { translation: ReturnType<typeof useE
           <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${state.percent}%` }} />
         </div>
       )}
-      {(state.kind === "off" || state.kind === "error") && (
-        <Button variant="outline" className="w-full" onClick={() => void enable()}>
+      {state.kind === "error" && (
+        <Button variant="outline" className="w-full" onClick={() => void prepare()}>
           <Languages aria-hidden />
-          {tr.enable}
-        </Button>
-      )}
-      {state.kind === "on" && (
-        <Button variant="ghost" onClick={disable}>
-          {tr.disable}
+          {t.common.retry}
         </Button>
       )}
     </section>

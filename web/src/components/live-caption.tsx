@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ArrowDown, Info } from "lucide-react";
+import { ArrowDown, Info, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CaptionText } from "@/components/caption-text";
 import type { UtteranceMessage } from "@/lib/realtime/schemas";
@@ -15,12 +15,13 @@ interface Props {
   items: readonly UtteranceMessage[];
   onTermClick: (termId: string) => void;
   lang?: Lang;
+  onLangChange?: (lang: Lang) => void;
 }
 
 const SIZES = [18, 22, 26, 32, 40];
 const FONT_KEY = "echodev:font-size";
 
-export function LiveCaption({ items, onTermClick, lang = "pt" }: Props) {
+export function LiveCaption({ items, onTermClick, lang = "pt", onLangChange }: Props) {
   const t = useT();
   const scroller = useRef<HTMLDivElement>(null);
   const [follow, setFollow] = useState(true);
@@ -79,7 +80,19 @@ export function LiveCaption({ items, onTermClick, lang = "pt" }: Props) {
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
       <div className="flex items-center gap-3 border-b bg-card/50 px-3 py-1.5 sm:px-4">
-        <span className="mr-auto text-sm text-muted-foreground">{t.student.fontSize}</span>
+        {onLangChange ? (
+          <Button
+            variant={wantsSpanish ? "default" : "outline"}
+            aria-pressed={wantsSpanish}
+            className="mr-auto"
+            onClick={() => onLangChange(wantsSpanish ? "pt" : "es")}
+          >
+            <Languages aria-hidden />
+            {wantsSpanish ? t.student.showOriginal : t.student.showSpanish}
+          </Button>
+        ) : (
+          <span className="mr-auto text-sm text-muted-foreground">{t.student.fontSize}</span>
+        )}
         <span aria-hidden className="flex items-end gap-1" title={t.student.fontLevel(sizeIdx + 1, SIZES.length)}>
           {SIZES.map((_, i) => (
             <span

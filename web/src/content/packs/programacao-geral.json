@@ -1,7 +1,7 @@
 {
   "id": "programacao-geral",
   "name": "Programação geral",
-  "version": 2,
+  "version": 4,
   "terms": [
     {
       "id": "variavel",
@@ -14,7 +14,7 @@
       "category": "conceitos",
       "explanations": {
         "pt": {
-          "short": "Um nome que guarda um valor para você usar depois no programa.",
+          "short": "Um nome que guarda um valor para você usar depois no programa. É como uma caixa com etiqueta: você põe um número, um texto ou uma lista dentro e chama pelo nome sempre que precisar.",
           "example": "let idade = 17; → a variável idade guarda o número 17.",
           "steps": [
             "Escolha um nome que descreva o valor.",
@@ -31,7 +31,7 @@
             "variable",
             "variables"
           ],
-          "short": "Variable: un nombre que guarda un valor para usarlo después en el programa.",
+          "short": "Variable: un nombre que guarda un valor para usarlo después en el programa. Es como una caja con etiqueta: guardas un número, un texto o una lista y la llamas por su nombre cuando la necesitas.",
           "example": "let edad = 17; → la variable edad guarda el número 17.",
           "steps": [
             "Elige un nombre que describa el valor.",
@@ -54,7 +54,7 @@
       "category": "conceitos",
       "explanations": {
         "pt": {
-          "short": "Um bloco de código com nome que faz uma tarefa e pode ser chamado várias vezes.",
+          "short": "Um bloco de código com nome que faz uma tarefa e pode ser chamado várias vezes. Ela recebe entradas (parâmetros), faz o trabalho e pode devolver um resultado, evitando repetir o mesmo código.",
           "example": "function somar(a, b) { return a + b; } → somar(2, 3) devolve 5.",
           "steps": [
             "Dê um nome à função.",
@@ -72,7 +72,7 @@
             "funciones",
             "funcion"
           ],
-          "short": "Función: un bloque de código con nombre que hace una tarea y se puede llamar muchas veces.",
+          "short": "Función: un bloque de código con nombre que hace una tarea y se puede llamar muchas veces. Recibe entradas (parámetros), hace el trabajo y puede devolver un resultado, así no repites el mismo código.",
           "example": "function sumar(a, b) { return a + b; } → sumar(2, 3) devuelve 5.",
           "steps": [
             "Dale un nombre a la función.",
@@ -95,7 +95,7 @@
       "category": "conceitos",
       "explanations": {
         "pt": {
-          "short": "Uma entrada que a função recebe para trabalhar.",
+          "short": "Uma entrada que a função recebe para trabalhar. É declarado entre os parênteses da função e, a cada chamada, recebe o valor que você passar.",
           "example": "Em function dobro(n), n é o parâmetro; em dobro(4), 4 é o valor passado.",
           "steps": [
             "Declare o parâmetro entre parênteses na função.",
@@ -109,7 +109,7 @@
             "parámetros",
             "parametro"
           ],
-          "short": "Parámetro: una entrada que la función recibe para trabajar.",
+          "short": "Parámetro: una entrada que la función recibe para trabajar. Se declara entre los paréntesis de la función y, en cada llamada, toma el valor que le pases.",
           "example": "En function doble(n), n es el parámetro; en doble(4), 4 es el valor que se pasa.",
           "steps": [
             "Declara el parámetro entre paréntesis en la función.",
@@ -131,7 +131,7 @@
       "category": "conceitos",
       "explanations": {
         "pt": {
-          "short": "Palavra que encerra a função e devolve um resultado para quem a chamou.",
+          "short": "Palavra que encerra a função e devolve um resultado para quem a chamou. Tudo o que vem depois do return dentro da função não é executado.",
           "example": "function dobro(n) { return n * 2; } → dobro(5) devolve 10.",
           "steps": [
             "A função calcula um valor.",
@@ -149,7 +149,7 @@
             "retorno",
             "devuelve"
           ],
-          "short": "return: termina la función y devuelve un resultado a quien la llamó.",
+          "short": "return: termina la función y devuelve un resultado a quien la llamó. Lo que viene después del return dentro de la función no se ejecuta.",
           "example": "function doble(n) { return n * 2; } → doble(5) devuelve 10.",
           "steps": [
             "La función calcula un valor.",
@@ -177,7 +177,7 @@
       "literalMeaning": "Em inglês, \"loop\" quer dizer \"laço\" ou \"volta\": algo que gira e volta ao começo.",
       "explanations": {
         "pt": {
-          "short": "Uma repetição: o mesmo trecho de código roda várias vezes.",
+          "short": "Uma repetição: o mesmo trecho de código roda várias vezes. Serve para percorrer listas ou repetir uma tarefa até uma condição mudar; os mais comuns são for e while.",
           "example": "for (let i = 1; i <= 3; i++) { console.log(i); } → mostra 1, 2 e 3.",
           "steps": [
             "Defina quando o loop começa.",
@@ -196,7 +196,7 @@
             "ciclo",
             "loop"
           ],
-          "short": "Bucle (loop): repetir el mismo trozo de código varias veces.",
+          "short": "Bucle (loop): repetir el mismo trozo de código varias veces. Sirve para recorrer listas o repetir una tarea hasta que cambie una condición; los más comunes son for y while.",
           "example": "for (let i = 1; i <= 3; i++) { console.log(i); } → muestra 1, 2 y 3.",
           "steps": [
             "Define cuándo empieza el bucle.",
@@ -222,7 +222,7 @@
       "literalMeaning": "Em inglês, \"while\" quer dizer \"enquanto\".",
       "explanations": {
         "pt": {
-          "short": "Um loop que repete enquanto uma condição for verdadeira.",
+          "short": "Um loop que repete enquanto uma condição for verdadeira. A condição é testada antes de cada volta; se nada dentro do loop mudar, ele nunca termina.",
           "example": "let n = 3; while (n > 0) { n--; } → repete até n chegar a 0.",
           "steps": [
             "Escreva a condição entre parênteses.",
@@ -236,7 +236,7 @@
             "while",
             "mientras"
           ],
-          "short": "while: un bucle que se repite mientras una condición sea verdadera.",
+          "short": "while: un bucle que se repite mientras una condición sea verdadera. La condición se comprueba antes de cada vuelta; si nada dentro del bucle cambia, nunca termina.",
           "example": "let n = 3; while (n > 0) { n--; } → se repite hasta que n llega a 0.",
           "steps": [
             "Escribe la condición entre paréntesis.",
@@ -261,7 +261,7 @@
       "literalMeaning": "Em inglês, \"if\" quer dizer \"se\".",
       "explanations": {
         "pt": {
-          "short": "Uma decisão: o código só roda se a condição for verdadeira.",
+          "short": "Uma decisão: o código só roda se a condição for verdadeira. É assim que o programa escolhe caminhos diferentes, por exemplo mostrar \"aprovado\" só para nota maior ou igual a 6.",
           "example": "if (nota >= 6) { console.log(\"aprovado\"); }",
           "steps": [
             "Escreva a condição entre parênteses.",
@@ -277,7 +277,7 @@
             "if",
             "si"
           ],
-          "short": "if: una decisión; el código solo se ejecuta si la condición es verdadera.",
+          "short": "if: una decisión; el código solo se ejecuta si la condición es verdadera. Así el programa elige caminos distintos, por ejemplo mostrar \"aprobado\" solo si la nota es mayor o igual a 6.",
           "example": "if (nota >= 6) { console.log(\"aprobado\"); }",
           "steps": [
             "Escribe la condición entre paréntesis.",
@@ -302,7 +302,7 @@
       "literalMeaning": "Em inglês, \"else\" quer dizer \"senão\".",
       "explanations": {
         "pt": {
-          "short": "O caminho alternativo do if: roda quando a condição é falsa.",
+          "short": "O caminho alternativo do if: roda quando a condição é falsa. Assim o programa sempre faz uma das duas coisas, nunca as duas ao mesmo tempo.",
           "example": "if (nota >= 6) { ok(); } else { recuperacao(); }",
           "steps": [
             "Escreva um if com a condição.",
@@ -316,7 +316,7 @@
             "sino",
             "si no"
           ],
-          "short": "else: el camino alternativo del if; se ejecuta cuando la condición es falsa.",
+          "short": "else: el camino alternativo del if; se ejecuta cuando la condición es falsa. Así el programa siempre hace una de las dos cosas, nunca las dos a la vez.",
           "example": "if (nota >= 6) { ok(); } else { recuperacion(); }",
           "steps": [
             "Escribe un if con la condición.",
@@ -342,7 +342,7 @@
       "category": "conceitos",
       "explanations": {
         "pt": {
-          "short": "Uma lista ordenada de valores guardada em uma única variável.",
+          "short": "Uma lista ordenada de valores guardada em uma única variável. Cada item tem uma posição (índice) que começa em 0, e dá para adicionar, remover e percorrer os itens.",
           "example": "const frutas = [\"maçã\", \"uva\"]; → frutas[0] é \"maçã\".",
           "steps": [
             "Crie a lista com colchetes [ ].",
@@ -361,7 +361,7 @@
             "arreglos",
             "matriz"
           ],
-          "short": "Array (arreglo): una lista ordenada de valores en una sola variable.",
+          "short": "Array (arreglo): una lista ordenada de valores en una sola variable. Cada elemento tiene una posición (índice) que empieza en 0, y se pueden agregar, quitar y recorrer los elementos.",
           "example": "const frutas = [\"manzana\", \"uva\"]; → frutas[0] es \"manzana\".",
           "steps": [
             "Crea la lista con corchetes [ ].",
@@ -389,7 +389,7 @@
       "literalMeaning": "Em inglês, \"string\" quer dizer \"cordão\" ou \"fio\": letras enfileiradas como contas num fio.",
       "explanations": {
         "pt": {
-          "short": "Um texto: uma sequência de caracteres entre aspas.",
+          "short": "Um texto: uma sequência de caracteres entre aspas. Nomes, mensagens e até números escritos entre aspas são strings, e dá para juntar, cortar e comparar textos.",
           "example": "const nome = \"Ana\"; → \"Ana\" é uma string.",
           "steps": [
             "Escreva o texto entre aspas simples, duplas ou crases.",
@@ -406,7 +406,7 @@
             "cadena",
             "cadenas"
           ],
-          "short": "String (cadena): un texto, una secuencia de caracteres entre comillas.",
+          "short": "String (cadena): un texto, una secuencia de caracteres entre comillas. Nombres, mensajes e incluso números entre comillas son strings, y se pueden unir, cortar y comparar.",
           "example": "const nombre = \"Ana\"; → \"Ana\" es un string.",
           "steps": [
             "Escribe el texto entre comillas simples, dobles o acentos graves.",
@@ -433,7 +433,7 @@
       "category": "conceitos",
       "explanations": {
         "pt": {
-          "short": "Um valor que só pode ser verdadeiro (true) ou falso (false).",
+          "short": "Um valor que só pode ser verdadeiro (true) ou falso (false). Ele aparece no resultado de comparações e é o que o if e o while usam para decidir.",
           "example": "const maiorDeIdade = idade >= 18; → vale true ou false.",
           "steps": [
             "Comparações (>, <, ===) geram booleans.",
@@ -447,7 +447,7 @@
             "booleanos",
             "boolean"
           ],
-          "short": "Booleano (boolean): un valor que solo puede ser verdadero (true) o falso (false).",
+          "short": "Booleano (boolean): un valor que solo puede ser verdadero (true) o falso (false). Aparece como resultado de comparaciones y es lo que if y while usan para decidir.",
           "example": "const mayorDeEdad = edad >= 18; → vale true o false.",
           "steps": [
             "Las comparaciones (>, <, ===) generan booleanos.",
@@ -469,7 +469,7 @@
       "category": "conceitos",
       "explanations": {
         "pt": {
-          "short": "Um conjunto de pares nome e valor que descreve uma coisa.",
+          "short": "Um conjunto de pares nome e valor que descreve uma coisa. Por exemplo, um aluno com nome e idade; cada par é uma propriedade, acessada com ponto (aluno.nome).",
           "example": "const aluno = { nome: \"Ana\", idade: 17 }; → aluno.nome é \"Ana\".",
           "steps": [
             "Crie o objeto com chaves { }.",
@@ -485,7 +485,7 @@
             "objeto",
             "objetos"
           ],
-          "short": "Objeto: un conjunto de pares nombre–valor que describe una cosa.",
+          "short": "Objeto: un conjunto de pares nombre–valor que describe una cosa. Por ejemplo, un alumno con nombre y edad; cada par es una propiedad, que se lee con un punto (alumno.nombre).",
           "example": "const alumno = { nombre: \"Ana\", edad: 17 }; → alumno.nombre es \"Ana\".",
           "steps": [
             "Crea el objeto con llaves { }.",
@@ -507,7 +507,7 @@
       "category": "conceitos",
       "explanations": {
         "pt": {
-          "short": "Um molde para criar vários objetos com a mesma estrutura.",
+          "short": "Um molde para criar vários objetos com a mesma estrutura. Ela define quais dados e quais métodos cada objeto terá; cada objeto criado com new é uma instância da classe.",
           "example": "class Aluno { constructor(nome) { this.nome = nome; } } → new Aluno(\"Ana\").",
           "steps": [
             "Declare a classe com class e um nome.",
@@ -520,7 +520,7 @@
             "clase",
             "clases"
           ],
-          "short": "Clase: un molde para crear muchos objetos con la misma estructura.",
+          "short": "Clase: un molde para crear muchos objetos con la misma estructura. Define qué datos y qué métodos tendrá cada objeto; cada objeto creado con new es una instancia de la clase.",
           "example": "class Alumno { constructor(nombre) { this.nombre = nombre; } } → new Alumno(\"Ana\").",
           "steps": [
             "Declara la clase con class y un nombre.",
@@ -542,7 +542,7 @@
       "category": "conceitos",
       "explanations": {
         "pt": {
-          "short": "Uma função que pertence a um objeto ou classe.",
+          "short": "Uma função que pertence a um objeto ou classe. É chamada com ponto depois do objeto, como texto.toUpperCase(), e costuma trabalhar com os dados desse objeto.",
           "example": "\"oi\".toUpperCase() → toUpperCase é um método de strings e devolve \"OI\".",
           "steps": [
             "Pegue o objeto.",
@@ -556,7 +556,7 @@
             "métodos",
             "metodo"
           ],
-          "short": "Método: una función que pertenece a un objeto o a una clase.",
+          "short": "Método: una función que pertenece a un objeto o a una clase. Se llama con un punto después del objeto, como texto.toUpperCase(), y suele trabajar con los datos de ese objeto.",
           "example": "\"hola\".toUpperCase() → toUpperCase es un método de los strings y devuelve \"HOLA\".",
           "steps": [
             "Toma el objeto.",
@@ -578,7 +578,7 @@
       "category": "conceitos",
       "explanations": {
         "pt": {
-          "short": "Uma sequência de passos bem definidos para resolver um problema.",
+          "short": "Uma sequência de passos bem definidos para resolver um problema. É como uma receita: a mesma entrada, seguindo os mesmos passos, sempre leva ao mesmo resultado.",
           "example": "Achar o maior número de uma lista: olhar cada item e guardar o maior visto até agora.",
           "steps": [
             "Entenda a entrada e a saída esperada.",
@@ -592,7 +592,7 @@
             "algoritmo",
             "algoritmos"
           ],
-          "short": "Algoritmo: una secuencia de pasos bien definidos para resolver un problema.",
+          "short": "Algoritmo: una secuencia de pasos bien definidos para resolver un problema. Es como una receta: con la misma entrada y los mismos pasos, siempre se llega al mismo resultado.",
           "example": "Encontrar el número mayor de una lista: mirar cada elemento y guardar el mayor visto hasta ahora.",
           "steps": [
             "Entiende la entrada y la salida esperada.",
@@ -614,7 +614,7 @@
       "category": "conceitos",
       "explanations": {
         "pt": {
-          "short": "Um valor que significa \"nada\", colocado de propósito.",
+          "short": "Um valor que significa \"nada\", colocado de propósito. Serve para dizer que algo existe mas está vazio agora, como um usuário que ainda não entrou.",
           "example": "let usuarioLogado = null; → ainda não há usuário.",
           "steps": [
             "Use null quando quiser dizer \"sem valor\" de forma intencional.",
@@ -627,7 +627,7 @@
             "null",
             "nulo"
           ],
-          "short": "null: un valor que significa \"nada\", puesto a propósito.",
+          "short": "null: un valor que significa \"nada\", puesto a propósito. Sirve para decir que algo existe pero ahora está vacío, como un usuario que todavía no inició sesión.",
           "example": "let usuarioConectado = null; → todavía no hay usuario.",
           "steps": [
             "Usa null cuando quieras decir \"sin valor\" de forma intencional.",
@@ -651,7 +651,7 @@
       "literalMeaning": "Em inglês, \"undefined\" quer dizer \"não definido\".",
       "explanations": {
         "pt": {
-          "short": "O valor de algo que ainda não recebeu valor.",
+          "short": "O valor de algo que ainda não recebeu valor. Aparece quando você declara uma variável sem valor ou lê uma propriedade que não existe; é diferente de null, que é colocado de propósito.",
           "example": "let x; console.log(x); → mostra undefined.",
           "steps": [
             "Uma variável declarada sem valor vale undefined.",
@@ -664,7 +664,7 @@
             "undefined",
             "indefinido"
           ],
-          "short": "undefined: el valor de algo que todavía no recibió un valor.",
+          "short": "undefined: el valor de algo que todavía no recibió un valor. Aparece cuando declaras una variable sin valor o lees una propiedad que no existe; es distinto de null, que se pone a propósito.",
           "example": "let x; console.log(x); → muestra undefined.",
           "steps": [
             "Una variable declarada sin valor vale undefined.",
@@ -693,7 +693,7 @@
       "literalMeaning": "Em inglês, \"call back\" quer dizer \"ligar de volta\": a função é chamada depois.",
       "explanations": {
         "pt": {
-          "short": "Uma função passada para outra função, para ser chamada depois.",
+          "short": "Uma função passada para outra função, para ser chamada depois. É muito usada em eventos (\"quando clicar, faça isto\") e em tarefas que demoram, como buscar dados.",
           "example": "botao.addEventListener(\"click\", () => alert(\"oi\")); → a seta é o callback.",
           "steps": [
             "Escreva uma função.",
@@ -706,7 +706,7 @@
             "callback",
             "callbacks"
           ],
-          "short": "Callback: una función que se pasa a otra función para que la llame después.",
+          "short": "Callback: una función que se pasa a otra función para que la llame después. Se usa mucho en eventos (\"cuando hagas clic, haz esto\") y en tareas que tardan, como buscar datos.",
           "example": "boton.addEventListener(\"click\", () => alert(\"hola\")); → la flecha es el callback.",
           "steps": [
             "Escribe una función.",
@@ -733,7 +733,7 @@
       "literalMeaning": "Em inglês, \"bug\" quer dizer \"inseto\".",
       "explanations": {
         "pt": {
-          "short": "Um erro no programa que faz ele se comportar diferente do esperado.",
+          "short": "Um erro no programa que faz ele se comportar diferente do esperado. Pode ser um cálculo errado, um botão que não responde ou uma tela que quebra; achar e corrigir faz parte do trabalho.",
           "example": "Somar \"2\" + 2 e receber \"22\" em vez de 4 é um bug.",
           "steps": [
             "Perceba o comportamento errado.",
@@ -749,7 +749,7 @@
             "error",
             "errores"
           ],
-          "short": "Bug: un error en el programa que hace que se comporte distinto de lo esperado.",
+          "short": "Bug: un error en el programa que hace que se comporte distinto de lo esperado. Puede ser un cálculo mal hecho, un botón que no responde o una pantalla que se rompe; encontrarlo y corregirlo es parte del trabajo.",
           "example": "Sumar \"2\" + 2 y obtener \"22\" en lugar de 4 es un bug.",
           "steps": [
             "Nota el comportamiento incorrecto.",
@@ -775,7 +775,7 @@
       "literalMeaning": "Em inglês, \"debug\" quer dizer \"tirar os insetos\".",
       "explanations": {
         "pt": {
-          "short": "Investigar o programa para achar e corrigir bugs.",
+          "short": "Investigar o programa para achar e corrigir bugs. Na prática é repetir o erro, observar os valores (com console.log ou o depurador) e testar até descobrir a causa.",
           "example": "Colocar console.log(total) no meio do código para ver o valor em cada passo.",
           "steps": [
             "Repita o erro.",
@@ -790,7 +790,7 @@
             "depurar",
             "depuración"
           ],
-          "short": "Depurar (debug): investigar el programa para encontrar y corregir bugs.",
+          "short": "Depurar (debug): investigar el programa para encontrar y corregir bugs. En la práctica es repetir el error, observar los valores (con console.log o el depurador) y probar hasta encontrar la causa.",
           "example": "Poner console.log(total) en medio del código para ver el valor en cada paso.",
           "steps": [
             "Repite el error.",
@@ -819,7 +819,7 @@
       "literalMeaning": "Em inglês, \"framework\" quer dizer \"estrutura\" ou \"armação\".",
       "explanations": {
         "pt": {
-          "short": "Uma base pronta que define como organizar seu projeto e já resolve partes comuns.",
+          "short": "Uma base pronta que define como organizar seu projeto e já resolve partes comuns. Você segue as regras dele (pastas, nomes) e escreve só o que é específico do seu sistema.",
           "example": "Next.js é um framework: você segue a estrutura de pastas dele e ganha rotas prontas.",
           "steps": [
             "Instale o framework.",
@@ -834,7 +834,7 @@
             "frameworks",
             "marco de trabajo"
           ],
-          "short": "Framework: una base lista que define cómo organizar tu proyecto y ya resuelve partes comunes.",
+          "short": "Framework: una base lista que define cómo organizar tu proyecto y ya resuelve partes comunes. Sigues sus reglas (carpetas, nombres) y escribes solo lo específico de tu sistema.",
           "example": "Next.js es un framework: sigues su estructura de carpetas y obtienes rutas listas.",
           "steps": [
             "Instala el framework.",
@@ -858,7 +858,7 @@
       "category": "ferramentas",
       "explanations": {
         "pt": {
-          "short": "Código pronto, escrito por outras pessoas, que você usa no seu projeto.",
+          "short": "Código pronto, escrito por outras pessoas, que você usa no seu projeto. Diferente de um framework, é você quem decide quando chamar a biblioteca.",
           "example": "Usar uma biblioteca de datas para formatar \"02/11/2026\" sem escrever tudo do zero.",
           "steps": [
             "Instale a biblioteca (por exemplo, com npm).",
@@ -873,7 +873,7 @@
             "librería",
             "librerías"
           ],
-          "short": "Biblioteca: código listo, escrito por otras personas, que usas en tu proyecto.",
+          "short": "Biblioteca: código listo, escrito por otras personas, que usas en tu proyecto. A diferencia de un framework, eres tú quien decide cuándo llamar a la biblioteca.",
           "example": "Usar una biblioteca de fechas para formatear \"02/11/2026\" sin escribirlo todo desde cero.",
           "steps": [
             "Instala la biblioteca (por ejemplo, con npm).",
@@ -895,14 +895,15 @@
       "category": "git",
       "explanations": {
         "pt": {
-          "short": "Ferramenta que guarda o histórico das mudanças do código.",
-          "example": "git log mostra a lista de mudanças salvas no projeto.",
+          "short": "Ferramenta que guarda o histórico das mudanças do código. Cada vez que você salva uma versão, o Git registra o que mudou, quando e por quem. Assim dá para voltar a uma versão antiga se algo quebrar, comparar o antes e o depois e trabalhar em equipe sem um apagar o trabalho do outro. Ele roda no seu computador; sites como o GitHub guardam uma cópia na internet.",
+          "example": "git init                 # começa a acompanhar a pasta\ngit add index.html       # marca o arquivo que mudou\ngit commit -m \"cria a página inicial\"\ngit log --oneline        # lista as versões salvas\n\n# saída do git log:\n# a1b2c3d cria a página inicial",
           "steps": [
             "Inicie com git init.",
             "Marque arquivos com git add.",
             "Salve uma versão com git commit.",
             "Veja o histórico com git log."
-          ]
+          ],
+          "exampleNote": "Primeiro o Git passa a acompanhar a pasta (git init). Depois você escolhe o que entra na próxima versão (git add) e salva essa versão com uma mensagem (git commit). O git log mostra a lista de versões, cada uma com um código curto e a mensagem."
         },
         "en": {
           "short": "Git: a tool that keeps the history of code changes."
@@ -911,14 +912,15 @@
           "names": [
             "git"
           ],
-          "short": "Git: herramienta que guarda el historial de cambios del código.",
-          "example": "git log muestra la lista de cambios guardados en el proyecto.",
+          "short": "Git: herramienta que guarda el historial de cambios del código. Cada vez que guardas una versión, Git registra qué cambió, cuándo y quién lo hizo. Así puedes volver a una versión anterior si algo se rompe, comparar el antes y el después y trabajar en equipo sin borrar el trabajo de otros. Funciona en tu computadora; sitios como GitHub guardan una copia en internet.",
+          "example": "git init                 # empieza a seguir la carpeta\ngit add index.html       # marca el archivo que cambió\ngit commit -m \"crea la página de inicio\"\ngit log --oneline        # lista las versiones guardadas\n\n# salida de git log:\n# a1b2c3d crea la página de inicio",
           "steps": [
             "Empieza con git init.",
             "Marca archivos con git add.",
             "Guarda una versión con git commit.",
             "Mira el historial con git log."
-          ]
+          ],
+          "exampleNote": "Primero Git empieza a seguir la carpeta (git init). Después eliges qué entra en la próxima versión (git add) y guardas esa versión con un mensaje (git commit). git log muestra la lista de versiones, cada una con un código corto y su mensaje."
         }
       },
       "reviewed": false
@@ -934,25 +936,27 @@
       "category": "git",
       "explanations": {
         "pt": {
-          "short": "Site que hospeda repositórios Git na internet para guardar e compartilhar código.",
-          "example": "Você envia seu projeto com git push e ele aparece no GitHub.",
+          "short": "Site que hospeda repositórios Git na internet para guardar e compartilhar código. O Git funciona no seu computador; o GitHub guarda uma cópia online, que a equipe inteira pode acessar. Lá também dá para revisar mudanças com pull requests, registrar tarefas e problemas (issues) e até publicar sites simples.",
+          "example": "# liga o repositório local ao repositório criado no GitHub\ngit remote add origin https://github.com/turma/meu-site.git\n\n# envia a branch main pela primeira vez\ngit push -u origin main\n\n# a colega baixa uma cópia do projeto\ngit clone https://github.com/turma/meu-site.git",
           "steps": [
             "Crie uma conta e um repositório no site.",
             "Ligue o repositório local ao remoto.",
             "Envie suas mudanças com git push."
-          ]
+          ],
+          "exampleNote": "O git remote add avisa ao Git onde fica a cópia no GitHub (chamada origin). O git push envia seus commits para lá, e qualquer pessoa da equipe pode baixar o projeto inteiro com git clone."
         },
         "es": {
           "names": [
             "github"
           ],
-          "short": "GitHub: sitio que aloja repositorios Git en internet para guardar y compartir código.",
-          "example": "Envías tu proyecto con git push y aparece en GitHub.",
+          "short": "GitHub: sitio que aloja repositorios Git en internet para guardar y compartir código. Git funciona en tu computadora; GitHub guarda una copia en línea a la que todo el equipo puede acceder. Allí también puedes revisar cambios con pull requests, registrar tareas y problemas (issues) e incluso publicar sitios simples.",
+          "example": "# conecta el repositorio local con el creado en GitHub\ngit remote add origin https://github.com/grupo/mi-sitio.git\n\n# envía la rama main por primera vez\ngit push -u origin main\n\n# una compañera descarga una copia del proyecto\ngit clone https://github.com/grupo/mi-sitio.git",
           "steps": [
             "Crea una cuenta y un repositorio en el sitio.",
             "Conecta el repositorio local con el remoto.",
             "Envía tus cambios con git push."
-          ]
+          ],
+          "exampleNote": "git remote add le dice a Git dónde está la copia en GitHub (llamada origin). git push envía tus commits allí, y cualquier persona del equipo puede descargar el proyecto completo con git clone."
         }
       },
       "reviewed": false
@@ -963,7 +967,10 @@
       "variants": [
         "comiti",
         "comit",
-        "comíti"
+        "comíti",
+        "comitê",
+        "comite",
+        "convite"
       ],
       "forms": [
         "commits"
@@ -973,14 +980,15 @@
       "literalMeaning": "Em inglês, \"commit\" quer dizer \"comprometer-se\" ou \"confirmar\".",
       "explanations": {
         "pt": {
-          "short": "Um ponto salvo no histórico do Git, com uma mensagem explicando a mudança.",
-          "example": "git commit -m \"corrige soma\" → salva as mudanças marcadas com essa mensagem.",
+          "short": "Um ponto salvo no histórico do Git, com uma mensagem explicando a mudança. É como tirar uma foto do projeto naquele momento: depois dá para ver o que mudou de uma foto para outra e voltar a qualquer uma delas. O ideal é fazer commits pequenos e frequentes, cada um com uma mensagem clara, para a equipe entender o que aconteceu.",
+          "example": "git add style.css\ngit commit -m \"deixa o botão azul\"\n# [main 4f9e2a1] deixa o botão azul\n#  1 file changed, 2 insertions(+), 1 deletion(-)\n\ngit log --oneline\n# 4f9e2a1 deixa o botão azul\n# a1b2c3d cria a página inicial",
           "steps": [
             "Altere os arquivos.",
             "Marque as mudanças com git add.",
             "Crie o commit com git commit -m \"mensagem\".",
             "O commit fica no histórico e pode ser revisto depois."
-          ]
+          ],
+          "exampleNote": "O git add escolhe o arquivo que entra na foto e o git commit tira a foto com a mensagem \"deixa o botão azul\". O Git responde quantos arquivos e linhas mudaram, e o git log mostra o commit novo em cima do anterior."
         },
         "en": {
           "short": "Commit: a saved point in Git history, with a message describing the change."
@@ -991,15 +999,16 @@
             "commits",
             "confirmación"
           ],
-          "short": "Commit: un punto guardado en el historial de Git, con un mensaje que explica el cambio.",
-          "example": "git commit -m \"corrige suma\" → guarda los cambios marcados con ese mensaje.",
+          "short": "Commit: un punto guardado en el historial de Git, con un mensaje que explica el cambio. Es como sacar una foto del proyecto en ese momento: después puedes ver qué cambió de una foto a otra y volver a cualquiera de ellas. Lo ideal es hacer commits pequeños y frecuentes, cada uno con un mensaje claro, para que el equipo entienda qué pasó.",
+          "example": "git add style.css\ngit commit -m \"pone el botón azul\"\n# [main 4f9e2a1] pone el botón azul\n#  1 file changed, 2 insertions(+), 1 deletion(-)\n\ngit log --oneline\n# 4f9e2a1 pone el botón azul\n# a1b2c3d crea la página de inicio",
           "steps": [
             "Cambia los archivos.",
             "Marca los cambios con git add.",
             "Crea el commit con git commit -m \"mensaje\".",
             "El commit queda en el historial y se puede revisar después."
           ],
-          "literal": "En inglés, \"commit\" significa \"comprometerse\" o \"confirmar\"."
+          "literal": "En inglés, \"commit\" significa \"comprometerse\" o \"confirmar\".",
+          "exampleNote": "git add elige el archivo que entra en la foto y git commit saca la foto con el mensaje \"pone el botón azul\". Git responde cuántos archivos y líneas cambiaron, y git log muestra el commit nuevo encima del anterior."
         }
       },
       "reviewed": false
@@ -1017,27 +1026,29 @@
       "literalMeaning": "Em inglês, \"push\" quer dizer \"empurrar\".",
       "explanations": {
         "pt": {
-          "short": "Enviar seus commits do computador para o repositório remoto.",
-          "example": "git push → seus commits aparecem no GitHub.",
+          "short": "Enviar seus commits do computador para o repositório remoto, como o GitHub. Enquanto você não faz push, os commits ficam só na sua máquina e a equipe não vê. Se alguém enviou mudanças antes de você, o Git pede para você baixar essas mudanças primeiro (git pull) e depois tentar o push de novo.",
+          "example": "git commit -m \"corrige o menu\"\ngit push\n# To https://github.com/turma/meu-site.git\n#    7c8d9e0..b2f4a61  main -> main\n\n# se alguém enviou antes:\n# ! [rejected] main -> main (fetch first)\ngit pull                 # baixa e junta o que é novo\ngit push                 # agora funciona",
           "steps": [
             "Faça um ou mais commits.",
             "Rode git push.",
             "Confira no site que as mudanças chegaram."
-          ]
+          ],
+          "exampleNote": "Depois do commit, o git push envia a versão para o GitHub e mostra de qual para qual versão a main avançou. Se o push for recusado porque alguém enviou antes, o git pull traz as mudanças da equipe e o push seguinte funciona."
         },
         "es": {
           "names": [
             "push",
             "empujar"
           ],
-          "short": "Push: enviar tus commits de la computadora al repositorio remoto.",
-          "example": "git push → tus commits aparecen en GitHub.",
+          "short": "Push: enviar tus commits de la computadora al repositorio remoto, como GitHub. Mientras no haces push, los commits quedan solo en tu máquina y el equipo no los ve. Si alguien envió cambios antes que tú, Git te pide descargar esos cambios primero (git pull) y después intentar el push otra vez.",
+          "example": "git commit -m \"corrige el menú\"\ngit push\n# To https://github.com/grupo/mi-sitio.git\n#    7c8d9e0..b2f4a61  main -> main\n\n# si alguien envió antes:\n# ! [rejected] main -> main (fetch first)\ngit pull                 # descarga y une lo nuevo\ngit push                 # ahora funciona",
           "steps": [
             "Haz uno o más commits.",
             "Ejecuta git push.",
             "Comprueba en el sitio que los cambios llegaron."
           ],
-          "literal": "En inglés, \"push\" significa \"empujar\"."
+          "literal": "En inglés, \"push\" significa \"empujar\".",
+          "exampleNote": "Después del commit, git push envía la versión a GitHub y muestra de qué versión a qué versión avanzó main. Si el push se rechaza porque alguien envió antes, git pull trae los cambios del equipo y el siguiente push funciona."
         }
       },
       "reviewed": false
@@ -1060,7 +1071,7 @@
       "literalMeaning": "Em inglês, \"pull request\" quer dizer \"pedido para puxar\": você pede que puxem suas mudanças.",
       "explanations": {
         "pt": {
-          "short": "Um pedido para juntar as mudanças de uma branch na principal, com revisão.",
+          "short": "Um pedido para juntar as mudanças de uma branch na principal, com revisão. Outras pessoas leem o código, comentam e aprovam antes de as mudanças entrarem.",
           "example": "Você abre um pull request da branch \"login\" para a \"main\" e a colega revisa.",
           "steps": [
             "Trabalhe numa branch separada.",
@@ -1079,7 +1090,7 @@
             "solicitud de extracción",
             "solicitud de cambios"
           ],
-          "short": "Pull request: una solicitud para unir los cambios de una rama en la principal, con revisión.",
+          "short": "Pull request: una solicitud para unir los cambios de una rama en la principal, con revisión. Otras personas leen el código, comentan y aprueban antes de que los cambios entren.",
           "example": "Abres un pull request de la rama \"login\" a \"main\" y una compañera lo revisa.",
           "steps": [
             "Trabaja en una rama separada.",
@@ -1110,13 +1121,14 @@
       "literalMeaning": "Em inglês, \"branch\" quer dizer \"galho\" de árvore.",
       "explanations": {
         "pt": {
-          "short": "Uma linha paralela de trabalho no Git, separada da principal.",
-          "example": "git switch -c login → cria a branch \"login\" para mexer sem afetar a main.",
+          "short": "Uma linha paralela de trabalho no Git, separada da principal (geralmente chamada main). Você cria uma branch para testar uma ideia ou fazer uma funcionalidade nova sem mexer no que já funciona. Os commits feitos nela não afetam a main; quando o trabalho fica pronto, você junta a branch de volta com um merge.",
+          "example": "git switch -c login      # cria a branch login e entra nela\n# ... edita os arquivos da tela de login ...\ngit add login.html\ngit commit -m \"cria a tela de login\"\n\ngit branch               # lista as branches\n#   main\n# * login",
           "steps": [
             "Crie a branch a partir da principal.",
             "Faça seus commits nela.",
             "Quando estiver pronto, junte com a principal (merge)."
-          ]
+          ],
+          "exampleNote": "O git switch -c cria a branch login e já muda para ela. O commit da tela de login fica só nessa branch; a main continua como estava. O git branch lista as branches, e o asterisco mostra em qual você está."
         },
         "en": {
           "short": "Branch: a parallel line of work in Git, separate from the main one."
@@ -1127,14 +1139,15 @@
             "ramas",
             "branch"
           ],
-          "short": "Rama (branch): una línea de trabajo paralela en Git, separada de la principal.",
-          "example": "git switch -c login → crea la rama \"login\" para trabajar sin afectar main.",
+          "short": "Rama (branch): una línea de trabajo paralela en Git, separada de la principal (normalmente llamada main). Creas una rama para probar una idea o hacer una función nueva sin tocar lo que ya funciona. Los commits hechos en ella no afectan a main; cuando el trabajo está listo, unes la rama de vuelta con un merge.",
+          "example": "git switch -c login      # crea la rama login y entra en ella\n# ... editas los archivos de la pantalla de login ...\ngit add login.html\ngit commit -m \"crea la pantalla de login\"\n\ngit branch               # lista las ramas\n#   main\n# * login",
           "steps": [
             "Crea la rama a partir de la principal.",
             "Haz tus commits en ella.",
             "Cuando esté lista, únela con la principal (merge)."
           ],
-          "literal": "En inglés, \"branch\" significa \"rama\" de árbol."
+          "literal": "En inglés, \"branch\" significa \"rama\" de árbol.",
+          "exampleNote": "git switch -c crea la rama login y cambia a ella. El commit de la pantalla de login queda solo en esa rama; main sigue igual. git branch lista las ramas, y el asterisco indica en cuál estás."
         }
       },
       "reviewed": false
@@ -1152,13 +1165,14 @@
       "literalMeaning": "Em inglês, \"merge\" quer dizer \"fundir\" ou \"juntar\".",
       "explanations": {
         "pt": {
-          "short": "Juntar as mudanças de uma branch em outra.",
-          "example": "git merge login → traz os commits da branch login para a branch atual.",
+          "short": "Juntar as mudanças de uma branch em outra. Depois de terminar o trabalho numa branch, você vai para a branch principal e faz o merge: os commits da outra branch passam a fazer parte dela. Se duas pessoas mudaram a mesma linha, o Git avisa um conflito e alguém precisa escolher qual versão fica antes de concluir.",
+          "example": "git switch main          # volta para a principal\ngit merge login          # traz os commits da branch login\n# Updating a1b2c3d..7c8d9e0\n# Fast-forward\n#  login.html | 25 +++++\n\n# se houver conflito:\n# CONFLICT (content): Merge conflict in index.html",
           "steps": [
             "Vá para a branch que vai receber as mudanças.",
             "Rode git merge com o nome da outra branch.",
             "Se houver conflito, escolha o que fica e faça commit."
-          ]
+          ],
+          "exampleNote": "Você volta para a main e pede para trazer a branch login. Se ninguém mexeu nas mesmas linhas, o Git junta sozinho. Se houver conflito, ele marca o arquivo, você escolhe o que fica e faz um commit para terminar o merge."
         },
         "es": {
           "names": [
@@ -1167,14 +1181,15 @@
             "fusionar",
             "unir"
           ],
-          "short": "Merge: unir los cambios de una rama en otra.",
-          "example": "git merge login → trae los commits de la rama login a la rama actual.",
+          "short": "Merge: unir los cambios de una rama en otra. Después de terminar el trabajo en una rama, vas a la rama principal y haces el merge: los commits de la otra rama pasan a formar parte de ella. Si dos personas cambiaron la misma línea, Git avisa un conflicto y alguien debe elegir qué versión se queda antes de terminar.",
+          "example": "git switch main          # vuelve a la principal\ngit merge login          # trae los commits de la rama login\n# Updating a1b2c3d..7c8d9e0\n# Fast-forward\n#  login.html | 25 +++++\n\n# si hay conflicto:\n# CONFLICT (content): Merge conflict in index.html",
           "steps": [
             "Ve a la rama que va a recibir los cambios.",
             "Ejecuta git merge con el nombre de la otra rama.",
             "Si hay conflicto, elige qué se queda y haz commit."
           ],
-          "literal": "En inglés, \"merge\" significa \"fusionar\" o \"unir\"."
+          "literal": "En inglés, \"merge\" significa \"fusionar\" o \"unir\".",
+          "exampleNote": "Vuelves a main y pides traer la rama login. Si nadie tocó las mismas líneas, Git las une solo. Si hay conflicto, marca el archivo, eliges qué se queda y haces un commit para terminar el merge."
         }
       },
       "reviewed": false
@@ -1192,26 +1207,28 @@
       "category": "git",
       "explanations": {
         "pt": {
-          "short": "A pasta do projeto acompanhada pelo Git, com todo o histórico.",
-          "example": "git init transforma a pasta atual em um repositório.",
+          "short": "A pasta do projeto acompanhada pelo Git, com todo o histórico de mudanças. Por fora parece uma pasta comum, mas dentro existe uma pasta escondida chamada .git, onde ficam todas as versões salvas. O repositório pode estar no seu computador (local) e ter uma cópia na internet, como no GitHub (remoto), para a equipe trabalhar junto.",
+          "example": "mkdir meu-site\ncd meu-site\ngit init\n# Initialized empty Git repository in .../meu-site/.git/\n\ngit status\n# On branch main\n# No commits yet",
           "steps": [
             "Crie com git init (ou copie um existente com git clone).",
             "Trabalhe nos arquivos.",
             "O Git guarda o histórico dentro do repositório."
-          ]
+          ],
+          "exampleNote": "Você cria uma pasta, entra nela e roda git init: a partir daí ela é um repositório. O git status confirma isso e mostra que ainda não há nenhuma versão salva (nenhum commit)."
         },
         "es": {
           "names": [
             "repositorio",
             "repositorios"
           ],
-          "short": "Repositorio: la carpeta del proyecto que Git sigue, con todo su historial.",
-          "example": "git init convierte la carpeta actual en un repositorio.",
+          "short": "Repositorio: la carpeta del proyecto que Git sigue, con todo el historial de cambios. Por fuera parece una carpeta normal, pero dentro hay una carpeta oculta llamada .git, donde se guardan todas las versiones. El repositorio puede estar en tu computadora (local) y tener una copia en internet, como en GitHub (remoto), para que el equipo trabaje junto.",
+          "example": "mkdir mi-sitio\ncd mi-sitio\ngit init\n# Initialized empty Git repository in .../mi-sitio/.git/\n\ngit status\n# On branch main\n# No commits yet",
           "steps": [
             "Créalo con git init (o copia uno existente con git clone).",
             "Trabaja en los archivos.",
             "Git guarda el historial dentro del repositorio."
-          ]
+          ],
+          "exampleNote": "Creas una carpeta, entras en ella y ejecutas git init: desde ese momento es un repositorio. git status lo confirma y muestra que todavía no hay ninguna versión guardada (ningún commit)."
         }
       },
       "reviewed": false
@@ -1223,7 +1240,7 @@
       "category": "web",
       "explanations": {
         "pt": {
-          "short": "A linguagem que define a estrutura e o conteúdo de uma página web.",
+          "short": "A linguagem que define a estrutura e o conteúdo de uma página web. Ela marca o que é título, parágrafo, imagem ou botão; a aparência fica com o CSS.",
           "example": "<h1>Olá</h1> cria um título na página.",
           "steps": [
             "Escreva o conteúdo dentro de tags, como <p> e </p>.",
@@ -1235,7 +1252,7 @@
           "names": [
             "html"
           ],
-          "short": "HTML: el lenguaje que define la estructura y el contenido de una página web.",
+          "short": "HTML: el lenguaje que define la estructura y el contenido de una página web. Marca qué es título, párrafo, imagen o botón; la apariencia queda a cargo del CSS.",
           "example": "<h1>Hola</h1> crea un título en la página.",
           "steps": [
             "Escribe el contenido dentro de etiquetas, como <p> y </p>.",
@@ -1256,7 +1273,7 @@
       "category": "web",
       "explanations": {
         "pt": {
-          "short": "A linguagem que define a aparência da página: cores, tamanhos e posições.",
+          "short": "A linguagem que define a aparência da página: cores, tamanhos e posições. Você escolhe elementos com seletores e aplica estilos, sem mudar o conteúdo do HTML.",
           "example": "h1 { color: blue; } → todos os títulos h1 ficam azuis.",
           "steps": [
             "Escolha o elemento com um seletor.",
@@ -1268,7 +1285,7 @@
           "names": [
             "css"
           ],
-          "short": "CSS: el lenguaje que define la apariencia de la página: colores, tamaños y posiciones.",
+          "short": "CSS: el lenguaje que define la apariencia de la página: colores, tamaños y posiciones. Eliges elementos con selectores y les aplicas estilos, sin cambiar el contenido del HTML.",
           "example": "h1 { color: blue; } → todos los títulos h1 quedan azules.",
           "steps": [
             "Elige el elemento con un selector.",
@@ -1290,7 +1307,7 @@
       "category": "web",
       "explanations": {
         "pt": {
-          "short": "A linguagem de programação que roda no navegador e deixa a página interativa.",
+          "short": "A linguagem de programação que roda no navegador e deixa a página interativa. Com ela a página reage a cliques, valida formulários e busca dados sem recarregar.",
           "example": "alert(\"oi\") mostra uma mensagem na tela.",
           "steps": [
             "Escreva o código num arquivo .js ou numa tag <script>.",
@@ -1302,7 +1319,7 @@
           "names": [
             "javascript"
           ],
-          "short": "JavaScript: el lenguaje de programación que corre en el navegador y hace la página interactiva.",
+          "short": "JavaScript: el lenguaje de programación que corre en el navegador y hace la página interactiva. Con él la página reacciona a clics, valida formularios y busca datos sin recargar.",
           "example": "alert(\"hola\") muestra un mensaje en la pantalla.",
           "steps": [
             "Escribe el código en un archivo .js o en una etiqueta <script>.",
@@ -1327,7 +1344,7 @@
       "category": "web",
       "explanations": {
         "pt": {
-          "short": "Um jeito combinado de um programa pedir dados ou serviços a outro.",
+          "short": "Um jeito combinado de um programa pedir dados ou serviços a outro. Você manda um pedido num endereço e formato definidos e recebe a resposta, geralmente em JSON.",
           "example": "fetch(\"https://api.exemplo.com/clima\") pede a previsão do tempo a uma API.",
           "steps": [
             "Leia a documentação da API.",
@@ -1344,7 +1361,7 @@
             "api",
             "apis"
           ],
-          "short": "API: una forma acordada para que un programa pida datos o servicios a otro.",
+          "short": "API: una forma acordada para que un programa pida datos o servicios a otro. Envías un pedido a una dirección y en un formato definidos y recibes la respuesta, casi siempre en JSON.",
           "example": "fetch(\"https://api.ejemplo.com/clima\") pide el pronóstico del tiempo a una API.",
           "steps": [
             "Lee la documentación de la API.",
@@ -1368,7 +1385,7 @@
       "category": "web",
       "explanations": {
         "pt": {
-          "short": "Um formato de texto para guardar e trocar dados, parecido com objetos JavaScript.",
+          "short": "Um formato de texto para guardar e trocar dados, parecido com objetos JavaScript. É o formato mais usado por APIs, porque qualquer linguagem consegue ler e escrever.",
           "example": "{ \"nome\": \"Ana\", \"idade\": 17 }",
           "steps": [
             "Use chaves para objetos e colchetes para listas.",
@@ -1383,7 +1400,7 @@
           "names": [
             "json"
           ],
-          "short": "JSON: un formato de texto para guardar e intercambiar datos, parecido a los objetos de JavaScript.",
+          "short": "JSON: un formato de texto para guardar e intercambiar datos, parecido a los objetos de JavaScript. Es el formato más usado por las APIs, porque cualquier lenguaje puede leerlo y escribirlo.",
           "example": "{ \"nombre\": \"Ana\", \"edad\": 17 }",
           "steps": [
             "Usa llaves para objetos y corchetes para listas.",
@@ -1406,7 +1423,7 @@
       "category": "web",
       "explanations": {
         "pt": {
-          "short": "Uma biblioteca JavaScript para montar interfaces a partir de componentes.",
+          "short": "Uma biblioteca JavaScript para montar interfaces a partir de componentes. Cada componente é uma parte da tela, e o React atualiza só o que mudou quando os dados mudam.",
           "example": "function Ola() { return <h1>Olá</h1>; } é um componente React.",
           "steps": [
             "Divida a tela em componentes.",
@@ -1418,7 +1435,7 @@
           "names": [
             "react"
           ],
-          "short": "React: una biblioteca de JavaScript para construir interfaces a partir de componentes.",
+          "short": "React: una biblioteca de JavaScript para construir interfaces a partir de componentes. Cada componente es una parte de la pantalla, y React actualiza solo lo que cambió cuando cambian los datos.",
           "example": "function Hola() { return <h1>Hola</h1>; } es un componente de React.",
           "steps": [
             "Divide la pantalla en componentes.",
@@ -1441,7 +1458,7 @@
       "category": "web",
       "explanations": {
         "pt": {
-          "short": "Um recurso do React para um componente lembrar um valor que pode mudar.",
+          "short": "Um recurso do React para um componente lembrar um valor que pode mudar. Quando você troca o valor com a função dele, o React desenha o componente de novo.",
           "example": "const [contador, setContador] = useState(0); → setContador(1) atualiza a tela.",
           "steps": [
             "Chame useState com o valor inicial.",
@@ -1457,7 +1474,7 @@
           "names": [
             "usestate"
           ],
-          "short": "useState: recurso de React para que un componente recuerde un valor que puede cambiar.",
+          "short": "useState: recurso de React para que un componente recuerde un valor que puede cambiar. Cuando cambias el valor con su función, React vuelve a dibujar el componente.",
           "example": "const [contador, setContador] = useState(0); → setContador(1) actualiza la pantalla.",
           "steps": [
             "Llama a useState con el valor inicial.",
@@ -1481,7 +1498,7 @@
       "category": "web",
       "explanations": {
         "pt": {
-          "short": "Um recurso do React para rodar código depois que o componente aparece ou muda.",
+          "short": "Um recurso do React para rodar código depois que o componente aparece ou muda. É usado para buscar dados, mexer no título da página ou ligar e desligar timers.",
           "example": "useEffect(() => { document.title = \"Oi\"; }, []); → muda o título uma vez.",
           "steps": [
             "Passe uma função para useEffect.",
@@ -1493,7 +1510,7 @@
           "names": [
             "useeffect"
           ],
-          "short": "useEffect: recurso de React para ejecutar código después de que el componente aparece o cambia.",
+          "short": "useEffect: recurso de React para ejecutar código después de que el componente aparece o cambia. Se usa para buscar datos, cambiar el título de la página o encender y apagar temporizadores.",
           "example": "useEffect(() => { document.title = \"Hola\"; }, []); → cambia el título una vez.",
           "steps": [
             "Pasa una función a useEffect.",
@@ -1518,7 +1535,7 @@
       "literalMeaning": "Em inglês, \"deploy\" quer dizer \"posicionar\" ou \"pôr em ação\".",
       "explanations": {
         "pt": {
-          "short": "Publicar o sistema num servidor para outras pessoas usarem.",
+          "short": "Publicar o sistema num servidor para outras pessoas usarem. Depois do deploy, o projeto deixa de rodar só no seu computador e ganha um endereço na internet.",
           "example": "Fazer o deploy do site na Vercel e receber um link público.",
           "steps": [
             "Gere a versão final do projeto (build).",
@@ -1533,7 +1550,7 @@
             "desplegar",
             "publicar"
           ],
-          "short": "Despliegue (deploy): publicar el sistema en un servidor para que otras personas lo usen.",
+          "short": "Despliegue (deploy): publicar el sistema en un servidor para que otras personas lo usen. Después del deploy, el proyecto deja de correr solo en tu computadora y tiene una dirección en internet.",
           "example": "Hacer el deploy del sitio en Vercel y recibir un enlace público.",
           "steps": [
             "Genera la versión final del proyecto (build).",
@@ -1556,7 +1573,7 @@
       "category": "ferramentas",
       "explanations": {
         "pt": {
-          "short": "Comando que mostra um valor no console, muito usado para entender o código.",
+          "short": "Comando que mostra um valor no console, muito usado para entender o código. É a forma mais simples de ver o que uma variável vale em cada passo do programa.",
           "example": "console.log(\"total:\", total); → aparece no console do navegador.",
           "steps": [
             "Escreva console.log( com o que quer ver.",
@@ -1568,7 +1585,7 @@
           "names": [
             "console.log"
           ],
-          "short": "console.log: comando que muestra un valor en la consola; se usa mucho para entender el código.",
+          "short": "console.log: comando que muestra un valor en la consola; se usa mucho para entender el código. Es la forma más simple de ver cuánto vale una variable en cada paso del programa.",
           "example": "console.log(\"total:\", total); → aparece en la consola del navegador.",
           "steps": [
             "Escribe console.log( con lo que quieres ver.",

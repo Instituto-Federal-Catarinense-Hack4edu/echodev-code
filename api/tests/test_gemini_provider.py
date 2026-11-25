@@ -143,7 +143,7 @@ async def test_other_errors_do_not_switch_models(code, message):
     ],
 )
 async def test_unusable_answers_become_llm_errors(outcome, message):
-    p, _ = provider({PRIMARY: [outcome]})
+    p, _ = provider({PRIMARY: [outcome], RESERVE: [outcome]})
     with pytest.raises(LLMError, match=message):
         await ask(p)
 
@@ -153,3 +153,51 @@ async def test_full_materials_flow_through_gemini():
     materials = await generate_materials(p, ["Hoje vamos falar de Git e commit."])
     assert len(materials.quiz) == 5
     assert materials.resumo.titulo == MOCK_MATERIALS["resumo"]["titulo"]
+
+
+THIRD = "gemini-3.1-flash-lite"
+
+
+async def test_reserve_list_goes_through_every_model(monkeypatch):
+    monkeypatch.setattr("app.llm.gemini_provider.OVERLOAD_PAUSE_SECONDS", 0)
+    p, models = provider(
+        {PRIMARY: [api_error(503)], RESERVE: [api_error(503)], THIRD: [reply("{}")]},
+        gemini_fallback_model=f"{RESERVE}, {THIRD}",
+    )
+    assert await ask(p) == "{}"
+    assert [c[0] for c in models.calls] == [PRIMARY, RESERVE, THIRD]
+
+
+async def test_everything_overloaded_gets_one_more_round_after_a_pause(monkeypatch):
+    monkeypatch.setattr("app.llm.gemini_provider.OVERLOAD_PAUSE_SECONDS", 0)
+    p, models = provider({PRIMARY: [api_error(503), reply("{}")], RESERVE: [api_error(503)]})
+    assert await ask(p) == "{}"
+    assert [c[0] for c in models.calls] == [PRIMARY, RESERVE, PRIMARY]
+
+
+async def test_overload_twice_gives_a_clear_error(monkeypatch):
+    monkeypatch.setattr("app.llm.gemini_provider.OVERLOAD_PAUSE_SECONDS", 0)
+    p, models = provider(
+        {PRIMARY: [api_error(503), api_error(503)], RESERVE: [api_error(503), api_error(503)]}
+    )
+    with pytest.raises(LLMError, match="HTTP 503"):
+        await ask(p)
+    assert len(models.calls) == 4
+
+
+async def test_quota_everywhere_does_not_wait_for_a_second_round(monkeypatch):
+    monkeypatch.setattr("app.llm.gemini_provider.OVERLOAD_PAUSE_SECONDS", 60)
+    p, models = provider({PRIMARY: [api_error(429)], RESERVE: [api_error(429)]})
+    with pytest.raises(LLMError, match="Cota"):
+        await ask(p)
+    assert len(models.calls) == 2
+
+
+async def test_slow_model_falls_through_to_the_next_without_a_second_round(monkeypatch):
+    monkeypatch.setattr("app.llm.gemini_provider.OVERLOAD_PAUSE_SECONDS", 60)
+    p, models = provider({PRIMARY: [httpx.ReadTimeout("slow")], RESERVE: [reply("{}")]})
+    assert await ask(p) == "{}"
+    p, models = provider({PRIMARY: [httpx.ReadTimeout("slow")], RESERVE: [api_error(503)]})
+    with pytest.raises(LLMError, match="HTTP 503"):
+        await ask(p)
+    assert len(models.calls) == 2

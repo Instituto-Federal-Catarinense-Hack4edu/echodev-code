@@ -1,55 +1,40 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createEsTranslator, esAvailability, type TranslateFn } from "./browser";
-
-const REMEMBER_KEY = "echodev:translate-es";
 
 export type TranslationState =
   | { kind: "checking" }
   | { kind: "unsupported" }
   | { kind: "unavailable" }
-  | { kind: "off" }
+  | { kind: "idle" }
   | { kind: "downloading"; percent: number }
   | { kind: "on"; translate: TranslateFn }
   | { kind: "error" };
 
-function remembered(): boolean {
-  try {
-    return localStorage.getItem(REMEMBER_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
-
-function remember(on: boolean) {
-  try {
-    if (on) localStorage.setItem(REMEMBER_KEY, "1");
-    else localStorage.removeItem(REMEMBER_KEY);
-  } catch {
-    /* storage unavailable */
-  }
-}
-
+/**
+ * The teacher's Chrome translates every sentence so each student can choose Spanish on
+ * their own device. The language pack download needs a click, so `prepare()` runs from
+ * the "start transcription" button; when the pack is already there it starts on its own.
+ */
 export function useEsTranslation() {
   const [state, setState] = useState<TranslationState>({ kind: "checking" });
+  const busy = useRef(false);
 
-  const enable = useCallback(async () => {
-    setState({ kind: "downloading", percent: 0 });
+  const prepare = useCallback(async () => {
+    if (busy.current) return;
+    busy.current = true;
+    setState((s) => (s.kind === "on" ? s : { kind: "downloading", percent: 0 }));
     try {
       const translate = await createEsTranslator((f) =>
         setState({ kind: "downloading", percent: Math.round(f * 100) }),
       );
-      remember(true);
       setState({ kind: "on", translate });
     } catch {
       setState({ kind: "error" });
+    } finally {
+      busy.current = false;
     }
-  }, []);
-
-  const disable = useCallback(() => {
-    remember(false);
-    setState({ kind: "off" });
   }, []);
 
   useEffect(() => {
@@ -57,13 +42,14 @@ export function useEsTranslation() {
     void esAvailability().then((a) => {
       if (cancelled) return;
       if (a === "unsupported" || a === "unavailable") setState({ kind: a });
-      else if (a === "available" && remembered()) void enable();
-      else setState({ kind: "off" });
+      else if (a === "available") void prepare();
+      else setState({ kind: "idle" });
     });
     return () => {
       cancelled = true;
     };
-  }, [enable]);
+  }, [prepare]);
 
-  return { state, enable, disable, translate: state.kind === "on" ? state.translate : null };
+  const needsPrepare = state.kind === "idle" || state.kind === "error";
+  return { state, prepare, needsPrepare, translate: state.kind === "on" ? state.translate : null };
 }

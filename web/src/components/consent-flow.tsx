@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, Baby, FileText, HeartHandshake, ShieldCheck, Sparkles, type LucideIcon } from "lucide-react";
+import { ArrowRight, FileText, HeartHandshake, ShieldCheck, Sparkles, type LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -120,11 +120,6 @@ export function ConsentFlow({ purposes, onDone }: Props) {
             )}
           </div>
         </section>
-
-        <p className="flex items-start gap-2 text-sm text-muted-foreground">
-          <Baby aria-hidden className="mt-0.5 size-4 shrink-0" />
-          {t.consent.minors}
-        </p>
       </div>
     </main>
   );

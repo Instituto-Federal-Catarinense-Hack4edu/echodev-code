@@ -5,7 +5,7 @@ import { connectAuthEmulator, getAuth, type Auth } from "firebase/auth";
 import { connectFirestoreEmulator, getFirestore, type Firestore } from "firebase/firestore";
 import { publicEnv } from "@/lib/env";
 
-// No Analytics on purpose: students may be minors and consent is per purpose
+// No Analytics on purpose: privacy, and consent is per purpose
 // (docs/DECISIONS.md). Only Auth and Firestore are used.
 
 let services: { app: FirebaseApp; auth: Auth; db: Firestore } | null = null;

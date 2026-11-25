@@ -89,6 +89,7 @@ export function StudentView(props: Props) {
       <LiveCaption
         items={items}
         lang={props.lang}
+        onLangChange={props.onLangChange}
         onTermClick={(id) => {
           setOpenTerm(id);
           props.onTermOpen?.(id, props.depth);

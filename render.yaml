@@ -1,0 +1,35 @@
+# Render Blueprint for the Python API (the web app goes to Vercel; see docs/DEPLOY.md).
+# Secrets are filled in on the Render dashboard, never here: GEMINI_API_KEY, WEB_ORIGIN and the
+# service account JSON as a Secret File named firebase-service-account.json.
+services:
+  - type: web
+    name: echodev-api
+    runtime: python
+    plan: free
+    rootDir: api
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.10
+      - key: ENVIRONMENT
+        value: production
+      - key: FIREBASE_PROJECT_ID
+        value: echodev-eb4fb
+      - key: FIREBASE_CREDENTIALS_FILE
+        value: /etc/secrets/firebase-service-account.json
+      - key: WEB_ORIGIN
+        sync: false
+      - key: CRON_SECRET
+        generateValue: true
+      - key: LLM_PROVIDER
+        value: gemini
+      - key: LLM_MODEL
+        value: gemini-3.1-flash-lite
+      - key: GEMINI_FALLBACK_MODEL
+        value: gemini-3.5-flash-lite,gemini-3.6-flash
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: LLM_TIMEOUT_SECONDS
+        value: "90"

@@ -11,6 +11,8 @@ export const TermCategorySchema = z.enum(["conceitos", "git", "web", "ferramenta
 const FullExplanationSchema = z.object({
   short: z.string().min(1),
   example: z.string().min(1),
+  /** Plain-language reading of the example (the example itself is code). */
+  exampleNote: z.string().min(1).optional(),
   steps: z.array(z.string().min(1)).min(2),
 });
 
@@ -19,6 +21,7 @@ const PartialExplanationSchema = z.object({
   names: z.array(z.string().min(1)).optional(),
   short: z.string().min(1),
   example: z.string().min(1).optional(),
+  exampleNote: z.string().min(1).optional(),
   steps: z.array(z.string().min(1)).optional(),
   literal: z.string().min(1).optional(),
 });
