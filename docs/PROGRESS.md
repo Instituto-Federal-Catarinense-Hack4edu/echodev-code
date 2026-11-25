@@ -97,7 +97,8 @@
 - **Revisão humana do conteúdo** dos 40 termos (explicações e traduções) antes da demo. Nada na interface diz "verificado".
 - Variações fonéticas são hipóteses: validar no Teste A (`docs/TESTE_MANUAL.md`).
 - **Textos de consentimento** são marcadores ("texto a ser aprovado pela instituição"). O piloto considera só alunos maiores de idade.
-- **Publicar** seguindo `docs/DEPLOY.md` (Render para a API com o `render.yaml`, Vercel para o site, limpeza de 24 h pelo GitHub Actions).
+- **Publicar** seguindo `docs/DEPLOY.md` (site e API na Vercel, limpeza de 24 h pelo GitHub Actions).
+- **Gerar uma chave nova da conta de serviço**: em 25/11 o Google passou a recusar a chave atual ("Invalid JWT Signature": apagada ou revogada no console).
 - **Trocar a chave do Gemini** depois do hackathon (ela passou pelo chat durante o desenvolvimento) e apagar o projeto Supabase antigo no painel dele, se ainda existir.
 
 ### Termos propensos a falso positivo (curadoria)

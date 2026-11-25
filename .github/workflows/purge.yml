@@ -1,6 +1,6 @@
 # Deletes transcript lines older than 24 h. The free Firebase plan has no TTL, so the API route
 # POST /cron/purge is called every hour. Set the repository secrets ECHODEV_API_URL (e.g.
-# https://echodev-api.onrender.com) and ECHODEV_CRON_SECRET (CRON_SECRET of the API).
+# https://echodev-api.vercel.app) and ECHODEV_CRON_SECRET (CRON_SECRET of the API).
 name: Limpeza de 24 h
 
 on:
@@ -24,6 +24,6 @@ jobs:
             echo "Segredos ECHODEV_API_URL e ECHODEV_CRON_SECRET não configurados; nada a fazer."
             exit 0
           fi
-          # A free Render instance may be asleep: allow time for it to wake up.
+          # Allow for a cold start of the API function.
           curl --fail --silent --show-error --max-time 120 --retry 2 --retry-delay 20 \
             -X POST "${API_URL%/}/cron/purge" -H "X-Cron-Secret: $CRON_SECRET"

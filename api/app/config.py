@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     # Service account JSON (Firebase console > Project settings > Service accounts).
     # Empty: Application Default Credentials, or nothing at all when using the emulators.
     firebase_credentials_file: str = ""
+    # The same JSON as text, for hosts without secret files (Vercel). Wins over the file.
+    firebase_credentials_json: str = ""
     # Local emulators (firebase emulators:start), e.g. "127.0.0.1:8080" and "127.0.0.1:9099".
     firestore_emulator_host: str = ""
     firebase_auth_emulator_host: str = ""

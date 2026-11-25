@@ -4,6 +4,7 @@ The Admin SDK bypasses the Firestore security rules, so every route that uses it
 ownership itself (see app/routes). The emulators are picked up from the settings.
 """
 
+import json
 import os
 
 import firebase_admin
@@ -25,6 +26,8 @@ def _export_emulators(settings: Settings) -> None:
 
 
 def _credential(settings: Settings) -> credentials.Base | None:
+    if settings.firebase_credentials_json.strip():
+        return credentials.Certificate(json.loads(settings.firebase_credentials_json))
     if settings.firebase_credentials_file:
         return credentials.Certificate(settings.firebase_credentials_file)
     return None

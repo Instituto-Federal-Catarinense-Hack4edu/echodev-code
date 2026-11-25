@@ -1,7 +1,18 @@
 [project]
 name = "echodev-api"
 version = "0.1.0"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
+# Same pins as requirements.txt (Vercel may read either file; a test keeps them equal).
+dependencies = [
+    "fastapi==0.162.0",
+    "uvicorn[standard]==0.54.0",
+    "pydantic==2.14.2",
+    "pydantic-settings==2.16.2",
+    "httpx==0.28.1",
+    "anthropic==2.4.0",
+    "google-genai==2.34.0",
+    "firebase-admin==7.7.0",
+]
 
 [tool.ruff]
 line-length = 100
