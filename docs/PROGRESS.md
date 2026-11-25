@@ -97,7 +97,7 @@
 - **Revisão humana do conteúdo** dos 40 termos (explicações e traduções) antes da demo. Nada na interface diz "verificado".
 - Variações fonéticas são hipóteses: validar no Teste A (`docs/TESTE_MANUAL.md`).
 - **Textos de consentimento** são marcadores ("texto a ser aprovado pela instituição"). O piloto considera só alunos maiores de idade.
-- **Escolher e configurar a hospedagem** da API (`docs/DEPLOY.md`) e as URLs de redirecionamento de produção.
+- **Publicar** seguindo `docs/DEPLOY.md` (Render para a API com o `render.yaml`, Vercel para o site, limpeza de 24 h pelo GitHub Actions).
 - **Trocar a chave do Gemini** depois do hackathon (ela passou pelo chat durante o desenvolvimento) e apagar o projeto Supabase antigo no painel dele, se ainda existir.
 
 ### Termos propensos a falso positivo (curadoria)
